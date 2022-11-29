@@ -1,12 +1,55 @@
-== Day 00: Hello World ==
+== Day 00: Hello World! ==
 
 It'll be the 3rd year of https://www.rust-lang.org/[Rust] solutions for the 2022 edition of 
 https://adventofcode.com/2021[Advent of Code]
 
-I created a little solution infrastrucutre I want to use in my solutions and a script that creates templates and downloads puzzle inputs.
+I created a little solution infrastrucutre (which resides in the `aoc` subfolder of `day00/rust/mr-kaffee`) I want to use in my solutions, and a small application that creates templates and downloads puzzle inputs (which resides in the `template` subfolder of `day00/rust/mr-kaffee`).
 
-Other than that, my challenges are again to create solutions that perform well and that do not use external dependencies.
+Other than that, my challenges are again to create solutions that perform well and that do not use external dependencies (the latter constraint is not applied for the Day 0 Hello World Example, which I also use to run all my solutions in a row).
+
+=== Run solutions for several days ===
+
+The Day 0 application can be used to run several of my solutions (they will be added as I create them) using `cargo run --release \-- -d <from>..=<to>` or `cargo --run --release \-- -d a,b,c,...` where `a`, `b`, `c`, ... are numbers of specific days to run. If the `-d` argument is omitted, all solutions are run.
 
 === General structure ===
 
-\... will come soon
+My solutions will be implemented in a `src/lib.rs` file and generally have the structure detailed below. This is most probably a bit of an overhead, but fun to write and a learning opportunity for me.
+
+==== The Puzzle definition ====
+
+This is a function returing an instance of `mr_kaffee_aoc::Puzzle` which defines metadata, input data, references to solver functions and expected solutions.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=definition]
+----
+
+
+==== Data Structures ====
+
+This includes the code to parse the input data
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=data-structures]
+----
+
+
+==== The solver functions ====
+
+The main solver functions plus potentially helper functions
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=solution]
+----
+
+
+==== Tests ====
+
+Tests, in particular code to execute the test cases typically defined in the puzzles
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----

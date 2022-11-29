@@ -1,0 +1,20 @@
+[package]
+name = "mr-kaffee-2022-00"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+
+lto = true
+codegen-units = 1
+
+[features]
+
+[dependencies]
+
+mr-kaffee-aoc = { path = "aoc" }
+
+itertools = "0.10.*"
+clap = { version = "4.*", features = ["derive"] }
+regex = "1.*"
+lazy_static = "1.*"
