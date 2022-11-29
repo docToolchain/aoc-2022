@@ -3,7 +3,7 @@ name: GitHub Pages
 on:
   push:
     branches:
-      - "main"
+      - "master"
   pull_request:
   workflow_dispatch: {}
 
@@ -23,7 +23,7 @@ jobs:
       - name: generate site
         run: ./gradlew generateIndex bake --info --stacktrace
       - name: Deploy
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/master' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
