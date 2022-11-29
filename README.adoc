@@ -1,15 +1,3 @@
-[WARNING]
-===============================
-We are running a little late setting up the repository this year.
-
-For now, we just have a slack channel (see below).
-
-If anybody wants to support, feel free to get in touch via Slack.
-
-I will try to set the repository up before December 1st, but it will probably only be ready on November 30th.
-===============================
-
-
 = aoc-2022
 
 WARNING: Spoiler Alert! If you want to solve the aoc problems on your own, do not read any further.
