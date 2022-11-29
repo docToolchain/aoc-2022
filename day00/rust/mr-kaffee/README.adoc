@@ -1,0 +1,12 @@
+== Day 00: Hello World ==
+
+It'll be the 3rd year of https://www.rust-lang.org/[Rust] solutions for the 2022 edition of 
+https://adventofcode.com/2021[Advent of Code]
+
+I created a little solution infrastrucutre I want to use in my solutions and a script that creates templates and downloads puzzle inputs.
+
+Other than that, my challenges are again to create solutions that perform well and that do not use external dependencies.
+
+=== General structure ===
+
+\... will come soon
