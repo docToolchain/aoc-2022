@@ -27,12 +27,7 @@
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//rules/index.html</loc>
-    	<lastmod>2022-11-29</lastmod>
-    </url>
-
-    <url>
-    	<loc>https://doctoolchain.org/aoc-2022//solutions/byLanguage.html</loc>
+    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/mr-kaffee/generatedDays.html</loc>
     	<lastmod>2022-11-29</lastmod>
     </url>
 
@@ -42,12 +37,22 @@
     </url>
 
     <url>
+    	<loc>https://doctoolchain.org/aoc-2022//solutions/byCoder.html</loc>
+    	<lastmod>2022-11-29</lastmod>
+    </url>
+
+    <url>
     	<loc>https://doctoolchain.org/aoc-2022//solutions/index.html</loc>
     	<lastmod>2022-11-29</lastmod>
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//solutions/byCoder.html</loc>
+    	<loc>https://doctoolchain.org/aoc-2022//solutions/byLanguage.html</loc>
+    	<lastmod>2022-11-29</lastmod>
+    </url>
+
+    <url>
+    	<loc>https://doctoolchain.org/aoc-2022//rules/index.html</loc>
     	<lastmod>2022-11-29</lastmod>
     </url>
 
