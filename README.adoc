@@ -1,9 +1,8 @@
-.Disclaimer
 [WARNING]
 ===============================
 We are running a little late setting up the repository this year.
 
-FOr now, we jus thave a slack channel (see below).
+For now, we just have a slack channel (see below).
 
 If anybody wants to support, feel free to get in touch via Slack.
 
@@ -30,7 +29,7 @@ The id of the https://adventofcode.com/2022/leaderboard/private/view/117454[shar
 
 == The Goal of this repository
 
-... is to
+\... is to
 
 - have a shared code base. It will be interesting to see how the same problem is solved in different languages with different approaches
 - have a development environment in which all examples run out of the box
