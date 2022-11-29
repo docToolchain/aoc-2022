@@ -147,8 +147,9 @@
 <li><a href="#_about_me">About me</a></li>
 <li><a href="#_day_00_rust">Day 00: rust</a>
 <ul class="sectlevel3">
-<li><a href="#_day_00_hello_world">Day 00: Hello World</a>
+<li><a href="#_day_00_hello_world">Day 00: Hello World!</a>
 <ul class="sectlevel4">
+<li><a href="#_run_solutions_for_several_days">Run solutions for several days</a></li>
 <li><a href="#_general_structure">General structure</a></li>
 </ul>
 </li>
@@ -194,21 +195,107 @@ Strava: <a href="https://www.strava.com/athletes/89256720">Peter Wieland</a></p>
 <div class="sect2">
 <h3 id="_day_00_rust"><a class="anchor" href="#_day_00_rust"></a><a class="link" href="#_day_00_rust">Day 00: rust</a></h3>
 <div class="sect3">
-<h4 id="_day_00_hello_world"><a class="anchor" href="#_day_00_hello_world"></a><a class="link" href="#_day_00_hello_world">Day 00: Hello World</a></h4>
+<h4 id="_day_00_hello_world"><a class="anchor" href="#_day_00_hello_world"></a><a class="link" href="#_day_00_hello_world">Day 00: Hello World!</a></h4>
 <div class="paragraph">
 <p>It&#8217;ll be the 3rd year of <a href="https://www.rust-lang.org/">Rust</a> solutions for the 2022 edition of
 <a href="https://adventofcode.com/2021">Advent of Code</a></p>
 </div>
 <div class="paragraph">
-<p>I created a little solution infrastrucutre I want to use in my solutions and a script that creates templates and downloads puzzle inputs.</p>
+<p>I created a little solution infrastrucutre (which resides in the <code>aoc</code> subfolder of <code>day00/rust/mr-kaffee</code>) I want to use in my solutions, and a small application that creates templates and downloads puzzle inputs (which resides in the <code>template</code> subfolder of <code>day00/rust/mr-kaffee</code>).</p>
 </div>
 <div class="paragraph">
-<p>Other than that, my challenges are again to create solutions that perform well and that do not use external dependencies.</p>
+<p>Other than that, my challenges are again to create solutions that perform well and that do not use external dependencies (the latter constraint is not applied for the Day 0 Hello World Example, which I also use to run all my solutions in a row).</p>
+</div>
+<div class="sect4">
+<h5 id="_run_solutions_for_several_days"><a class="anchor" href="#_run_solutions_for_several_days"></a><a class="link" href="#_run_solutions_for_several_days">Run solutions for several days</a></h5>
+<div class="paragraph">
+<p>The Day 0 application can be used to run several of my solutions (they will be added as I create them) using <code>cargo run --release -- -d &lt;from&gt;..=&lt;to&gt;</code> or <code>cargo --run --release -- -d a,b,c,&#8230;&#8203;</code> where <code>a</code>, <code>b</code>, <code>c</code>, &#8230;&#8203; are numbers of specific days to run. If the <code>-d</code> argument is omitted, all solutions are run.</p>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_general_structure"><a class="anchor" href="#_general_structure"></a><a class="link" href="#_general_structure">General structure</a></h5>
 <div class="paragraph">
-<p>... will come soon</p>
+<p>My solutions will be implemented in a <code>src/lib.rs</code> file and generally have the structure detailed below. This is most probably a bit of an overhead, but fun to write and a learning opportunity for me.</p>
+</div>
+<div class="sect5">
+<h6 id="_the_puzzle_definition"><a class="anchor" href="#_the_puzzle_definition"></a><a class="link" href="#_the_puzzle_definition">The Puzzle definition</a></h6>
+<div class="paragraph">
+<p>This is a function returing an instance of <code>mr_kaffee_aoc::Puzzle</code> which defines metadata, input data, references to solver functions and expected solutions.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn puzzle() -&gt; Puzzle&lt;PuzzleData, usize, usize, usize, usize&gt; {
+    Puzzle {
+        year: 2022,
+        day: 0,
+        input: include_str!("../input.txt"),
+        star1: Some(Star {
+            name: "Hello World example",
+            f: &amp;star_1,
+            exp: Some(0),
+        }),
+        star2: None,
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_data_structures"><a class="anchor" href="#_data_structures"></a><a class="link" href="#_data_structures">Data Structures</a></h6>
+<div class="paragraph">
+<p>This includes the code to parse the input data</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub struct PuzzleData {
+    s: String,
+}
+
+impl FromStr for PuzzleData {
+    type Err = Infallible;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self, Self::Err&gt; {
+        Ok(Self { s: s.into() })
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_the_solver_functions"><a class="anchor" href="#_the_solver_functions"></a><a class="link" href="#_the_solver_functions">The solver functions</a></h6>
+<div class="paragraph">
+<p>The main solver functions plus potentially helper functions</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    println!("{}", data.s);
+    0
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_tests"><a class="anchor" href="#_tests"></a><a class="link" href="#_tests">Tests</a></h6>
+<div class="paragraph">
+<p>Tests, in particular code to execute the test cases typically defined in the puzzles</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use mr_kaffee_aoc::GenericPuzzle;
+
+    use super::*;
+
+    #[test]
+    pub fn test_something() {
+        let puzzle = puzzle();
+        assert!(puzzle.solve_handle_err());
+    }
+}</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
