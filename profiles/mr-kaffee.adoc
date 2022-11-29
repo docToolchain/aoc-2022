@@ -1,0 +1,26 @@
+
+:mr-kaffee-avatar: https://avatars0.githubusercontent.com/u/73745454?v=4
+:mr-kaffee-realName: Peter Wieland
+
+:icons: font
+
+//tag::free-form[]
+
+[cols="1,5"]
+|===
+| image:{mr-kaffee-avatar}[width=100px]
+a| **mr-kaffee** +
+{mr-kaffee-realName} +
+Github: https://github.com/mr-kaffee[mr-kaffee],
+Strava: https://www.strava.com/athletes/89256720[Peter Wieland]
+|===
+
+=== About me
+
+I am a regular SW coder. Each year in december, I code AoC puzzle solutions. This year, for the 3rd year in a row, I'll go with Rust.
+
+In my professional career, I used to do lots of Java and MATLAB coding, yet, this feels like very long time ago.
+
+If I do not code or work, I enjoy https://www.strava.com/athletes/89256720[cycling] on or off roads, with or without electric support.
+
+//end::free-form[]
