@@ -78,4 +78,4 @@ It would be great if everybody could explain their solution with a short descrip
 
 == Questions?
 
-=> see you on Slack: https://aoc-2021.slack.com/[aoc-2022]
+=> see you on Slack: https://aoc-2022.slack.com/[aoc-2022]

@@ -1,0 +1,12 @@
+image:
+  file: .gitpod.dockerfile
+ports:
+- port: 8050
+  onOpen: open-preview
+- port: 8888
+  onOpen: open-browser
+tasks:
+  - command: source /home/gitpod/.sdkman/bin/sdkman-init.sh
+vscode:
+  extensions:
+    - asciidoctor.asciidoctor-vscode
