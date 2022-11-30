@@ -1,0 +1,6 @@
+== Day 00 Hello World! ==
+
+This is a simple Hello World program in https://kotlinlang.org[Kotlin], if you want to experiment with Kotlin use the https://play.kotlinlang.org[Kotlin Playground]
+
+My aim with https://adventofcode.com/2021[Advent of Code] is to write code solving the puzzles in a way that is understandable to a wide audience.
+Feel free to reach out with comments at the links above.
