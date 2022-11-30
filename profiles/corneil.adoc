@@ -1,0 +1,25 @@
+
+:corneil-avatar: https://avatars.githubusercontent.com/u/466422?v=4
+:corneil-realName: Corneil du Plessis
+
+:icons: font
+
+//tag::free-form[]
+
+[cols="1,5"]
+|===
+| image:{corneil-avatar}[width=100px]
+a| **corneil** +
+{corneil-realName} +
+Github: https://github.com/corneil[corneil] +
+Twitter: https://twitter.com/corneil[@corneil] +
+Mastodon: https://mastodon.social/@corneil[@corneil@mastodon.social]
+|===
+
+=== About me
+
+I am a Staff Software Engineer at VMware working on the Spring Cloud Data Flow team. I enjoyed AoC 2019 and decided to give it another go this year.
+
+I love coding in Kotlin and I try write the code solving the puzzles in a way that someone else can understand the solution.
+
+//end::free-form[]
