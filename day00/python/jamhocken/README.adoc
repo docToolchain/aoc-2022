@@ -1,0 +1,18 @@
+Day 0 of year 2021
+
+== Python
+
+I thought about trying another language, but my youngest son is going to try his hand at AOC this year.
+ And, so, I'll stick to Python.
+
+Judging from the past, he has a good chance to get 1 star on a few of the first ones.
+
+I'll post both solutions. :-) It'll be an adventure.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
