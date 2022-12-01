@@ -155,6 +155,19 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_01_rust">Day 01: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_1_calorie_counting">Day 1: Calorie Counting</a>
+<ul class="sectlevel4">
+<li><a href="#_input">Input</a></li>
+<li><a href="#_star_1">Star 1</a></li>
+<li><a href="#_star_2">Star 2</a></li>
+<li><a href="#_tests_2">Tests</a></li>
+<li><a href="#_today_i_learned">Today I learned</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -224,7 +237,7 @@ Strava: <a href="https://www.strava.com/athletes/89256720">Peter Wieland</a></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn puzzle() -&gt; Puzzle&lt;PuzzleData, usize, usize, usize, usize&gt; {
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn puzzle() -&gt; Puzzle&lt;'static, PuzzleData, usize, usize, usize, usize&gt; {
     Puzzle {
         year: 2022,
         day: 0,
@@ -248,14 +261,14 @@ Strava: <a href="https://www.strava.com/athletes/89256720">Peter Wieland</a></p>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub struct PuzzleData {
-    s: String,
+    input: &amp;'static str,
 }
 
-impl FromStr for PuzzleData {
-    type Err = Infallible;
+impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
+    type Error = Infallible;
 
-    fn from_str(s: &amp;str) -&gt; Result&lt;Self, Self::Err&gt; {
-        Ok(Self { s: s.into() })
+    fn try_from(input: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
+        Ok(Self { input })
     }
 }</code></pre>
 </div>
@@ -269,7 +282,7 @@ impl FromStr for PuzzleData {
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
-    println!("{}", data.s);
+    println!("{}", data.input);
     0
 }</code></pre>
 </div>
@@ -296,6 +309,101 @@ mod tests {
 }</code></pre>
 </div>
 </div>
+<a id="day01" />
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_01_rust"><a class="anchor" href="#_day_01_rust"></a><a class="link" href="#_day_01_rust">Day 01: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_1_calorie_counting"><a class="anchor" href="#_day_1_calorie_counting"></a><a class="link" href="#_day_1_calorie_counting">Day 1: Calorie Counting</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/1">AoC|2022|1</a>.</p>
+</div>
+<div class="paragraph">
+<p>Nothing very interesting today.</p>
+</div>
+<div class="sect4">
+<h5 id="_input"><a class="anchor" href="#_input"></a><a class="link" href="#_input">Input</a></h5>
+<div class="paragraph">
+<p>Parse everything in a vec of vecs (after having read instructions for part 1 and 2, vec of sums would have been sufficient)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    use std::num::ParseIntError;
+
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        pub calories: Vec&lt;Vec&lt;usize&gt;&gt;,
+    }
+
+    impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
+        type Error = ParseIntError;
+
+        /// parse the puzzle input
+        fn try_from(s: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
+            s.split("\n\n")
+                .map(|elf| {
+                    elf.lines()
+                        .map(|l| l.parse::&lt;usize&gt;())
+                        .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()
+                })
+                .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()
+                .map(|calories| Self { calories })
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1"><a class="anchor" href="#_star_1"></a><a class="link" href="#_star_1">Star 1</a></h5>
+<div class="paragraph">
+<p>Just find the biggest sum (I use <code>fold</code> instead of <code>max</code> to not handle to <code>Option::None</code> case)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    data.calories
+        .iter()
+        .fold(0, |mx, elf| mx.max(elf.iter().fold(0, |sm, c| sm + c)))
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2"><a class="anchor" href="#_star_2"></a><a class="link" href="#_star_2">Star 2</a></h5>
+<div class="paragraph">
+<p>Sum the three biggest sums. Probably there is faster solutions than sorting the whole vector.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let mut calories = data
+        .calories
+        .iter()
+        .map(|elf| elf.iter().fold(0, |sm, c| sm + c))
+        .collect::&lt;Vec&lt;_&gt;&gt;();
+
+    calories.sort();
+
+    calories.iter().rev().take(3).fold(0, |sm, c| sm + c)
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_2"><a class="anchor" href="#_tests_2"></a><a class="link" href="#_tests_2">Tests</a></h5>
+<div class="paragraph">
+<p>No tests today. It was too simple.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_today_i_learned"><a class="anchor" href="#_today_i_learned"></a><a class="link" href="#_today_i_learned">Today I learned</a></h5>
+<div class="paragraph">
+<p>Not so much. My template works.</p>
 </div>
 </div>
 </div>
