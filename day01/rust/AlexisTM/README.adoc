@@ -1,0 +1,9 @@
+== Day 00: Hello World! ==
+
+Oh, hi there!
+
+You can start it with (within the folder with input.txt)
+
+```rust
+cargo run --release
+```
