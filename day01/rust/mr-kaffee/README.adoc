@@ -15,7 +15,7 @@ include::src/lib.rs[tags=input]
 
 === Star 1 ===
 
-Just find the biggest sum (I use `fold` instead of `max` to not handle to `Option::None` case)
+Just find the biggest sum (I use `fold` instead of `max` to not handle the `Option::None` case)
 
 [source,rust,numbered]
 ----
