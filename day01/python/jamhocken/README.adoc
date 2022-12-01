@@ -1,0 +1,22 @@
+
+Day 1 of year 2022
+https://adventofcode.com/2022/day/1
+
+== What I learned
+
+. This one was straightforward and I just had to get into the groove again.
+
+== Approach
+
+I put the calories per elf into a list.
+
+. For star 1, I just found the max of my list.
+. For star 2, I sorted the list in descending order and added up the first 3 values.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
