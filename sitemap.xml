@@ -32,6 +32,11 @@
     </url>
 
     <url>
+    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/razziel89/generatedDays.html</loc>
+    	<lastmod>2022-12-01</lastmod>
+    </url>
+
+    <url>
     	<loc>https://doctoolchain.org/aoc-2022//generated/coder/ojuaf/generatedDays.html</loc>
     	<lastmod>2022-12-01</lastmod>
     </url>
@@ -42,17 +47,12 @@
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/jamhocken/generatedDays.html</loc>
-    	<lastmod>2022-12-01</lastmod>
-    </url>
-
-    <url>
     	<loc>https://doctoolchain.org/aoc-2022//generated/coder/corneil/generatedDays.html</loc>
     	<lastmod>2022-12-01</lastmod>
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/ceedee666/generatedDays.html</loc>
+    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/jamhocken/generatedDays.html</loc>
     	<lastmod>2022-12-01</lastmod>
     </url>
 
@@ -62,7 +62,7 @@
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//solutions/index.html</loc>
+    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/ceedee666/generatedDays.html</loc>
     	<lastmod>2022-12-01</lastmod>
     </url>
 
@@ -72,17 +72,22 @@
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//rules/index.html</loc>
-    	<lastmod>2022-12-01</lastmod>
-    </url>
-
-    <url>
     	<loc>https://doctoolchain.org/aoc-2022//solutions/byDay.html</loc>
     	<lastmod>2022-12-01</lastmod>
     </url>
 
     <url>
+    	<loc>https://doctoolchain.org/aoc-2022//solutions/index.html</loc>
+    	<lastmod>2022-12-01</lastmod>
+    </url>
+
+    <url>
     	<loc>https://doctoolchain.org/aoc-2022//solutions/byCoder.html</loc>
+    	<lastmod>2022-12-01</lastmod>
+    </url>
+
+    <url>
+    	<loc>https://doctoolchain.org/aoc-2022//rules/index.html</loc>
     	<lastmod>2022-12-01</lastmod>
     </url>
 
