@@ -151,6 +151,13 @@
 <li><a href="#_run_script">Run script</a></li>
 </ul>
 </li>
+<li><a href="#_day_01_python">Day 01: python</a>
+<ul class="sectlevel3">
+<li><a href="#_what_i_learned">What I learned</a></li>
+<li><a href="#_approach">Approach</a></li>
+<li><a href="#_run_script_2">Run script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -183,7 +190,7 @@
 <div class="sect2">
 <h3 id="_day_00_python"><a class="anchor" href="#_day_00_python"></a><a class="link" href="#_day_00_python">Day 00: python</a></h3>
 <div class="paragraph">
-<p>Day 0 of year 2021</p>
+<p>Day 0 of year 2022</p>
 </div>
 <div class="sect3">
 <h4 id="_python"><a class="anchor" href="#_python"></a><a class="link" href="#_python">Python</a></h4>
@@ -208,6 +215,77 @@
 <pre class="prettyprint highlight"><code class="language-python" data-lang="python">def main():
     print("Hello, World!")
 
+
+main()</code></pre>
+</div>
+</div>
+<a id="day01" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_01_python"><a class="anchor" href="#_day_01_python"></a><a class="link" href="#_day_01_python">Day 01: python</a></h3>
+<div class="paragraph">
+<p>Day 1 of year 2022
+<a href="https://adventofcode.com/2022/day/1" class="bare">https://adventofcode.com/2022/day/1</a></p>
+</div>
+<div class="sect3">
+<h4 id="_what_i_learned"><a class="anchor" href="#_what_i_learned"></a><a class="link" href="#_what_i_learned">What I learned</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>This one was straightforward and I just had to get into the groove again.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_approach"><a class="anchor" href="#_approach"></a><a class="link" href="#_approach">Approach</a></h4>
+<div class="paragraph">
+<p>I put the calories per elf into a list.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>For star 1, I just found the max of my list.</p>
+</li>
+<li>
+<p>For star 2, I sorted the list in descending order and added up the first 3 values.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_run_script_2"><a class="anchor" href="#_run_script_2"></a><a class="link" href="#_run_script_2">Run script</a></h4>
+<div class="paragraph">
+<p>Run the solution with <code>python solution.py</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-python" data-lang="python">def process_input(file_contents):
+    lines_stripped = [line.strip() for line in file_contents]
+    cal = 0
+    calories = []
+    for line in lines_stripped:
+        if not line:
+            calories.append(cal)
+            cal = 0
+        else:
+            cal += int(line)
+
+    return calories
+
+def main():
+    with open("input.txt",'r') as input_file:
+        input_lines = input_file.readlines()
+
+    calories = process_input(input_lines)
+
+    #star 1
+    print("The elf with the most calories is carrying",max(calories),"calories.")
+
+    #star 2
+    calories.sort(reverse=True)
+    print("The top three elves are carrying",sum(calories[0:3]),"calories.")
 
 main()</code></pre>
 </div>
