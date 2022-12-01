@@ -12,7 +12,7 @@ How does it work: +
 Inside function _calories_ the puzzle input is read and accumulated. Whenever a new block comes, the accumulated value is added to a list and the accumulation starts from new. The function takes one input parameter, if it is _1_ only the max value of the list with accumulated calories is returned
 [source, kotlin, numbered]
 ....
-include::day2201_1_2.kts[tags=calories]
+include::day2201_1_2.kt[tags=calories]
 ....
 
 
@@ -23,11 +23,11 @@ How does it work: +
 The same function call is used only with a different input parameter and therefore not the max value is returned but the sum of the three highest values
 [source, kotlin, numbered]
 ....
-include::day2201_1_2.kts[tags=calories]
+include::day2201_1_2.kt[tags=calories]
 ....
 
 At the end, both solutions are printed out. 
 [source, kotlin, numbered]
 ....
-include::day2201_1_2.kts[tags=output]
+include::day2201_1_2.kt[tags=output]
 ....
