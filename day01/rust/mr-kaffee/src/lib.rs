@@ -51,20 +51,29 @@ pub mod input {
 pub fn star_1(data: &PuzzleData) -> usize {
     data.calories
         .iter()
-        .fold(0, |mx, elf| mx.max(elf.iter().fold(0, |sm, c| sm + c)))
+        .fold(0, |mx, elf| mx.max(elf.iter().sum()))
 }
 // end::star_1[]
 
 // tag::star_2[]
 pub fn star_2(data: &PuzzleData) -> usize {
-    let mut calories = data
-        .calories
+    data.calories
         .iter()
-        .map(|elf| elf.iter().fold(0, |sm, c| sm + c))
-        .collect::<Vec<_>>();
-
-    calories.sort();
-
-    calories.iter().rev().take(3).fold(0, |sm, c| sm + c)
+        .map(|elf| elf.iter().sum())
+        .fold([0; 3], |mut mx, cal| {
+            if cal > mx[0] {
+                mx[2] = mx[1];
+                mx[1] = mx[0];
+                mx[0] = cal;
+            } else if cal > mx[1] {
+                mx[2] = mx[1];
+                mx[1] = cal;
+            } else if cal > mx[2] {
+                mx[2] = cal;
+            }
+            mx
+        })
+        .iter()
+        .sum()
 }
 // end::star_2[]

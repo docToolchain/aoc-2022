@@ -15,7 +15,7 @@ include::src/lib.rs[tags=input]
 
 === Star 1 ===
 
-Just find the biggest sum (I use `fold` instead of `max` to not handle to `Option::None` case)
+Just find the biggest sum (I use `fold` instead of `max` to not handle the `Option::None` case)
 
 [source,rust,numbered]
 ----
@@ -24,7 +24,7 @@ include::src/lib.rs[tags=star_1]
 
 === Star 2 ===
 
-Sum the three biggest sums. Probably there is faster solutions than sorting the whole vector.
+Sum the three biggest sums. First solution used `Vec::sort`. New solution does not use any sorting and should be `O(n)`.
 
 [source,rust,numbered]
 ----
