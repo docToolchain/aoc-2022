@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::{
     collections::HashMap,
     fmt::Display,
@@ -34,7 +35,10 @@ pub fn write_files(
     }
 
     let target_src_path = target_path.join("src");
-    println!("Creating directories for {}", target_src_path.to_string_lossy());
+    println!(
+        "Creating directories for {}",
+        target_src_path.to_string_lossy()
+    );
     fs::create_dir_all(target_src_path.as_path())?;
 
     // input file from web
@@ -55,8 +59,16 @@ pub fn write_files(
         &variables,
         target_path.join("Cargo.toml").as_path(),
     )?;
-    write_file(README_ADOC, &variables, target_path.join("README.adoc").as_path())?;
-    write_file(MAIN_RS, &variables, target_src_path.join("main.rs").as_path())?;
+    write_file(
+        README_ADOC,
+        &variables,
+        target_path.join("README.adoc").as_path(),
+    )?;
+    write_file(
+        MAIN_RS,
+        &variables,
+        target_src_path.join("main.rs").as_path(),
+    )?;
     write_file(LIB_RS, &variables, target_src_path.join("lib.rs").as_path())?;
 
     Ok(())
@@ -100,6 +112,54 @@ fn write_file(
     fs::write(path, content)?;
 
     Ok(())
+}
+
+pub fn update_files(runner_path: &Path, year: u16, day: u8) -> Result<(), Error> {
+    update_file(
+        "INCLUDE_PUZZLES",
+        format!("&mr_kaffee_{year}_{day}::puzzle(),").as_str(),
+        runner_path.join("src/main.rs").as_path(),
+    )?;
+    update_file(
+        "INCLUDE_PUZZLES",
+        format!(
+            "mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}"
+        )
+        .as_str(),
+        runner_path.join("Cargo.toml").as_path(),
+    )?;
+    Ok(())
+}
+
+pub fn update_file(separator: &str, line: &str, path: &Path) -> Result<bool, Error> {
+    println!("Updating file {} ...", path.to_string_lossy());
+    let re = Regex::new(
+        format!(r"(?ms:(?P<prefix>^.*{separator}:START.*?[\r\n]+)(?P<indent>\s*)(?P<data>.*?{separator}:END)(?P<suffix>.*$))")
+            .as_str(),
+    )
+    .unwrap();
+
+    let s = fs::read_to_string(path)?;
+    if let Some(captures) = re.captures(s.as_str()) {
+        // if regex matches, those groups exist
+        let prefix = captures.name("prefix").unwrap().as_str();
+        let indent = captures.name("indent").unwrap().as_str();
+        let data = captures.name("data").unwrap().as_str();
+        let suffix = captures.name("suffix").unwrap().as_str();
+
+        if !data.contains(line) {
+            let contents = format!("{prefix}{indent}{line}\n{indent}{data}{suffix}");
+            fs::write(path, contents)?;
+            println!("-> Updated");
+            Ok(true)
+        } else {
+            println!("-> Nothing to update");
+            Ok(false)
+        }
+    } else {
+        println!("-> No section to update ({separator}:START ... {separator}:END) found");
+        Ok(false)
+    }
 }
 
 const MAIN_RS: &str = r###"use mr_kaffee_aoc::{err::PuzzleError, GenericPuzzle};
