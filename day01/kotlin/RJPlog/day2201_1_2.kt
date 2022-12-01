@@ -33,12 +33,6 @@ fun calories(in1: Int): Int {
 
 fun main() {
 	var t1 = System.currentTimeMillis()
-	
-	
-	var result: String =  File("day2201_puzzle_input.txt").readLines().joinToString("\n")  // = "1000\n2000\n3000\n\n4000\n5000\n6000\n\n7000\n8000\n9000\n10000"
-	var resultDay01 = result.split("\n\n").map {it.split("\n").map {it.toInt()}.sum()}.sortedDescending()[0]
-	println(resultDay01)
-    
 
 	var solution1 = calories(1)
 	var solution2 = calories(2)
