@@ -1,6 +1,6 @@
 use clap::Parser;
-use std::{fs, io::Error, path::PathBuf};
 use mr_kaffee_template::*;
+use std::{fs, io::Error, path::PathBuf};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -19,6 +19,9 @@ struct Cli {
 
     #[arg(short, long)]
     force: bool,
+
+    #[arg(short, long)]
+    runner_path: Option<PathBuf>,
 }
 
 fn main() -> Result<(), Error> {
@@ -36,5 +39,11 @@ fn main() -> Result<(), Error> {
         cli.year,
         cli.day,
         cli.force,
-    )
+    )?;
+
+    if let Some(runner_path) = cli.runner_path {
+        update_files(runner_path.as_path(), cli.year, cli.day)?;
+    }
+
+    Ok(())
 }

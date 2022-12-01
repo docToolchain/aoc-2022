@@ -9,7 +9,12 @@ fn main() {
     let cli = cli::Cli::parse();
 
     // define puzzles
-    let puzzles: &[&dyn GenericPuzzle] = &[&mr_kaffee_2022_00::puzzle()];
+    let puzzles: &[&dyn GenericPuzzle] = &[
+        &mr_kaffee_2022_0::puzzle(),
+        // INCLUDE_PUZZLES:START
+        &mr_kaffee_2022_1::puzzle(),
+        // INCLUDE_PUZZLES:END
+    ];
 
     // sort puzzles
     let mut puzzles = Vec::from(puzzles);

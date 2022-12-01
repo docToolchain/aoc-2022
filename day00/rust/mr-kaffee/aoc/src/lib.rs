@@ -1,5 +1,5 @@
 use err::PuzzleError;
-use std::{str::FromStr, time::Instant};
+use std::time::Instant;
 
 /// Trait representing the result of a puzzle
 ///
@@ -46,35 +46,35 @@ where
 }
 
 /// The solution for an [Advent of Code](https:://adventofcode.com) puzzle of a specific day/year
-pub struct Puzzle<S, T1, R1, T2, R2>
+pub struct Puzzle<'a, S, T1, R1, T2, R2>
 where
-    S: 'static + FromStr,
+    S: 'static + TryFrom<&'a str>,
     T1: 'static + PartialEq + std::fmt::Display,
     R1: 'static + PuzzleResult<T1>,
     T2: 'static + PartialEq + std::fmt::Display,
     R2: 'static + PuzzleResult<T2>,
-    PuzzleError: From<<S as FromStr>::Err>,
+    PuzzleError: From<<S as TryFrom<&'a str>>::Error>,
 {
     /// year of the puzzle
     pub year: u16,
     /// day of the puzzle
     pub day: u16,
     /// the puzzle input
-    pub input: &'static str,
+    pub input: &'a str,
     /// the first star of the puzzle, if any
     pub star1: Option<Star<S, T1, R1>>,
     /// the second star of the puzzle, if any
     pub star2: Option<Star<S, T2, R2>>,
 }
 
-impl<S, T1, R1, T2, R2> Puzzle<S, T1, R1, T2, R2>
+impl<'a, S, T1, R1, T2, R2> Puzzle<'a, S, T1, R1, T2, R2>
 where
-    S: 'static + FromStr,
+    S: 'static + TryFrom<&'a str>,
     T1: 'static + PartialEq + std::fmt::Display,
     R1: 'static + PuzzleResult<T1>,
     T2: 'static + PartialEq + std::fmt::Display,
     R2: 'static + PuzzleResult<T2>,
-    PuzzleError: From<<S as FromStr>::Err>,
+    PuzzleError: From<<S as TryFrom<&'a str>>::Error>,
 {
     /// Solve a puzzle
     ///
@@ -85,13 +85,25 @@ where
     /// # use mr_kaffee_aoc::{Puzzle,Star,err::PuzzleError,PuzzleResult};
     /// # use std::error::Error;
     /// // a simple puzzle instance with a star that simply outputs the input
-    /// let puzzle: Puzzle<usize, usize, usize, usize, usize> = Puzzle {
+    /// struct Data {
+    ///     data: usize,
+    /// }
+    /// 
+    /// impl <'a> TryFrom<&'a str> for Data {
+    ///     type Error = std::num::ParseIntError;
+    /// 
+    ///     fn try_from(s: &'a str) -> Result<Data, Self::Error> {
+    ///         s.parse().map(|data| Self { data })
+    ///     }
+    /// }
+    /// 
+    /// let puzzle: Puzzle<'_, Data, usize, usize, usize, usize> = Puzzle {
     ///     year: 2022,
     ///     day: 24,
     ///     input: "10",
     ///     star1: Some(Star {
     ///         name: "my star",
-    ///         f: &(|v| *v),
+    ///         f: &(|v| v.data),
     ///         exp: Some(10),
     ///     }),
     ///     star2: None,
@@ -105,7 +117,7 @@ where
     pub fn solve(&self) -> Result<(Option<T1>, Option<T2>), PuzzleError> {
         let t = Instant::now();
 
-        let data = self.input.parse::<S>()?;
+        let data = self.input.try_into()?;
 
         let sol1 = self
             .star1
@@ -166,14 +178,14 @@ where
     }
 }
 
-impl<S, T1, R1, T2, R2> GenericPuzzle for Puzzle<S, T1, R1, T2, R2>
+impl<'a, S, T1, R1, T2, R2> GenericPuzzle for Puzzle<'a, S, T1, R1, T2, R2>
 where
-    S: 'static + FromStr,
+    S: 'static + TryFrom<&'a str>,
     T1: 'static + PartialEq + std::fmt::Display,
     R1: 'static + PuzzleResult<T1>,
     T2: 'static + PartialEq + std::fmt::Display,
     R2: 'static + PuzzleResult<T2>,
-    PuzzleError: From<<S as FromStr>::Err>,
+    PuzzleError: From<<S as TryFrom<&'a str>>::Error>,
 {
     /// Calls the [`Puzzle::solve``] function and returns `true` if it does not return
     /// an [`Result::Err`].
@@ -209,7 +221,7 @@ pub type SolverFun<IN, R> = dyn Fn(&IN) -> R;
 /// The solution for one star for a specific [`Puzzle`]
 pub struct Star<S, T, R>
 where
-    S: 'static + FromStr,
+    S: 'static,
     T: 'static + PartialEq + std::fmt::Display,
     R: 'static + PuzzleResult<T>,
 {
@@ -224,7 +236,7 @@ where
 
 impl<S, T, R> Star<S, T, R>
 where
-    S: 'static + FromStr,
+    S: 'static,
     T: 'static + PartialEq + std::fmt::Display,
     R: 'static + PuzzleResult<T>,
 {
@@ -464,10 +476,10 @@ mod test {
         values: Vec<usize>,
     }
 
-    impl FromStr for Data {
-        type Err = PuzzleError;
+    impl <'a> TryFrom<&'a str> for Data {
+        type Error = PuzzleError;
 
-        fn from_str(s: &str) -> Result<Self, Self::Err> {
+        fn try_from(s: &'a str) -> Result<Self, Self::Error> {
             Ok(Self {
                 values: s
                     .split(',')
@@ -479,7 +491,7 @@ mod test {
 
     #[test]
     fn test_parse_fail() {
-        let data = "100,a".parse::<Data>();
+        let data = Data::try_from("100,a");
 
         let error = data.err().expect("No error");
 

@@ -1,9 +1,8 @@
-use std::{convert::Infallible, str::FromStr};
-
 use mr_kaffee_aoc::{Puzzle, Star};
+use std::convert::Infallible;
 
 // tag::definition[]
-pub fn puzzle() -> Puzzle<PuzzleData, usize, usize, usize, usize> {
+pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
     Puzzle {
         year: 2022,
         day: 0,
@@ -20,21 +19,21 @@ pub fn puzzle() -> Puzzle<PuzzleData, usize, usize, usize, usize> {
 
 // tag::data-structures[]
 pub struct PuzzleData {
-    s: String,
+    input: &'static str,
 }
 
-impl FromStr for PuzzleData {
-    type Err = Infallible;
+impl TryFrom<&'static str> for PuzzleData {
+    type Error = Infallible;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self { s: s.into() })
+    fn try_from(input: &'static str) -> Result<Self, Self::Error> {
+        Ok(Self { input })
     }
 }
 //end::data-structures[]
 
 // tag::solution[]
 pub fn star_1(data: &PuzzleData) -> usize {
-    println!("{}", data.s);
+    println!("{}", data.input);
     0
 }
 // end::solution[]
@@ -49,7 +48,7 @@ mod tests {
     #[test]
     pub fn test_something() {
         let puzzle = puzzle();
-        assert!(puzzle.solve_handle_err());        
+        assert!(puzzle.solve_handle_err());
     }
 }
 // end::tests[]

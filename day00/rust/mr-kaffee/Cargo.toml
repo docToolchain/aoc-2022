@@ -1,5 +1,5 @@
 [package]
-name = "mr-kaffee-2022-00"
+name = "mr-kaffee-2022-0"
 version = "0.1.0"
 edition = "2021"
 
@@ -18,3 +18,7 @@ itertools = "0.10.*"
 clap = { version = "4.*", features = ["derive"] }
 regex = "1.*"
 lazy_static = "1.*"
+
+# INCLUDE_PUZZLES:START
+mr-kaffee-2022-1 = { path = "../../../day01/rust/mr-kaffee/"}
+# INCLUDE_PUZZLES:END
