@@ -150,6 +150,11 @@
 <li><a href="#_day_00_hello_world">Day 00 Hello World!</a></li>
 </ul>
 </li>
+<li><a href="#_day_01_kotlin">Day 01: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_01_calorie_counting">Day 01 Calorie Counting</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -195,6 +200,53 @@ Mastodon: <a href="https://mastodon.social/@corneil">@corneil@mastodon.social</a
 <div class="paragraph">
 <p>My aim with <a href="https://adventofcode.com/2021">Advent of Code</a> is to write code solving the puzzles in a way that is understandable to a wide audience.
 Feel free to reach out with comments at the links above.</p>
+</div>
+<a id="day01" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_01_kotlin"><a class="anchor" href="#_day_01_kotlin"></a><a class="link" href="#_day_01_kotlin">Day 01: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_01_calorie_counting"><a class="anchor" href="#_day_01_calorie_counting"></a><a class="link" href="#_day_01_calorie_counting">Day 01 Calorie Counting</a></h4>
+<div class="paragraph">
+<p>The day was lines representing the calories of food items carried by elves and separated by blank lines.
+Kotlin File has a readLines function that makes it easy to parse the input, calculate the calories for each elf and add to a list.
+For part one the max value it the answer.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">    fun findCalories(input: List&lt;String&gt;): List&lt;Int&gt; {
+        val elves = mutableListOf&lt;Int&gt;()
+        var calories = 0
+        for (line in input) {
+            if (line.isBlank()) {
+                elves.add(calories)
+                calories = 0
+            } else {
+                calories += line.toInt()
+            }
+        }
+        elves.add(calories)
+        return elves
+    }
+
+
+    fun findMaxCalories(input: List&lt;String&gt;): Int {
+        val calories = findCalories(input)
+        return calories.max()
+    }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For part two the result is the sum of the first three when sorted in descending order. Kotlin has the <code>take</code> method on collections which is very useful in this case.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">    fun topThree(input: List&lt;String&gt;): Int {
+        val calories = findCalories(input)
+        return calories.sortedDescending().take(3).sum()
+    }</code></pre>
+</div>
 </div>
 </div>
 </div>
