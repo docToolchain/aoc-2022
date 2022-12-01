@@ -219,7 +219,28 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">Unresolved directive in ../../../../../../day01/kotlin/RJPlog/README.adoc - include::day2201_1_2.kts[tags=calories]</code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun calories(in1: Int): Int {
+
+	var caloriesPerElf = mutableListOf&lt;Int&gt;()
+	var calories: Int = 0
+
+	File("day2201_puzzle_input.txt").forEachLine {
+		if (it == "") {
+			caloriesPerElf.add(calories)
+			calories = 0
+		} else {
+			calories += it.toInt()
+		}
+	}
+	caloriesPerElf.add(calories)
+
+	if (in1 == 1) {
+		return caloriesPerElf.max() ?: 0
+	} else {
+		return caloriesPerElf.sorted().takeLast(3).sum()
+	}
+
+}</code></pre>
 </div>
 </div>
 </div>
@@ -233,7 +254,28 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">Unresolved directive in ../../../../../../day01/kotlin/RJPlog/README.adoc - include::day2201_1_2.kts[tags=calories]</code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun calories(in1: Int): Int {
+
+	var caloriesPerElf = mutableListOf&lt;Int&gt;()
+	var calories: Int = 0
+
+	File("day2201_puzzle_input.txt").forEachLine {
+		if (it == "") {
+			caloriesPerElf.add(calories)
+			calories = 0
+		} else {
+			calories += it.toInt()
+		}
+	}
+	caloriesPerElf.add(calories)
+
+	if (in1 == 1) {
+		return caloriesPerElf.max() ?: 0
+	} else {
+		return caloriesPerElf.sorted().takeLast(3).sum()
+	}
+
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -241,7 +283,18 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">Unresolved directive in ../../../../../../day01/kotlin/RJPlog/README.adoc - include::day2201_1_2.kts[tags=output]</code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">// print solution for part 1
+	println("*******************************")
+	println("--- Day 1: Calorie Counting ---")
+	println("*******************************")
+	println("Solution for part1")
+	println("   $solution1 is that Elf carrying?")
+	println()
+// print solution for part 2
+	println("*******************************")
+	println("Solution for part2")
+	println("   $solution2 are those Elves carrying")
+	println()</code></pre>
 </div>
 </div>
 </div>
