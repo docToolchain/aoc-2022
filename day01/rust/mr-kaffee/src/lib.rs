@@ -10,12 +10,12 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
         star1: Some(Star {
             name: "Star 1",
             f: &star_1,
-            exp: Some(67658),
+            exp: Some(67_658),
         }),
         star2: Some(Star {
             name: "Star 2",
             f: &star_2,
-            exp: Some(200158),
+            exp: Some(200_158),
         }),
     }
 }
