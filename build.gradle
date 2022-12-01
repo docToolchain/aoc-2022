@@ -262,7 +262,7 @@ include::../../../../profiles/allUsers.adoc[]
                     langDays ++
                     entry = codersForLang[currentDayAnchor].collect { coder ->
                         langCoders ++
-                       "image:{${coder}-avatar}[width=32,link=/generated/coder/${coder}/generatedDays.html#_day_${currentDay.padLeft(2,'0')}_${currentLanguage.key}]"
+                       "image:{${coder}-avatar}[width=32,link=/aoc-2022/generated/coder/${coder}/generatedDays.html#_day_${currentDay.padLeft(2,'0')}_${currentLanguage.key}]"
                     }.join(" ")
                 }
                 return entry

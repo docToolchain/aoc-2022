@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::{
     collections::HashMap,
     fmt::Display,
@@ -33,9 +34,12 @@ pub fn write_files(
         ));
     }
 
-    let src_path = target_path.join("src");
-    println!("Creating directories for {}", src_path.to_string_lossy());
-    fs::create_dir_all(src_path.as_path())?;
+    let target_src_path = target_path.join("src");
+    println!(
+        "Creating directories for {}",
+        target_src_path.to_string_lossy()
+    );
+    fs::create_dir_all(target_src_path.as_path())?;
 
     // input file from web
     write_file(
@@ -55,8 +59,17 @@ pub fn write_files(
         &variables,
         target_path.join("Cargo.toml").as_path(),
     )?;
-    write_file(MAIN_RS, &variables, src_path.join("main.rs").as_path())?;
-    write_file(LIB_RS, &variables, src_path.join("lib.rs").as_path())?;
+    write_file(
+        README_ADOC,
+        &variables,
+        target_path.join("README.adoc").as_path(),
+    )?;
+    write_file(
+        MAIN_RS,
+        &variables,
+        target_src_path.join("main.rs").as_path(),
+    )?;
+    write_file(LIB_RS, &variables, target_src_path.join("lib.rs").as_path())?;
 
     Ok(())
 }
@@ -101,6 +114,54 @@ fn write_file(
     Ok(())
 }
 
+pub fn update_files(runner_path: &Path, year: u16, day: u8) -> Result<(), Error> {
+    update_file(
+        "INCLUDE_PUZZLES",
+        format!("&mr_kaffee_{year}_{day}::puzzle(),").as_str(),
+        runner_path.join("src/main.rs").as_path(),
+    )?;
+    update_file(
+        "INCLUDE_PUZZLES",
+        format!(
+            "mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}"
+        )
+        .as_str(),
+        runner_path.join("Cargo.toml").as_path(),
+    )?;
+    Ok(())
+}
+
+pub fn update_file(separator: &str, line: &str, path: &Path) -> Result<bool, Error> {
+    println!("Updating file {} ...", path.to_string_lossy());
+    let re = Regex::new(
+        format!(r"(?ms:(?P<prefix>^.*{separator}:START.*?[\r\n]+)(?P<indent>\s*)(?P<data>.*?{separator}:END)(?P<suffix>.*$))")
+            .as_str(),
+    )
+    .unwrap();
+
+    let s = fs::read_to_string(path)?;
+    if let Some(captures) = re.captures(s.as_str()) {
+        // if regex matches, those groups exist
+        let prefix = captures.name("prefix").unwrap().as_str();
+        let indent = captures.name("indent").unwrap().as_str();
+        let data = captures.name("data").unwrap().as_str();
+        let suffix = captures.name("suffix").unwrap().as_str();
+
+        if !data.contains(line) {
+            let contents = format!("{prefix}{indent}{line}\n{indent}{data}{suffix}");
+            fs::write(path, contents)?;
+            println!("-> Updated");
+            Ok(true)
+        } else {
+            println!("-> Nothing to update");
+            Ok(false)
+        }
+    } else {
+        println!("-> No section to update ({separator}:START ... {separator}:END) found");
+        Ok(false)
+    }
+}
+
 const MAIN_RS: &str = r###"use mr_kaffee_aoc::{err::PuzzleError, GenericPuzzle};
 use mr_kaffee_{YEAR}_{DAY}::*;
 
@@ -109,11 +170,11 @@ fn main() -> Result<(), PuzzleError> {
 }
 "###;
 
-const LIB_RS: &str = r###"use mr_kaffee_aoc::{Puzzle, Star};
-use input::*;
+const LIB_RS: &str = r###"use input::*;
+use mr_kaffee_aoc::{Puzzle, Star};
 
 /// the puzzle
-pub fn puzzle() -> Puzzle<PuzzleData, usize, usize, usize, usize> {
+pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
     Puzzle {
         year: {YEAR},
         day: {DAY},
@@ -131,63 +192,90 @@ pub fn puzzle() -> Puzzle<PuzzleData, usize, usize, usize, usize> {
     }
 }
 
+// tag::input[]
 pub mod input {
-    use core::fmt;
-    use std::{convert::Infallible, str::FromStr};
+    use std::convert::Infallible;
 
     #[derive(Debug)]
     pub struct PuzzleData {
-        input: String,
+        pub input: &'static str,
     }
 
-    impl FromStr for PuzzleData {
-        type Err = Infallible;
+    impl TryFrom<&'static str> for PuzzleData {
+        type Error = Infallible;
 
         /// parse the puzzle input
-        ///
-        /// # Examples
-        /// ```
-        /// # use mr_kaffee_{YEAR}_{DAY}::input::*;
-        /// let data = "Hello World".parse::<PuzzleData>().unwrap();
-        /// assert_eq!("Hello World", format!("{}", data));
-        /// ```    
-        fn from_str(s: &str) -> Result<Self, Self::Err> {
-            Ok(PuzzleData { input: s.into() })
-        }
-    }
-
-    impl fmt::Display for PuzzleData {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            self.input.fmt(f)
+        fn try_from(s: &'static str) -> Result<Self, Self::Error> {
+            Ok(PuzzleData { input: s })
         }
     }
 }
+// end::input[]
 
+// tag::star_1[]
 pub fn star_1(data: &PuzzleData) -> usize {
-    println!("{}", data);
+    println!("{}", data.input);
     0
 }
+// end::star_1[]
 
+// tag::star_2[]
 pub fn star_2(data: &PuzzleData) -> usize {
     println!("{:?}", data);
     0
 }
+// end::star_2[]
 
+// tag::tests[]
 #[cfg(test)]
 mod tests {
     use super::*;
     use mr_kaffee_aoc::err::PuzzleError;
 
     const CONTENT: &str = r#"Hello World!
-Freedom"#;
+Advent of Code 2022"#;
 
     #[test]
     pub fn test_puzzle_data_from_str() -> Result<(), PuzzleError> {
-        let data = CONTENT.parse::<PuzzleData>()?;
-        assert_eq!(format!("{}", data), CONTENT.to_string());
+        let data = PuzzleData::try_from(CONTENT)?;
+        assert_eq!(data.input, CONTENT.to_string());
         Ok(())
     }
 }
+// end::tests[]
+"###;
+
+const README_ADOC: &str = r###"== Day {DAY}: _TODO_ ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/{YEAR}/day/{DAY}[AoC|{YEAR}|{DAY}].
+
+=== Input ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
 "###;
 
 const CARGO_TOML: &str = r###"[package]
