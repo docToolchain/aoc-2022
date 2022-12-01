@@ -1,0 +1,24 @@
+== Day 01
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea of this solution is to group the data into a list of lists.
+Once the data is grouped into a list of lists simple Python functions
+like `sum` and `max` can be used to solve the exercise.
+
+
+=== What did I learn
+
+How to use `.vimspector.json` files to manage debug configurations.
+
+=== How to run
+
+Run using:
+`$ python day_01.py --help`
