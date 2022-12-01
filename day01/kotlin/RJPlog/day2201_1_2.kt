@@ -1,6 +1,11 @@
 import java.io.File
 import kotlin.math.*
 
+// tag::oneliner[]
+fun day01Part1Solution() = File("day2201_puzzle_input.txt").readLines().joinToString("\n").split("\n\n").map {it.split("\n").map {it.toInt()}.sum()}.sortedDescending()[0]
+
+fun day01Part2Solution() = File("day2201_puzzle_input.txt").readLines().joinToString("\n").split("\n\n").map {it.split("\n").map {it.toInt()}.sum()}.sortedDescending().take(3).sum()
+// end::oneliner[]
 
 // tag::calories[]
 fun calories(in1: Int): Int {
@@ -23,7 +28,6 @@ fun calories(in1: Int): Int {
 	} else {
 		return caloriesPerElf.sorted().takeLast(3).sum()
 	}
-
 }
 // end::calories[]
 
@@ -40,11 +44,15 @@ fun main() {
 	println("*******************************")
 	println("Solution for part1")
 	println("   $solution1 is that Elf carrying?")
+	print("   oneliner: ")
+	println(day01Part1Solution())
 	println()
 // print solution for part 2
 	println("*******************************")
 	println("Solution for part2")
 	println("   $solution2 are those Elves carrying")
+	print("   oneliner: ")
+	println(day01Part2Solution())
 	println()
 // end::output[]
 
