@@ -1,0 +1,40 @@
+== Day 1: Calorie Counting ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/1[AoC|2022|1].
+
+Nothing very interesting today.
+
+=== Input ===
+
+Parse everything in a vec of vecs (after having read instructions for part 1 and 2, vec of sums would have been sufficient)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+Just find the biggest sum (I use `fold` instead of `max` to not handle to `Option::None` case)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Sum the three biggest sums. Probably there is faster solutions than sorting the whole vector.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+No tests today. It was too simple.
+
+=== Today I learned ===
+
+Not so much. My template works.
