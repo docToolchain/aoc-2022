@@ -88,6 +88,13 @@ impl<'a> InputProvider for InputLoader<'a> {
         reqwest::blocking::Client::new()
             .get(format!("https://adventofcode.com/{}/day/{}/input", year, day).as_str())
             .header("Cookie", format!("session={}", self.session))
+            .header("User-Agent", 
+                format!(
+                    "{}/{} (github.com/mr-kaffee/aoc-2022/day00/rust/mr-kaffee/template by peter@die-wielands.net)", 
+                    env!("CARGO_PKG_NAME"), 
+                    env!("CARGO_PKG_VERSION")
+                )
+            )
             .send()
             .map_err(|err| Error::new(ErrorKind::Other, err))?
             .text()
