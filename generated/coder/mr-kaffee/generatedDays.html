@@ -361,14 +361,14 @@ mod tests {
 <div class="sect4">
 <h5 id="_star_1"><a class="anchor" href="#_star_1"></a><a class="link" href="#_star_1">Star 1</a></h5>
 <div class="paragraph">
-<p>Just find the biggest sum (I use <code>fold</code> instead of <code>max</code> to not handle to <code>Option::None</code> case)</p>
+<p>Just find the biggest sum (I use <code>fold</code> instead of <code>max</code> to not handle the <code>Option::None</code> case)</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
     data.calories
         .iter()
-        .fold(0, |mx, elf| mx.max(elf.iter().fold(0, |sm, c| sm + c)))
+        .fold(0, |mx, elf| mx.max(elf.iter().sum()))
 }</code></pre>
 </div>
 </div>
@@ -376,20 +376,29 @@ mod tests {
 <div class="sect4">
 <h5 id="_star_2"><a class="anchor" href="#_star_2"></a><a class="link" href="#_star_2">Star 2</a></h5>
 <div class="paragraph">
-<p>Sum the three biggest sums. Probably there is faster solutions than sorting the whole vector.</p>
+<p>Sum the three biggest sums. First solution used <code>Vec::sort</code>. New solution does not use any sorting and should be <code>O(n)</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
-    let mut calories = data
-        .calories
+    data.calories
         .iter()
-        .map(|elf| elf.iter().fold(0, |sm, c| sm + c))
-        .collect::&lt;Vec&lt;_&gt;&gt;();
-
-    calories.sort();
-
-    calories.iter().rev().take(3).fold(0, |sm, c| sm + c)
+        .map(|elf| elf.iter().sum())
+        .fold([0; 3], |mut mx, cal| {
+            if cal &gt; mx[0] {
+                mx[2] = mx[1];
+                mx[1] = mx[0];
+                mx[0] = cal;
+            } else if cal &gt; mx[1] {
+                mx[2] = mx[1];
+                mx[1] = cal;
+            } else if cal &gt; mx[2] {
+                mx[2] = cal;
+            }
+            mx
+        })
+        .iter()
+        .sum()
 }</code></pre>
 </div>
 </div>
