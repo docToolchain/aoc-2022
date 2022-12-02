@@ -12,7 +12,7 @@ How does it work: +
 Inside function _rockPaperScissors_ the puzzle input is read line by line. With a simple _when_ construct for each game the result is added to a final result.
 [source, kotlin, numbered]
 ....
-include::day2201_1_2.kts[tags=RPS]
+include::day2202_1_2.kt[tags=RPS]
 ....
 
 
@@ -26,5 +26,5 @@ The same function call is used only with a different input parameter and therefo
 At the end, both solutions are printed out. 
 [source, kotlin, numbered]
 ....
-include::day2201_1_2.kts[tags=output]
+include::day2202_1_2.kt[tags=output]
 ....
