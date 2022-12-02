@@ -155,6 +155,11 @@
 <li><a href="#_day_01_calorie_counting">Day 01 Calorie Counting</a></li>
 </ul>
 </li>
+<li><a href="#_day_02_kotlin">Day 02: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_02_rock_paper_scissors">Day 02 Rock Paper Scissors</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -246,6 +251,144 @@ For part one the max value it the answer.</p>
         val calories = findCalories(input)
         return calories.sortedDescending().take(3).sum()
     }</code></pre>
+</div>
+</div>
+<a id="day02" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_02_kotlin"><a class="anchor" href="#_day_02_kotlin"></a><a class="link" href="#_day_02_kotlin">Day 02: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_02_rock_paper_scissors"><a class="anchor" href="#_day_02_rock_paper_scissors"></a><a class="link" href="#_day_02_rock_paper_scissors">Day 02 Rock Paper Scissors</a></h4>
+<div class="paragraph">
+<p>Part 1 meant we needed to parse input representing an opponent hand when playing RPS, and we had to assume the 2nd input was an answer we needed to provide while "cheating".</p>
+</div>
+<div class="paragraph">
+<p>Part 2 came with a curveball in that the 2nd input should be treated as an outcome. This means we needed to find the correct hand for the outcome.
+The score calculation was a function of the outcome and the hand we selected.</p>
+</div>
+<div class="paragraph">
+<p>Below is the final code and there are loaders for creating the rounds for part 1 and part 2.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">enum class Rps(val identifiers: String, val shapeScore: Int) {
+    ROCK("AX", 1),
+    PAPER("BY", 2),
+    SCISSORS("CZ", 3)
+}
+
+enum class Outcome(val identifier: String, val score: Int) {
+    LOSE("X", 0),
+    DRAW("Y", 3),
+    WIN("Z", 6)
+}
+
+data class Hand(val them: Rps, val me: Rps)
+
+object Rules {
+
+    data class Rule(val loser: Rps, val winner: Rps)
+
+    private val beats = mapOf(
+        Rps.ROCK to Rule(Rps.SCISSORS, Rps.PAPER),
+        Rps.PAPER to Rule(Rps.ROCK, Rps.SCISSORS),
+        Rps.SCISSORS to Rule(Rps.PAPER, Rps.ROCK)
+    )
+
+    fun winner(shape: Rps): Rps {
+        val winner = beats[shape] ?: error("Cannot find $shape")
+        return winner.winner
+    }
+
+    fun loser(shape: Rps): Rps {
+        val loser = beats[shape] ?: error("Cannot find $shape")
+        return loser.loser
+    }
+
+    fun didIWin(round: Hand): Boolean {
+        val shape = loser(round.me)
+        return shape == round.them
+    }
+
+}
+
+fun main() {
+
+    fun toRps(hint: String): Rps {
+        return Rps.values().find { it.identifiers.contains(hint) } ?: error("Invalid RPS $hint")
+    }
+
+    fun toOutcome(outcome: String): Outcome {
+        return Outcome.values().find { it.identifier == outcome } ?: error("Invalid Outcome:$outcome")
+    }
+
+    fun readRounds(input: List&lt;String&gt;): List&lt;Hand&gt; {
+        return input.map {
+            val hints = it.split(" ")
+            Hand(toRps(hints[0]), toRps(hints[1]))
+        }
+    }
+
+    // choose a shape to match the outcome
+    fun chooseShape(shape: Rps, outcome: Outcome): Rps {
+        return when (outcome) {
+            Outcome.DRAW -&gt; shape
+            Outcome.WIN -&gt; Rules.winner(shape)
+            Outcome.LOSE -&gt; Rules.loser(shape)
+        }
+    }
+
+    // convert 2nd to outcome and then find a shape to match outcome given 1st
+    fun readRounds2(input: List&lt;String&gt;): List&lt;Hand&gt; {
+        return input.map {
+            val hints = it.split(" ")
+            Pair(toRps(hints[0]), toOutcome(hints[1]))
+        }.map {
+            Hand(it.first, chooseShape(it.first, it.second))
+        }
+    }
+
+    fun calcRound(round: Hand): Int {
+        return when {
+            round.them == round.me -&gt; Outcome.DRAW.score
+            Rules.didIWin(round) -&gt; Outcome.WIN.score
+            else -&gt; Outcome.LOSE.score
+        }
+    }
+
+    fun calcScore(round: Hand): Int {
+        return round.me.shapeScore + calcRound(round)
+    }
+
+    fun calcTotal(rounds: List&lt;Hand&gt;): Int {
+        return rounds.sumOf { calcScore(it) }
+    }
+
+    fun part1() {
+
+        val testScore = calcTotal(readRounds(readInput("day02_test")))
+        println("Test Total = $testScore")
+        check(testScore == 15)
+
+        val total = calcTotal(readRounds(readInput("day02")))
+        println("Total = $total")
+
+    }
+
+    fun part2() {
+
+        val testScore2 = calcTotal(readRounds2(readInput("day02_test")))
+        println("Test Total 2 = $testScore2")
+        check(testScore2 == 12)
+
+        val total2 = calcTotal(readRounds2(readInput("day02")))
+        println("Total 2 = $total2")
+    }
+
+    part1()
+    part2()
+}</code></pre>
 </div>
 </div>
 </div>
