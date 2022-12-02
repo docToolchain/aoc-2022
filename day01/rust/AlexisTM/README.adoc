@@ -1,9 +1,7 @@
 == Day 01 Calorie Counting ==
 
-Oh, hi there!
-
-You can start it with (within the folder with input.txt)
-
-```rust
-cargo run --release
-```
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs
+----

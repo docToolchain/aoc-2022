@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fs};
 
+// end::solution[]
 fn solve(input: &String, quick_conversion: &HashMap<&str, u64>) -> u64 {
     let result: u64 = input
         .lines()
@@ -8,8 +9,15 @@ fn solve(input: &String, quick_conversion: &HashMap<&str, u64>) -> u64 {
         .fold(0u64, |acc, b| acc + quick_conversion[b]);
     return result;
 }
+// end::solution[]
 
 fn main() {
+    /*
+    A ROCK
+    B PAPER
+    C CISSOR
+    */
+
     let input = fs::read_to_string("input.txt").expect("Should have been able to read the file");
     let quick_conversion_p1: HashMap<&str, u64> = [
         ("A X", 4),
@@ -26,12 +34,7 @@ fn main() {
     .cloned()
     .collect();
 
-    /*
-    A ROCK
-    B PAPER
-    C CISSOR
-    */
-
+    // tag::input[]
     let quick_conversion_p2: HashMap<&str, u64> = [
         ("A X", 3),
         ("A Y", 4),
@@ -48,6 +51,7 @@ fn main() {
     .collect();
     let p1 = solve(&input, &quick_conversion_p1);
     let p2 = solve(&input, &quick_conversion_p2);
+    // end::input[]
 
     print!("{} {}", p1, p2);
 }
