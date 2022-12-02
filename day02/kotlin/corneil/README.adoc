@@ -1,0 +1,13 @@
+== Day 02 Rock Paper Scissors
+
+Part 1 meant we needed to parse input representing an opponent hand when playing RPS, and we had to assume the 2nd input was an answer we needed to provide while "cheating".
+
+Part 2 came with a curveball in that the 2nd input should be treated as an outcome. This means we needed to find the correct hand for the outcome.
+The score calculation was a function of the outcome and the hand we selected.
+
+Below is the final code and there are loaders for creating the rounds for part 1 and part 2.
+
+[source,kotlin]
+....
+include::src/solution.kt[]
+....
