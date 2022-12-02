@@ -1,20 +1,7 @@
 import java.io.File
 import kotlin.math.*
 
-// tag::oneliner[]
-fun day02Part1Solution() = File("day2201_puzzle_input.txt").readText().split("\r\n\r\n").map {
-	it.split("\r\n").map { it.toInt() }.sum()
-}.max() ?: 0
-//fun day01Part1Solution() = File("day2201_puzzle_input.txt").readLines().joinToString("\n").split("\n\n").map {it.split("\n").map {it.toInt()}.sum()}.sortedDescending()[0]
-
-fun day02Part2Solution() = File("day2201_puzzle_input.txt").readText().split("\r\n\r\n").map {
-	it.split("\r\n").map { it.toInt() }.sum()
-}.sorted().takeLast(3).sum()
-//fun day01Part2Solution() = File("day2201_puzzle_input.txt").readLines().joinToString("\n").split("\n\n").map {it.split("\n").map {it.toInt()}.sum()}.sortedDescending().take(3).sum()
-// end::oneliner[]
-
-
-// tag::calories[]
+// tag::RPS[]
 fun rockPaperScissors(in1: Int): Int {
 
 	var result: Int = 0
@@ -48,7 +35,7 @@ fun rockPaperScissors(in1: Int): Int {
 	}
 	return result
 }
-// end::calories[]
+// end::RPS[]
 
 fun main() {
 	var t1 = System.currentTimeMillis()
