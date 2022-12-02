@@ -32,11 +32,6 @@
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/ojuaf/generatedDays.html</loc>
-    	<lastmod>2022-12-02</lastmod>
-    </url>
-
-    <url>
     	<loc>https://doctoolchain.org/aoc-2022//generated/coder/RJPlog/generatedDays.html</loc>
     	<lastmod>2022-12-02</lastmod>
     </url>
@@ -47,7 +42,12 @@
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/jamhocken/generatedDays.html</loc>
+    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/ojuaf/generatedDays.html</loc>
+    	<lastmod>2022-12-02</lastmod>
+    </url>
+
+    <url>
+    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/AlexisTM/generatedDays.html</loc>
     	<lastmod>2022-12-02</lastmod>
     </url>
 
@@ -62,7 +62,7 @@
     </url>
 
     <url>
-    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/AlexisTM/generatedDays.html</loc>
+    	<loc>https://doctoolchain.org/aoc-2022//generated/coder/jamhocken/generatedDays.html</loc>
     	<lastmod>2022-12-02</lastmod>
     </url>
 
