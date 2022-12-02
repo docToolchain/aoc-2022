@@ -1,23 +1,29 @@
 use input::*;
-use mr_kaffee_aoc::{Puzzle, Star};
+use mr_kaffee_aoc::Puzzle;
 
 /// the puzzle
+#[cfg(not(feature = "modulo"))]
 pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
     Puzzle {
         year: 2022,
         day: 2,
         input: include_str!("../input.txt"),
-        star1: Some(Star {
+        star1: Some(mr_kaffee_aoc::Star {
             name: "Star 1",
             f: &star_1,
             exp: Some(11_063),
         }),
-        star2: Some(Star {
+        star2: Some(mr_kaffee_aoc::Star {
             name: "Star 2",
             f: &star_2,
             exp: Some(10_349),
         }),
     }
+}
+
+#[cfg(feature = "modulo")]
+pub fn puzzle() -> Puzzle<'static, alternative::PuzzleData, usize, usize, usize, usize> {
+    alternative::puzzle()
 }
 
 // tag::input[]
@@ -157,3 +163,98 @@ C Z"#;
     }
 }
 // end::tests[]
+
+#[cfg(feature = "modulo")]
+pub mod alternative {
+    use mr_kaffee_aoc::{Puzzle, Star};
+
+    pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
+        Puzzle {
+            year: 2022,
+            day: 2,
+            input: include_str!("../input.txt"),
+            star1: Some(Star {
+                name: "Star 1",
+                f: &star_1,
+                exp: Some(11_063),
+            }),
+            star2: Some(Star {
+                name: "Star 2",
+                f: &star_2,
+                exp: Some(10_349),
+            }),
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        pub strategy: Vec<(usize, usize)>,
+    }
+
+    // tag::parse_variants[]
+    impl TryFrom<&'static str> for PuzzleData {
+        type Error = String;
+
+        /// parse the puzzle input
+        fn try_from(s: &'static str) -> Result<Self, Self::Error> {
+            if cfg!(feature = "unchecked_parse") {
+                Ok(Self {
+                    strategy: s
+                        .lines()
+                        .map(str::as_bytes)
+                        .map(|bytes| ((bytes[0] - b'A') as usize, (bytes[2] - b'X') as usize))
+                        .collect(),
+                })
+            } else {
+                s.lines()
+                    .map(|l| {
+                        l.split_once(' ')
+                            .ok_or_else(|| format!("Could not parse line '{l}'"))
+                            .and_then(|(a, b)| {
+                                match a {
+                                    "A" => Ok(0),
+                                    "B" => Ok(1),
+                                    "C" => Ok(2),
+                                    _ => Err(format!("Expected one of A, B, C, found '{a}'")),
+                                }
+                                .and_then(|a| match b {
+                                    "X" => Ok((a, 0)),
+                                    "Y" => Ok((a, 1)),
+                                    "Z" => Ok((a, 2)),
+                                    _ => Err(format!("Expected one of X, Y, Z, found '{b}'")),
+                                })
+                            })
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+                    .map(|strategy| Self { strategy })
+            }
+        }
+    }
+    // end::parse_variants[]
+
+    // tag::alternative[]
+    pub fn star_1(data: &PuzzleData) -> usize {
+        // 0 rock
+        // 1 paper
+        // 2 scissor
+        // (rock - paper + 1) % 3 = 0
+        // (rock - rock + 1) % 3 = 1
+        // (rock - scissor + 1) % 3 = 2
+        data.strategy
+            .iter()
+            .map(|(a, b)| ((b + 4 - a) % 3) * 3 + (b + 1))
+            .sum()
+    }
+
+    pub fn star_2(data: &PuzzleData) -> usize {
+        // 0 rock, 1 paper, 2 scissor
+        // 0 loose, 1 draw, 2 win
+        // to loose, subtract 1 (% 3), to win add 1 (% 3)
+        // play (a + b - 1) % 3 -> add this in formula for first star
+        data.strategy
+            .iter()
+            .map(|(a, b)| b * 3 + (a + b + 2) % 3 + 1)
+            .sum()
+    }
+    // end::alternative[]
+}

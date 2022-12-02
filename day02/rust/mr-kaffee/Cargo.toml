@@ -8,3 +8,8 @@ edition = "2021"
 [dependencies]
 
 mr-kaffee-aoc = { path = "../../../day00/rust/mr-kaffee/aoc" }
+
+[features]
+
+modulo = []
+unchecked_parse = ["modulo"]
