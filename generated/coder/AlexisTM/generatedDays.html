@@ -215,7 +215,14 @@ Mastodon: <a href="https://fosstodon.org/@AlexisTM">@<a href="mailto:AlexisTM@fo
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">include::src/main.rs</code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use std::fs;
+
+fn main() {
+    let input = fs::read_to_string("input.txt")
+        .expect("Should have been able to read the file");
+
+    println!("Oh, I didn't see you there {}", input);
+}</code></pre>
 </div>
 </div>
 <a id="day01" />
@@ -230,7 +237,33 @@ Mastodon: <a href="https://fosstodon.org/@AlexisTM">@<a href="mailto:AlexisTM@fo
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">include::src/main.rs</code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use std::fs;
+
+fn main() {
+    let input = fs::read_to_string("input.txt")
+        .expect("Should have been able to read the file");
+
+
+    let elves_data = input.split("\n\n");
+    let mut calories = Vec::&lt;u64&gt;::new();
+
+    for elf in elves_data {
+        let val: u64 = elf.split("\n")
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(|s| -&gt; u64 {s.parse().unwrap()})
+        .fold(0u64, |acc, b| acc + b);
+        calories.push(val);
+    }
+
+    println!("{}", calories.iter().max().unwrap());
+
+
+    // Top 3
+    calories.sort();
+    let sum: u64 = calories.iter().rev().take(3).sum();
+    println!("{}", sum);
+}</code></pre>
 </div>
 </div>
 <a id="day02" />
@@ -244,7 +277,7 @@ Mastodon: <a href="https://fosstodon.org/@AlexisTM">@<a href="mailto:AlexisTM@fo
 <p>This was solved in two step: Assign a value for each possible input (9 in total), then just sum them using a fold over the iteration.</p>
 </div>
 <div class="paragraph">
-<p><code>main.rs</code></p>
+<p><code>main.rs # input</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -270,11 +303,18 @@ Mastodon: <a href="https://fosstodon.org/@AlexisTM">@<a href="mailto:AlexisTM@fo
 <p>The solution becomes trivial with this methodology</p>
 </div>
 <div class="paragraph">
-<p><code>main.rs</code></p>
+<p><code>main.rs # solution</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust"></code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">fn solve(input: &amp;String, quick_conversion: &amp;HashMap&lt;&amp;str, u64&gt;) -&gt; u64 {
+    let result: u64 = input
+        .lines()
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .fold(0u64, |acc, b| acc + quick_conversion[b]);
+    return result;
+}</code></pre>
 </div>
 </div>
 </div>
