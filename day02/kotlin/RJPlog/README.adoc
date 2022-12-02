@@ -2,7 +2,7 @@
 
 This solution is written in Kotlin.
 
-The original puzzle can be found at https://adventofcode.com/2022/day/1
+The original puzzle can be found at https://adventofcode.com/2022/day/2
 
 
 === First Star
