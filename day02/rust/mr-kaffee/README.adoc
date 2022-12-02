@@ -1,4 +1,4 @@
-== Day 2: _TODO_ ==
+== Day 2: Rock Paper Scissors ==
 
 https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/2[AoC|2022|2].
 
@@ -6,7 +6,7 @@ https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/2[AoC|
 
 I have two enums to parse the first column (A, B, C to `RockPaperScissors`) and the second column (X, Y, Z to `XYZ`).
 
-It would have been much simpler to parse both into 0, 1, 2 and than use some simple formulas later on, but my solution fails gracefully if something unexpected comes in the input ;)
+It would have been much simpler to parse both into 0, 1, 2 and than use some simple formulas later on (which I did as an alternative, see below), but my solution fails gracefully if something unexpected comes in the input ;)
 
 [source,rust,numbered]
 ----
@@ -61,4 +61,23 @@ include::src/lib.rs[tags=tests]
 
 === Today I learned ===
 
-I think it was the first time I used `Result::and_then` in a (maybe) meaningful way
+I think it was the first time I used `Result::and_then` in a (maybe) meaningful way.
+
+=== Alternative based on direct calculations ===
+
+I could not stop myself from implementing an alternative solution using direct calculations. Run the alternative solution with `cargo run --release --features modulo`
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=alternative]
+----
+
+I also implemented a parse function which does not check any inputs and will probably result in panics if something unexpected is in the input (to parse without error handling run `cargo run --release --features unchecked_parse`; this will automatically use the direct calculation variant)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=parse_variants]
+----
+
+Interestingly, not doing any error handling in parsing the input does not lead to any measurable speed-up. Maybe this is because the overall solution time is so small, that the differences are not distinguishable from noise?
+
