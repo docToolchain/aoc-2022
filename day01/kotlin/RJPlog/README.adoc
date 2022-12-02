@@ -35,7 +35,9 @@ include::day2201_1_2.kt[tags=output]
 
 === Add on
 
-Since today I had some free time, I tried to find another solution with only one line. There was still some trouble with using readText, I guess there is still some missmatch with the charset, I used readLines instead which is not as elegant, but for the time being I need to get back to some other stuff.
+Since today I had some free time, I tried to find another solution with only one line. There was still some trouble with using _readText_, I guess there is still some missmatch with the charset, I used _readLines_ instead which is not as elegant, but for the time being I need to get back to some other stuff.
+
+UPDATE: I found the issue with _readText()_, for new line not only _\n_ is in the input file but _\r\n_ which needs different splitting.
 [source, kotlin, numbered]
 ....
 include::day2201_1_2.kt[tags=oneliner]
