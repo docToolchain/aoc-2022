@@ -170,13 +170,14 @@
 </li>
 <li><a href="#_day_02_rust">Day 02: rust</a>
 <ul class="sectlevel3">
-<li><a href="#_day_2_todo">Day 2: <em>TODO</em></a>
+<li><a href="#_day_2_rock_paper_scissors">Day 2: Rock Paper Scissors</a>
 <ul class="sectlevel4">
 <li><a href="#_input_2">Input</a></li>
 <li><a href="#_star_1_2">Star 1</a></li>
 <li><a href="#_star_2_2">Star 2</a></li>
 <li><a href="#_tests_3">Tests</a></li>
 <li><a href="#_today_i_learned_2">Today I learned</a></li>
+<li><a href="#_alternative_based_on_direct_calculations">Alternative based on direct calculations</a></li>
 </ul>
 </li>
 </ul>
@@ -430,7 +431,7 @@ mod tests {
 <div class="sect2">
 <h3 id="_day_02_rust"><a class="anchor" href="#_day_02_rust"></a><a class="link" href="#_day_02_rust">Day 02: rust</a></h3>
 <div class="sect3">
-<h4 id="_day_2_todo"><a class="anchor" href="#_day_2_todo"></a><a class="link" href="#_day_2_todo">Day 2: <em>TODO</em></a></h4>
+<h4 id="_day_2_rock_paper_scissors"><a class="anchor" href="#_day_2_rock_paper_scissors"></a><a class="link" href="#_day_2_rock_paper_scissors">Day 2: Rock Paper Scissors</a></h4>
 <div class="paragraph">
 <p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/2">AoC|2022|2</a>.</p>
 </div>
@@ -440,7 +441,7 @@ mod tests {
 <p>I have two enums to parse the first column (A, B, C to <code>RockPaperScissors</code>) and the second column (X, Y, Z to <code>XYZ</code>).</p>
 </div>
 <div class="paragraph">
-<p>It would have been much simpler to parse both into 0, 1, 2 and than use some simple formulas later on, but my solution fails gracefully if something unexpected comes in the input ;)</p>
+<p>It would have been much simpler to parse both into 0, 1, 2 and than use some simple formulas later on (which I did as an alternative, see below), but my solution fails gracefully if something unexpected comes in the input ;)</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -617,7 +618,88 @@ C Z"#;
 <div class="sect4">
 <h5 id="_today_i_learned_2"><a class="anchor" href="#_today_i_learned_2"></a><a class="link" href="#_today_i_learned_2">Today I learned</a></h5>
 <div class="paragraph">
-<p>I think it was the first time I used <code>Result::and_then</code> in a (maybe) meaningful way</p>
+<p>I think it was the first time I used <code>Result::and_then</code> in a (maybe) meaningful way.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_alternative_based_on_direct_calculations"><a class="anchor" href="#_alternative_based_on_direct_calculations"></a><a class="link" href="#_alternative_based_on_direct_calculations">Alternative based on direct calculations</a></h5>
+<div class="paragraph">
+<p>I could not stop myself from implementing an alternative solution using direct calculations. Run the alternative solution with <code>cargo run --release --features modulo</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+        // 0 rock
+        // 1 paper
+        // 2 scissor
+        // (rock - paper + 1) % 3 = 0
+        // (rock - rock + 1) % 3 = 1
+        // (rock - scissor + 1) % 3 = 2
+        data.strategy
+            .iter()
+            .map(|(a, b)| ((b + 4 - a) % 3) * 3 + (b + 1))
+            .sum()
+    }
+
+    pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+        // 0 rock, 1 paper, 2 scissor
+        // 0 loose, 1 draw, 2 win
+        // to loose, subtract 1 (% 3), to win add 1 (% 3)
+        // play (a + b - 1) % 3 -&gt; add this in formula for first star
+        data.strategy
+            .iter()
+            .map(|(a, b)| b * 3 + (a + b + 2) % 3 + 1)
+            .sum()
+    }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>I also implemented a parse function which does not check any inputs and will probably result in panics if something unexpected is in the input (to parse without error handling run <code>cargo run --release --features unchecked_parse</code>; this will automatically use the direct calculation variant)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
+        type Error = String;
+
+        /// parse the puzzle input
+        fn try_from(s: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
+            if cfg!(feature = "unchecked_parse") {
+                Ok(Self {
+                    strategy: s
+                        .lines()
+                        .map(str::as_bytes)
+                        .map(|bytes| ((bytes[0] - b'A') as usize, (bytes[2] - b'X') as usize))
+                        .collect(),
+                })
+            } else {
+                s.lines()
+                    .map(|l| {
+                        l.split_once(' ')
+                            .ok_or_else(|| format!("Could not parse line '{l}'"))
+                            .and_then(|(a, b)| {
+                                match a {
+                                    "A" =&gt; Ok(0),
+                                    "B" =&gt; Ok(1),
+                                    "C" =&gt; Ok(2),
+                                    _ =&gt; Err(format!("Expected one of A, B, C, found '{a}'")),
+                                }
+                                .and_then(|a| match b {
+                                    "X" =&gt; Ok((a, 0)),
+                                    "Y" =&gt; Ok((a, 1)),
+                                    "Z" =&gt; Ok((a, 2)),
+                                    _ =&gt; Err(format!("Expected one of X, Y, Z, found '{b}'")),
+                                })
+                            })
+                    })
+                    .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()
+                    .map(|strategy| Self { strategy })
+            }
+        }
+    }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Interestingly, not doing any error handling in parsing the input does not lead to any measurable speed-up. Maybe this is because the overall solution time is so small, that the differences are not distinguishable from noise?</p>
 </div>
 </div>
 </div>
