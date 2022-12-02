@@ -3,5 +3,5 @@
 `main.rs`
 [source,rust,numbered]
 ----
-include::src/main.rs
+include::src/main.rs[tag=**]
 ----

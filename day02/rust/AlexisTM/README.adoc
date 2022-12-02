@@ -2,7 +2,7 @@
 
 This was solved in two step: Assign a value for each possible input (9 in total), then just sum them using a fold over the iteration.
 
-`main.rs`
+`main.rs # input`
 [source,rust,numbered]
 ----
 include::src/main.rs[tags=input]
@@ -10,7 +10,7 @@ include::src/main.rs[tags=input]
 
 The solution becomes trivial with this methodology
 
-`main.rs`
+`main.rs # solution`
 [source,rust,numbered]
 ----
 include::src/main.rs[tags=solution]

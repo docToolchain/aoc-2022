@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs};
 
-// end::solution[]
+// tag::solution[]
 fn solve(input: &String, quick_conversion: &HashMap<&str, u64>) -> u64 {
     let result: u64 = input
         .lines()
