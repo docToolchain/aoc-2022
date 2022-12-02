@@ -155,6 +155,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_02_rust">Day 02: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_02_rock_paper_scissors">Day 02: Rock Paper Scissors</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_2">Oveview</a></li>
+<li><a href="#_solution">Solution</a></li>
+<li><a href="#_how_to_run_2">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -339,6 +350,288 @@ pub fn baggages_to_elves(baggage: Vec&lt;Baggage&gt;) -&gt; Vec&lt;Elf&gt; {
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
 run the solution.</p>
+</div>
+<a id="day02" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_02_rust"><a class="anchor" href="#_day_02_rust"></a><a class="link" href="#_day_02_rust">Day 02: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_02_rock_paper_scissors"><a class="anchor" href="#_day_02_rock_paper_scissors"></a><a class="link" href="#_day_02_rock_paper_scissors">Day 02: Rock Paper Scissors</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of the RPS puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_2"><a class="anchor" href="#_oveview_2"></a><a class="link" href="#_oveview_2">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution"><a class="anchor" href="#_solution"></a><a class="link" href="#_solution">Solution</a></h5>
+<div class="paragraph">
+<p>This one was pretty straightforward.
+I might have taken enums in Rust a bit far, here, but I wanted to use them since
+Go, the language used last year, doesn&#8217;t have enums.
+I also tried out a custom trait so that I could use generics to determine which
+round it was.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+// Constants.
+// None yet.
+
+fn solve&lt;T&gt;(file: &amp;str) -&gt; Result&lt;()&gt;
+where
+    T: FromStr&lt;Err = Error&gt;,
+    T: data::Round,
+{
+    eprintln!("PROCESSING {}", file);
+
+    let mut scores = (0, 0);
+
+    // Read file and convert into data.
+    let rounds = io::parse_lines_to_data::&lt;T&gt;(file, "rounds")?;
+
+    for round in rounds {
+        let round_scores = round.score();
+        scores = (scores.0 + round_scores.0, scores.1 + round_scores.1);
+    }
+
+    println!("scores are opponent: {}, you: {}\n", scores.0, scores.1);
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    // Funny that the example for part 1 would end in a draw, but that's not mentioned anywhere.
+    solve::&lt;data::RoundPart1&gt;(SAMPLE)?;
+    solve::&lt;data::RoundPart1&gt;(REAL)?;
+
+    solve::&lt;data::RoundPart2&gt;(SAMPLE)?;
+    solve::&lt;data::RoundPart2&gt;(REAL)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub enum RPS {
+    R,
+    P,
+    S,
+}
+
+#[derive(Debug)]
+pub enum Outcome {
+    Win,
+    Loss,
+    Draw,
+}
+
+// This trait is used so that we don't have to care which round we're scoring.
+pub trait Round {
+    fn score(&amp;self) -&gt; (usize, usize);
+}
+
+#[derive(Debug)]
+pub struct RoundPart1 {
+    other: RPS,
+    me: RPS,
+}
+
+#[derive(Debug)]
+pub struct RoundPart2 {
+    other: RPS,
+    outcome: Outcome,
+}
+
+impl FromStr for RPS {
+    type Err = Error;
+
+    // This parser can be used for rounds 1 and 2.
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s {
+            "A" | "X" =&gt; Ok(RPS::R),
+            "B" | "Y" =&gt; Ok(RPS::P),
+            "C" | "Z" =&gt; Ok(RPS::S),
+            _ =&gt; Err(Error::msg(format!("cannot parse {} as RPS", s))),
+        }
+    }
+}
+
+impl FromStr for Outcome {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s {
+            "X" =&gt; Ok(Outcome::Loss),
+            "Y" =&gt; Ok(Outcome::Draw),
+            "Z" =&gt; Ok(Outcome::Win),
+            _ =&gt; Err(Error::msg(format!("cannot parse {} as Outcome", s))),
+        }
+    }
+}
+
+impl FromStr for RoundPart1 {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+            [other, me] =&gt; {
+                // Other error.
+                if !["A", "B", "C"].contains(other) {
+                    Err(Error::msg(format!("unknown value {} for other", other)))
+                // Me error.
+                } else if !["X", "Y", "Z"].contains(me) {
+                    Err(Error::msg(format!("unknown value {} for me", me)))
+                // Success case.
+                } else {
+                    Ok(RoundPart1 {
+                        other: other.parse::&lt;RPS&gt;()?,
+                        me: me.parse::&lt;RPS&gt;()?,
+                    })
+                }
+            }
+            _ =&gt; Err(Error::msg(format!("cannot parse {}", s))),
+        }
+    }
+}
+
+impl FromStr for RoundPart2 {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+            [other, result] =&gt; {
+                // Other error.
+                if !["A", "B", "C"].contains(other) {
+                    Err(Error::msg(format!("unknown value {} for other", other)))
+                // Success case.
+                } else {
+                    Ok(RoundPart2 {
+                        other: other.parse::&lt;RPS&gt;()?,
+                        outcome: result.parse::&lt;Outcome&gt;()?,
+                    })
+                }
+            }
+            _ =&gt; Err(Error::msg(format!("cannot parse {}", s))),
+        }
+    }
+}
+
+impl Outcome {
+    fn score(&amp;self) -&gt; usize {
+        match &amp;self {
+            Outcome::Loss =&gt; 0,
+            Outcome::Draw =&gt; 3,
+            Outcome::Win =&gt; 6,
+        }
+    }
+}
+
+impl RPS {
+    fn score(&amp;self) -&gt; usize {
+        match self {
+            RPS::R =&gt; 1,
+            RPS::P =&gt; 2,
+            RPS::S =&gt; 3,
+        }
+    }
+
+    // Needed for round 1. This function could benefit from testing so that we know the result if
+    // called with (a, b) and (b, a) make sense.
+    fn check_win(&amp;self, other: &amp;RPS) -&gt; Outcome {
+        match (self, other) {
+            // Self rock.
+            (RPS::R, RPS::R) =&gt; Outcome::Draw,
+            (RPS::R, RPS::P) =&gt; Outcome::Loss,
+            (RPS::R, RPS::S) =&gt; Outcome::Win,
+            // Self paper.
+            (RPS::P, RPS::R) =&gt; Outcome::Win,
+            (RPS::P, RPS::P) =&gt; Outcome::Draw,
+            (RPS::P, RPS::S) =&gt; Outcome::Loss,
+            // Self scissors.
+            (RPS::S, RPS::R) =&gt; Outcome::Loss,
+            (RPS::S, RPS::P) =&gt; Outcome::Win,
+            (RPS::S, RPS::S) =&gt; Outcome::Draw,
+        }
+    }
+
+    // Needed for round 2. This is called on the other's value with a desired outcome.
+    fn get_reply(&amp;self, result: &amp;Outcome) -&gt; RPS {
+        match (self, result) {
+            // Rock.
+            (RPS::R, Outcome::Loss) =&gt; RPS::S,
+            (RPS::R, Outcome::Draw) =&gt; RPS::R,
+            (RPS::R, Outcome::Win) =&gt; RPS::P,
+            // Paper.
+            (RPS::P, Outcome::Loss) =&gt; RPS::R,
+            (RPS::P, Outcome::Draw) =&gt; RPS::P,
+            (RPS::P, Outcome::Win) =&gt; RPS::S,
+            // Scissors.
+            (RPS::S, Outcome::Loss) =&gt; RPS::P,
+            (RPS::S, Outcome::Draw) =&gt; RPS::S,
+            (RPS::S, Outcome::Win) =&gt; RPS::R,
+        }
+    }
+}
+
+// It turns out we do not need to track the other's score, but we only knew that after the fact...
+impl Round for RoundPart1 {
+    fn score(&amp;self) -&gt; (usize, usize) {
+        (
+            self.other.score() + self.other.check_win(&amp;self.me).score(),
+            self.me.score() + self.me.check_win(&amp;self.other).score(),
+        )
+    }
+}
+
+impl Round for RoundPart2 {
+    fn score(&amp;self) -&gt; (usize, usize) {
+        let reply = self.other.get_reply(&amp;self.outcome);
+        (
+            self.other.score() + self.other.check_win(&amp;reply).score(),
+            reply.score() + reply.check_win(&amp;self.other).score(),
+        )
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are currently no tests.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_2"><a class="anchor" href="#_how_to_run_2"></a><a class="link" href="#_how_to_run_2">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
 </div>
 </div>
 </div>
