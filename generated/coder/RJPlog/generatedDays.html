@@ -171,6 +171,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_03_kotlin">Day 03: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_3_rucksack_reorganization">Day 3: Rucksack Reorganization</a>
+<ul class="sectlevel4">
+<li><a href="#_first_star_3">First Star</a></li>
+<li><a href="#_second_star_3">Second Star</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -412,6 +422,119 @@ fun day01Part2Solution() = File("day2201_puzzle_input.txt").readText().split("\r
 	println("*********************************")
 	println("Solution for part2")
 	println("   $solution2 would be your total score")
+	println()</code></pre>
+</div>
+</div>
+<a id="day03" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_03_kotlin"><a class="anchor" href="#_day_03_kotlin"></a><a class="link" href="#_day_03_kotlin">Day 03: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_3_rucksack_reorganization"><a class="anchor" href="#_day_3_rucksack_reorganization"></a><a class="link" href="#_day_3_rucksack_reorganization">Day 3: Rucksack Reorganization</a></h4>
+<div class="paragraph">
+<p>This solution is written in Kotlin.</p>
+</div>
+<div class="paragraph">
+<p>The original puzzle can be found at <a href="https://adventofcode.com/2022/day/3" class="bare">https://adventofcode.com/2022/day/3</a></p>
+</div>
+<div class="sect4">
+<h5 id="_first_star_3"><a class="anchor" href="#_first_star_3"></a><a class="link" href="#_first_star_3">First Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>Inside function <em>RuRePartOne</em> the puzzle input is read line by line. Each line is split into two substrings and than iterated through every letter to find the common ones. The values of the letter are added to the result.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun RuRePartOne(): Int {
+
+	var result: Int = 0
+
+	File("day2203_puzzle_input.txt").forEachLine {
+		val compOne = it.chunked(it.length / 2)[0]
+		val compTwo = it.chunked(it.length / 2)[1]
+		for (i in 1..52) {
+			var item: Char
+			if (i &lt; 27) {
+				item = (i + 96).toChar()
+			} else {
+				item = (i + 64 - 26).toChar()
+			}
+			if (compOne.contains(item) &amp;&amp; compTwo.contains(item)) {
+				result += i
+				break
+			}
+		}
+	}
+	return result
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_second_star_3"><a class="anchor" href="#_second_star_3"></a><a class="link" href="#_second_star_3">Second Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>Inside function <em>RuRePartTwo</em> the puzzle input is read line by line. Every third line all values so far were iterated through every letter to find the common one. The values of the letter are added to the result.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun RuRePartTwo(): Int {
+
+	var result: Int = 0
+	var groupCount: Int = 0
+	var compOne = ""
+	var compTwo = ""
+	var compThree = ""
+
+	File("day2203_puzzle_input.txt").forEachLine {
+		if (groupCount == 0) {
+			compOne = it
+		} else if (groupCount == 1) {
+			compTwo = it
+		} else {
+			compThree = it
+			for (i in 1..52) {
+				var item: Char
+				if (i &lt; 27) {
+					item = (i + 96).toChar()
+				} else {
+					item = (i + 64 - 26).toChar()
+				}
+				if (compOne.contains(item) &amp;&amp; compTwo.contains(item) &amp;&amp; compThree.contains(item)) {
+					result += i
+					break
+				}
+			}
+			groupCount = -1
+		}
+		groupCount += 1
+	}
+	return result
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>At the end, both solutions are printed out.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">// print solution for part 1
+	println("**************************************")
+	println("--- Day 3: Rucksack Reorganization ---")
+	println("**************************************")
+	println("Solution for part1")
+	println("   $solution1 is the sum of the priorities of those item types")
+	println()
+// print solution for part 2
+	println("**************************************")
+	println("Solution for part2")
+	println("   $solution2 is the sum of the priorities of those item types")
 	println()</code></pre>
 </div>
 </div>
