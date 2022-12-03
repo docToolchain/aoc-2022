@@ -17,7 +17,11 @@ include::src/lib.rs[tags=input]
 
 Star 1 is about finding the item in the first compartment (first half) of the rucksack, which is also contained in the secod half.
 
-I assume that such an item always exists and therefore do not limit the search to the first half (it will stop once an item is found, which will be in the first half)
+Some simplifications work because / if the input is correct. 
+
+* I assume that a common item always exists and therefore do not limit the search to the first half (it will stop once an item is found, which will be in the first half)
+* The `find` function returns an `Option`. If there were any `None` values, they would be simply discarded using `filter_map` (actually, for part 1, there can be no `None` values, because search is not stopped in the first half, so the first element of the second half would be found, if there is no common element between first and second half. so a simple `unwrap` would work as well). 
+* The `chunks_exact` function makes sure that every chunk has exactly three elements. If the overall number of rucksacks was not a multiple of three, the remaining rucksacks would simply be discarded.  
 
 I use a `fold` instead of `sum` to do type conversion on the fly (`u8` would not be big enough to hold the sum).
 
@@ -46,4 +50,4 @@ include::src/lib.rs[tags=tests]
 
 === Today I learned ===
 
-... that sometimes it is as simple as it appears at first view.
+\... that sometimes it is as simple as it appears at first view.
