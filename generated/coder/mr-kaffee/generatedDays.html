@@ -182,6 +182,19 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_03_rust">Day 03: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_3_rucksack_reorganization">Day 3: Rucksack Reorganization</a>
+<ul class="sectlevel4">
+<li><a href="#_input_3">Input</a></li>
+<li><a href="#_star_1_3">Star 1</a></li>
+<li><a href="#_star_2_3">Star 2</a></li>
+<li><a href="#_tests_4">Tests</a></li>
+<li><a href="#_today_i_learned_3">Today I learned</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -700,6 +713,145 @@ C Z"#;
 </div>
 <div class="paragraph">
 <p>Interestingly, not doing any error handling in parsing the input does not lead to any measurable speed-up. Maybe this is because the overall solution time is so small, that the differences are not distinguishable from noise?</p>
+</div>
+<a id="day03" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_03_rust"><a class="anchor" href="#_day_03_rust"></a><a class="link" href="#_day_03_rust">Day 03: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_3_rucksack_reorganization"><a class="anchor" href="#_day_3_rucksack_reorganization"></a><a class="link" href="#_day_3_rucksack_reorganization">Day 3: Rucksack Reorganization</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/3">AoC|2022|3</a>.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_3"><a class="anchor" href="#_input_3"></a><a class="link" href="#_input_3">Input</a></h5>
+<div class="paragraph">
+<p>I parse the input directly into a vec of vecs of bytes, each representing the priority of the items contained in the rucksacks.</p>
+</div>
+<div class="paragraph">
+<p>I was tempted to think about using sets for quicker <code>contains</code> operations, but given the size of the problem, this is most likely not worth it.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        pub rucksacks: Vec&lt;Vec&lt;u8&gt;&gt;,
+    }
+
+    impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
+        type Error = &amp;'static str;
+
+        /// parse the puzzle input
+        fn try_from(s: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
+            s.lines()
+                .map(|l| {
+                    l.as_bytes()
+                        .iter()
+                        .map(|&amp;b| match b {
+                            b if b'a' &lt;= b &amp;&amp; b &lt;= b'z' =&gt; Ok(b - b'a' + 1),
+                            b if b'A' &lt;= b &amp;&amp; b &lt;= b'Z' =&gt; Ok(b - b'A' + 27),
+                            _ =&gt; Err("Unexpected bytes in input"),
+                        })
+                        .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()
+                })
+                .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()
+                .map(|rucksacks| Self { rucksacks })
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_3"><a class="anchor" href="#_star_1_3"></a><a class="link" href="#_star_1_3">Star 1</a></h5>
+<div class="paragraph">
+<p>Star 1 is about finding the item in the first compartment (first half) of the rucksack, which is also contained in the secod half.</p>
+</div>
+<div class="paragraph">
+<p>I assume that such an item always exists and therefore do not limit the search to the first half (it will stop once an item is found, which will be in the first half)</p>
+</div>
+<div class="paragraph">
+<p>I use a <code>fold</code> instead of <code>sum</code> to do type conversion on the fly (<code>u8</code> would not be big enough to hold the sum).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    data.rucksacks
+        .iter()
+        .filter_map(|rucksack| {
+            rucksack
+                .iter()
+                .find(|item| rucksack.as_slice()[rucksack.len() / 2..].contains(item))
+        })
+        .fold(0usize, |sum, item| sum + *item as usize)
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_3"><a class="anchor" href="#_star_2_3"></a><a class="link" href="#_star_2_3">Star 2</a></h5>
+<div class="paragraph">
+<p>Star 2 is a simple modification, where we look for items that are common for groups of three consecutive rucksacks</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    data.rucksacks
+        .chunks_exact(3)
+        .filter_map(|group| {
+            group[0]
+                .iter()
+                .find(|item| group[1].contains(item) &amp;&amp; group[2].contains(item))
+        })
+        .fold(0usize, |sum, item| sum + *item as usize)
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_4"><a class="anchor" href="#_tests_4"></a><a class="link" href="#_tests_4">Tests</a></h5>
+<div class="paragraph">
+<p>Tests use the example given in the puzzle.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"vJrwpWtwJgWrhcsFMMfFFhFp
+jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+PmmdzqPrVvPwwTWBwg
+wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+ttgJtRGJQctTZtZT
+CrZsJsPPZsGzwwsLwLmpwMDw"#;
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(157, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(70, star_2(&amp;data));
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_today_i_learned_3"><a class="anchor" href="#_today_i_learned_3"></a><a class="link" href="#_today_i_learned_3">Today I learned</a></h5>
+<div class="olist lowerroman">
+<ol class="lowerroman" type="i">
+<li>
+<p>that sometimes it is as simple as it appears at first view.</p>
+</li>
+</ol>
 </div>
 </div>
 </div>
