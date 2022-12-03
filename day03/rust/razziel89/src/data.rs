@@ -11,10 +11,7 @@ pub struct Rucksack {
 
 impl Rucksack {
     pub fn everything(&self) -> HashSet<char> {
-        self.left
-            .union(&self.right)
-            .map(|el| el.clone())
-            .collect::<HashSet<_>>()
+        &self.left | &self.right
     }
 }
 

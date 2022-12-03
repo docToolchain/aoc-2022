@@ -10,7 +10,6 @@ mod io;
 
 // tag::main[]
 use anyhow::{Error, Result};
-use std::collections::HashSet;
 // Constants.
 // None yet.
 
@@ -34,11 +33,11 @@ fn solve(file: &str) -> Result<()> {
     // Part 1.
     let common = rucksacks
         .iter()
-        .map(|el| el.left.intersection(&el.right).collect::<Vec<_>>())
+        .map(|el| (&el.left & &el.right).into_iter().collect::<Vec<_>>())
         .enumerate()
         .map(|(idx, el)| {
             if el.len() == 1 {
-                ord(*el[0])
+                ord(el[0])
             } else {
                 Err(Error::msg(format!(
                     "entry {} has wrong length {}",
@@ -76,26 +75,20 @@ fn solve(file: &str) -> Result<()> {
         .into_iter()
         .map(|sets| {
             if let [set1, set2, set3] = sets {
-                Some(
-                    set1.intersection(&set2)
-                        .map(|el| el.clone())
-                        .collect::<HashSet<_>>()
-                        .intersection(&set3)
-                        .map(|el| el.clone())
-                        .collect::<Vec<_>>(),
-                )
+                (&(set1 & set2) & set3).into_iter().collect::<Vec<_>>()
             } else {
-                None
+                panic!("this will never happen due to the use of exact_chunk")
             }
         })
         .enumerate()
-        .map(|(idx, val)| {
-            if let Some(el) = val && el.len() == 1 {
+        .map(|(idx, el)| {
+            if el.len() == 1 {
                 ord(el[0])
             } else {
                 Err(Error::msg(format!(
-                    "entry {} is wrong",
+                    "entry {} has wrong length {}",
                     idx,
+                    el.len()
                 )))
             }
         })
