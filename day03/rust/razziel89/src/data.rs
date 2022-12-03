@@ -9,6 +9,15 @@ pub struct Rucksack {
     pub right: HashSet<char>,
 }
 
+impl Rucksack {
+    pub fn everything(&self) -> HashSet<char> {
+        self.left
+            .union(&self.right)
+            .map(|el| el.clone())
+            .collect::<HashSet<_>>()
+    }
+}
+
 impl FromStr for Rucksack {
     type Err = Error;
 
