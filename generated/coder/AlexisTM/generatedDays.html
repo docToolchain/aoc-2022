@@ -160,6 +160,11 @@
 <li><a href="#_day_02_rock_paper_scissors">Day 02: Rock Paper Scissors</a></li>
 </ul>
 </li>
+<li><a href="#_day_03_rust">Day 03: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_02_rock_paper_scissors_2">Day 02: Rock Paper Scissors</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -315,6 +320,76 @@ fn main() {
         .fold(0u64, |acc, b| acc + quick_conversion[b]);
     return result;
 }</code></pre>
+</div>
+</div>
+<a id="day03" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_03_rust"><a class="anchor" href="#_day_03_rust"></a><a class="link" href="#_day_03_rust">Day 03: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_02_rock_paper_scissors_2"><a class="anchor" href="#_day_02_rock_paper_scissors_2"></a><a class="link" href="#_day_02_rock_paper_scissors_2">Day 02: Rock Paper Scissors</a></h4>
+<div class="paragraph">
+<p>Today&#8217;s problem is solved in few steps:
+- Split the input in the slices to compare
+- Find the common char in those slices
+- Convert the letters to numbers
+- Accumulate the numbers</p>
+</div>
+<div class="paragraph">
+<p><code>find the common letters between 2 or 3 slices</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">fn common_char(start: &amp;str, end: &amp;str) -&gt; Option&lt;char&gt; {
+    start.chars().filter(|c| end.contains(*c)).nth(0)
+}
+
+
+fn common_chars(b1: &amp;str, b2: &amp;str, b3: &amp;str) -&gt; Option&lt;char&gt; {
+    b1.chars().filter(|c| b2.contains(*c)).filter(|c| b3.contains(*c)).nth(0)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Convert chars to numbers</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">fn accumulate_letters(acc: u64, val: Option&lt;char&gt;) -&gt; u64 {
+    if let Some(val) = val {
+        if val &lt;= 'Z' {
+            return acc + 27 + (val as u8 - 'A' as u8) as u64;
+        } else {
+            return acc + 1 + (val as u8 - 'a' as u8) as u64;
+        }
+    } else {
+        println!("Empty result, can't be used!");
+        return acc;
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Solution 1</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    let part1: u64 = input
+        .lines()
+        .map(|f| common_char(&amp;f[0..f.len() / 2], &amp;f[f.len() / 2..]))
+        .fold(0, accumulate_letters);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Solution 2</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    let part2 = input.lines().chunks(3).into_iter().map(|chunk| {
+        let values: Vec&lt;&amp;str&gt; = chunk.collect();
+        common_chars(values[0], values[1], values[2])
+     }).fold(0u64, accumulate_letters);</code></pre>
 </div>
 </div>
 </div>
