@@ -1,4 +1,5 @@
 use regex::Regex;
+use reqwest::StatusCode;
 use std::{
     collections::HashMap,
     fmt::Display,
@@ -79,14 +80,37 @@ pub trait InputProvider {
 }
 
 #[derive(Debug)]
-pub struct InputLoader<'a> {
+pub struct PuzzleIO<'a> {
     pub session: &'a str,
 }
 
-impl<'a> InputProvider for InputLoader<'a> {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Star {
+    One,
+    Two,
+}
+
+impl Star {
+    pub fn as_level(&self) -> &'static str {
+        match self {
+            Star::One => "1",
+            Star::Two => "2",
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Answer {
+    Right,
+    AlreadySolved,
+    Wrong,
+    Wait(Option<usize>),
+}
+
+impl<'a> InputProvider for PuzzleIO<'a> {
     fn load_input(&self, year: u16, day: u8) -> Result<String, Error> {
         reqwest::blocking::Client::new()
-            .get(format!("https://adventofcode.com/{}/day/{}/input", year, day).as_str())
+            .get(format!("https://adventofcode.com/{year}/day/{day}/input").as_str())
             .header("Cookie", format!("session={}", self.session))
             .header("User-Agent", 
                 format!(
@@ -99,6 +123,80 @@ impl<'a> InputProvider for InputLoader<'a> {
             .map_err(|err| Error::new(ErrorKind::Other, err))?
             .text()
             .map_err(|err| Error::new(ErrorKind::Other, err))
+    }
+}
+
+impl<'a> PuzzleIO<'a> {
+    pub fn submit_result(
+        &self,
+        year: u16,
+        day: u16,
+        star: Star,
+        solution: &str,
+    ) -> Result<Answer, Error> {
+        let response = reqwest::blocking::Client::new()
+            .post(format!("https://adventofcode.com/{year}/day/{day}/answer").as_str())
+            .header("Cookie", format!("session={}", self.session))
+            .header("User-Agent", 
+                format!(
+                    "{}/{} (github.com/mr-kaffee/aoc-2022/day00/rust/mr-kaffee/template by peter@die-wielands.net)", 
+                    env!("CARGO_PKG_NAME"), 
+                    env!("CARGO_PKG_VERSION")
+                )
+            ).form(&[("level", star.as_level()), ("solution", solution)])
+            .send()
+            .map_err(|err| Error::new(ErrorKind::Other, err))?;
+
+        if response.status() != StatusCode::OK {
+            return Err(Error::new(
+                ErrorKind::Other,
+                format!("Response with status code {}", response.status()),
+            ));
+        }
+
+        let text = response
+            .text()
+            .map_err(|err| Error::new(ErrorKind::Other, err))?;
+
+        let main = text
+            .find("<main>")
+            .and_then(|start| text.find("</main>").map(|end| (start, end)));
+        if let Some((start, end)) = main {
+            let (end, suffix) = if end > 400 + start + 6 {
+                (400 + start + 3, "...")
+            } else {
+                (end, "")
+            };
+            println!("{}{suffix}", &text[start + 6..end]);
+        } else {
+            if text.len() > 400 {
+                println!("{}...", &text[0..397]);
+            } else {
+                println!("{text}");
+            }
+        }
+
+        if text.contains("That's the right answer") {
+            Ok(Answer::Right)
+        } else if text.contains("Did you already complete it") {
+            Ok(Answer::AlreadySolved)
+        } else if text.contains("That's not the right answer") {
+            Ok(Answer::Wrong)
+        } else if text.contains("You gave an answer too recently") {
+            let re = Regex::new(r"You have (?:(?P<m>\d+)m )?(?P<s>\d+)s left to wait").unwrap();
+            let s = re.captures(text.as_str()).map(|c| {
+                c.name("m")
+                    .map(|m| m.as_str().parse::<usize>().unwrap())
+                    .unwrap_or(0)
+                    * 60
+                    + c.name("s")
+                        .map(|s| s.as_str().parse::<usize>().unwrap())
+                        .unwrap()
+            });
+            Ok(Answer::Wait(s))
+        } else {
+            Err(Error::new(ErrorKind::Other, "Can't interpret answer."))
+        }
     }
 }
 
@@ -129,10 +227,8 @@ pub fn update_files(runner_path: &Path, year: u16, day: u8) -> Result<(), Error>
     )?;
     update_file(
         "INCLUDE_PUZZLES",
-        format!(
-            "mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}"
-        )
-        .as_str(),
+        format!("mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}")
+            .as_str(),
         runner_path.join("Cargo.toml").as_path(),
     )?;
     Ok(())

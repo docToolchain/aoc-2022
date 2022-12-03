@@ -28,7 +28,7 @@ fn main() -> Result<(), Error> {
     let cli = Cli::parse();
 
     let session = fs::read_to_string("session.cookie")?;
-    let input_provider = InputLoader {
+    let input_provider = PuzzleIO {
         session: session.trim(),
     };
 
@@ -46,4 +46,17 @@ fn main() -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+#[test]
+pub fn test_submit() {
+    let session = fs::read_to_string("C:\\users\\Peter\\git\\session.cookie").unwrap();
+    let input_provider = PuzzleIO {
+        session: session.trim(),
+    };
+
+    let result = input_provider.submit_result(2022, 3, Star::One, "0");
+    println!("{result:?}");
+
+    panic!();
 }
