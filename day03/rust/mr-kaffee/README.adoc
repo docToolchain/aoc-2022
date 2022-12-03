@@ -1,0 +1,49 @@
+== Day 3: Rucksack Reorganization ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/3[AoC|2022|3].
+
+=== Input ===
+
+I parse the input directly into a vec of vecs of bytes, each representing the priority of the items contained in the rucksacks.
+
+I was tempted to think about using sets for quicker `contains` operations, but given the size of the problem, this is most likely not worth it.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+Star 1 is about finding the item in the first compartment (first half) of the rucksack, which is also contained in the secod half.
+
+I assume that such an item always exists and therefore do not limit the search to the first half (it will stop once an item is found, which will be in the first half)
+
+I use a `fold` instead of `sum` to do type conversion on the fly (`u8` would not be big enough to hold the sum).
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Star 2 is a simple modification, where we look for items that are common for groups of three consecutive rucksacks
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+Tests use the example given in the puzzle.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Today I learned ===
+
+... that sometimes it is as simple as it appears at first view.
