@@ -1,0 +1,20 @@
+== Day ??
+
+This solution is written in python.
+
+The following libraries are used to implement the solution::
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea of this solution is to use sets and set intersection to find the common items
+
+=== What did I learn
+
+That list comprehension can be use to split list into sub lists.
+
+=== How to run
+
+Run using:
+`$ python day_03.py --help`
