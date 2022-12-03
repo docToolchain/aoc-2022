@@ -1,0 +1,32 @@
+== Day 02: Rock Paper Scissors ==
+
+Today's problem is solved in few steps:
+- Split the input in the slices to compare
+- Find the common char in those slices
+- Convert the letters to numbers
+- Accumulate the numbers
+
+
+`find the common letters between 2 or 3 slices`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=common]
+----
+
+`Convert chars to numbers`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=letter_to_number]
+----
+
+`Solution 1`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=solution_part1]
+----
+
+`Solution 2`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=solution_part2]
+----
