@@ -596,3 +596,9 @@ mod test {
         Ok(())
     }
 }
+
+#[cfg(feature = "io")]
+pub mod puzzle_io;
+
+#[cfg(feature = "template")]
+pub mod template;
