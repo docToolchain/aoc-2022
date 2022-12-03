@@ -751,8 +751,8 @@ C Z"#;
                     l.as_bytes()
                         .iter()
                         .map(|&amp;b| match b {
-                            b if b'a' &lt;= b &amp;&amp; b &lt;= b'z' =&gt; Ok(b - b'a' + 1),
-                            b if b'A' &lt;= b &amp;&amp; b &lt;= b'Z' =&gt; Ok(b - b'A' + 27),
+                            b'a'..=b'z' =&gt; Ok(b - b'a' + 1),
+                            b'A'..=b'Z' =&gt; Ok(b - b'A' + 27),
                             _ =&gt; Err("Unexpected bytes in input"),
                         })
                         .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()
@@ -771,7 +771,20 @@ C Z"#;
 <p>Star 1 is about finding the item in the first compartment (first half) of the rucksack, which is also contained in the secod half.</p>
 </div>
 <div class="paragraph">
-<p>I assume that such an item always exists and therefore do not limit the search to the first half (it will stop once an item is found, which will be in the first half)</p>
+<p>Some simplifications work because / if the input is correct.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>I assume that a common item always exists and therefore do not limit the search to the first half (it will stop once an item is found, which will be in the first half)</p>
+</li>
+<li>
+<p>The <code>find</code> function returns an <code>Option</code>. If there were any <code>None</code> values, they would be simply discarded using <code>filter_map</code> (actually, for part 1, there can be no <code>None</code> values, because search is not stopped in the first half, so the first element of the second half would be found, if there is no common element between first and second half. so a simple <code>unwrap</code> would work as well).</p>
+</li>
+<li>
+<p>The <code>chunks_exact</code> function makes sure that every chunk has exactly three elements. If the overall number of rucksacks was not a multiple of three, the remaining rucksacks would simply be discarded.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
 <p>I use a <code>fold</code> instead of <code>sum</code> to do type conversion on the fly (<code>u8</code> would not be big enough to hold the sum).</p>
@@ -846,12 +859,8 @@ CrZsJsPPZsGzwwsLwLmpwMDw"#;
 </div>
 <div class="sect4">
 <h5 id="_today_i_learned_3"><a class="anchor" href="#_today_i_learned_3"></a><a class="link" href="#_today_i_learned_3">Today I learned</a></h5>
-<div class="olist lowerroman">
-<ol class="lowerroman" type="i">
-<li>
-<p>that sometimes it is as simple as it appears at first view.</p>
-</li>
-</ol>
+<div class="paragraph">
+<p>... that sometimes it is as simple as it appears at first view.</p>
 </div>
 </div>
 </div>
