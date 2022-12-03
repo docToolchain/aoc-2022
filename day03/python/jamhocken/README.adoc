@@ -1,0 +1,27 @@
+
+Day 3 of year 2022
+https://adventofcode.com/2022/day/3
+
+== What I learned
+
+. I used `ord` for the first time.
+
+== Approach
+I put all of the rucksacks in a list.
+
+**Star 1** +
+I just took each letter from the first half of each rucksack and check if it is present in the second half. If so,
+it's the duplicate and I go to the next rucksack.
+To get the priorities, I used ord and did the math.
+
+**Star 2** +
+It's similar. I take each letter from the first rucksack and see if it is in both of the next
+2 rucksacks. If so, it's the badge and I skip to the next 3 rucksacks.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
