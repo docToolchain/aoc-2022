@@ -1,0 +1,34 @@
+==  Day 3: Rucksack Reorganization  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/3
+
+
+=== First Star
+
+How does it work: +
+
+Inside function _RuRePartOne_ the puzzle input is read line by line. Each line is split into two substrings and than iterated through every letter to find the common ones. The values of the letter are added to the result.
+[source, kotlin, numbered]
+....
+include::day2203_1_2.kt[tags=RuRePartOne]
+....
+
+
+=== Second Star
+
+How does it work: +
+
+Inside function _RuRePartTwo_ the puzzle input is read line by line. Every third line all values so far were iterated through every letter to find the common one. The values of the letter are added to the result.
+[source, kotlin, numbered]
+....
+include::day2203_1_2.kt[tags=RuRePartTwo]
+....
+
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2203_1_2.kt[tags=output]
+....
