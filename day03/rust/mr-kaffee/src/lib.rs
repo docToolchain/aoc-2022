@@ -37,8 +37,8 @@ pub mod input {
                     l.as_bytes()
                         .iter()
                         .map(|&b| match b {
-                            b if b'a' <= b && b <= b'z' => Ok(b - b'a' + 1),
-                            b if b'A' <= b && b <= b'Z' => Ok(b - b'A' + 27),
+                            b'a'..=b'z' => Ok(b - b'a' + 1),
+                            b'A'..=b'Z' => Ok(b - b'A' + 27),
                             _ => Err("Unexpected bytes in input"),
                         })
                         .collect::<Result<Vec<_>, _>>()
