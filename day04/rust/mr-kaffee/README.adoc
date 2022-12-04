@@ -4,7 +4,7 @@ https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/4[AoC|
 
 === Input ===
 
-Today, input parsing was the biggest challenge. Mainly because I decided to not use `unwrap` but try some proper error handling and to avoid intermediate `collect` calls. This leads to a lot of `and_then` (to short-circuit on the first error) followed by `map` (to combine results). Let's see whether I find a cleaner ways throughout this year's AoC journey.
+Today, input parsing was the biggest challenge. Mainly because I decided to not use `unwrap` but try some proper error handling and to avoid intermediate `collect` calls. Until I figured out that the code is much simplified if I create a separate function to parse a single line (because `?` can be used in that function but not in a clojure within an iterator's `map` function), I had to use a lot of `and_then`, `map`, `map_error`, ...
 
 So here is my parsing functions (admittedly not how it looked like when I submitted my results)
 
@@ -42,4 +42,4 @@ include::src/lib.rs[tags=tests]
 
 === Today I learned ===
 
-`and_then` - `map` - `and_then` - `map` - `map_err` ...
+`and_then` - `map` - `and_then` - `map` - `map_err` ... is all not needed if some parsing functionality for one line is moved to a separate function where the `?` shortcut operator can be used for error propagation and conversion

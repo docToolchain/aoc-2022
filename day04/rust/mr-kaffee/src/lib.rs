@@ -29,23 +29,26 @@ pub mod input {
         pub range_pairs: Vec<((usize, usize), (usize, usize))>,
     }
 
-    fn parse_pair<'a, T: Iterator<Item = &'a str>>(
-        iter: &mut T,
-    ) -> Result<((usize, usize), (usize, usize)), PuzzleError> {
-        parse_tuple(iter).and_then(|t1| parse_tuple(iter).map(|t2| (t1, t2)))
-    }
-
-    fn parse_tuple<'a, T: Iterator<Item = &'a str>>(
-        iter: &mut T,
-    ) -> Result<(usize, usize), PuzzleError> {
-        iter.next()
-            .ok_or_else(|| PuzzleError::from("Missing first item"))
-            .and_then(|a| a.parse::<usize>().map_err(|e| e.into()))
-            .and_then(|a| {
+    fn parse_pair(line: &str) -> Result<((usize, usize), (usize, usize)), PuzzleError> {
+        let mut iter = line.split(|c: char| c == '-' || c == ',');
+        Ok((
+            (
                 iter.next()
-                    .ok_or_else(|| PuzzleError::from("Missing second item"))
-                    .and_then(|b| b.parse::<usize>().map(|b| (a, b)).map_err(|e| e.into()))
-            })
+                    .ok_or_else(|| format!("Missing start 1 '{line}'"))?
+                    .parse()?,
+                iter.next()
+                    .ok_or_else(|| format!("Missing end 1 in '{line}'"))?
+                    .parse()?,
+            ),
+            (
+                iter.next()
+                    .ok_or_else(|| format!("Missing start 2 in '{line}'"))?
+                    .parse()?,
+                iter.next()
+                    .ok_or_else(|| format!("Missing end 2 in '{line}'"))?
+                    .parse()?,
+            ),
+        ))
     }
 
     impl TryFrom<&'static str> for PuzzleData {
@@ -54,7 +57,7 @@ pub mod input {
         /// parse the puzzle input
         fn try_from(s: &'static str) -> Result<Self, Self::Error> {
             s.lines()
-                .map(|l| parse_pair(&mut l.split(|c: char| c == '-' || c == ',')))
+                .map(parse_pair)
                 .collect::<Result<Vec<_>, _>>()
                 .map(|range_pairs| Self { range_pairs })
         }
