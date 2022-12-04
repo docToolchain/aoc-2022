@@ -1,0 +1,10 @@
+[package]
+name = "alexistm-aoc-01"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+lto = true
+
+[dependencies]
+itertools = "0.10"

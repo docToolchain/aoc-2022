@@ -1,0 +1,32 @@
+:AlexisTM-avatar: https://avatars.githubusercontent.com/u/6976744?v=4
+:AlexisTM-realName: Alexis Paques
+
+:icons: font
+
+//tag::free-form[]
+
+[cols="1,5"]
+|===
+| image:{corneil-avatar}[width=100px]
+a| **corneil** +
+{corneil-realName} +
+Github: https://github.com/AlexisTM[AlexisTM] +
+Twitter: https://twitter.com/AlexisPaques[@AlexisPaques] +
+Mastodon: https://fosstodon.org/@AlexisTM[@AlexisTM@fosstodon.org]
+|===
+
+=== About me
+
+I am a Robotics Engineer working mainly in C++, Python & Javascript.
+
+I started the AoC 2021 in https://codewithrockstar.com/online[RockStar] but didn't have the bravery to go all the way through it.
+
+Today, I want to learn Rust so created few projects and will do this AoC with it. This would definitely have avoided https://www.freebsd.org/security/advisories/FreeBSD-SA-22:15.ping.asc[Ping CVE in FreeBSD].
+
+To start up with rust, you can install the toolchain with https://rustup.rs/[Rustup], then compile & run with:
+
+```rust
+cargo run --release
+```
+
+//end::free-form[]

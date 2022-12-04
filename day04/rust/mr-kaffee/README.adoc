@@ -1,0 +1,45 @@
+== Day 4: Camp Cleanup ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/4[AoC|2022|4].
+
+=== Input ===
+
+Today, input parsing was the biggest challenge. Mainly because I decided to not use `unwrap` but try some proper error handling and to avoid intermediate `collect` calls. Until I figured out that the code is much simplified if I create a separate function to parse a single line (because `?` can be used in that function but not in a clojure within an iterator's `map` function), I had to use a lot of `and_then`, `map`, `map_error`, ...
+
+So here is my parsing functions (admittedly not how it looked like when I submitted my results)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+The actual solution is simple for part 1 ...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+\... as well as for part 2 (I was afraid to be asked to look for overlaps across pairs in part 2 ...)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+Today I even did test-driven development in the sense that I did not write any functional code before I had a failing test case ;)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Today I learned ===
+
+`and_then` - `map` - `and_then` - `map` - `map_err` ... is all not needed if some parsing functionality for one line is moved to a separate function where the `?` shortcut operator can be used for error propagation and conversion

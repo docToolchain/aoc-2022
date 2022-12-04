@@ -1,0 +1,54 @@
+== Day 02 - Rucksack Reorganization
+
+Today puzzle was about manipulating strings and calculating the values of characters according rules.
+
+=== Calculating the priority
+[source,kotlin]
+....
+fun calcPriority(value: Char): Int = when (value) {
+  in 'a'..'z' -> value - 'a' + 1
+  in 'A'..'Z' -> value - 'A' + 27
+  else -> error("Invalid input $value")
+}
+....
+
+=== Part1
+[source,kotlin]
+....
+fun calcRucksacks(input: List<String>): Int =
+  input.map { Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2)) }  // <1>
+    .map { it.first.toSet().intersect(it.second.toSet()).first() }                      // <2>
+    .sumOf { calcPriority(it) }                                                         // <3>
+....
+<1> Split string into equal parts to represent compartments
+<2> Determine common character by converting to set of characters and finding union
+<3> Calculate the sum of the priorities
+
+=== Part 2
+[source,kotlin]
+....
+fun calcBadges(input: List<String>): Int =
+  input.mapIndexed { index, s -> index / 3 to s }
+    .groupBy({ it.first }, { it.second })           // <1>
+    .map { e ->
+      e.value
+        .map { it.toSet() }
+        .reduce { a, b -> a.intersect(b) }
+        .first()                                    // <2>
+    }
+    .sumOf { calcPriority(it) }                     // <3>
+....
+<1> Group strings by 3.
+<2> Determine common character from all 3 strings.
+<3> Calculate the sum of the priorities
+
+=== Takeaways
+* `String.toSet` gives to a `Set` of `Char`
+* `reduce` is a great way to determine the intersection on multiple sets.
+* `groupBy` can take two parameters and with the second parameter you can determine the type of the value.
+
+=== Full source
+[source,kotlin]
+....
+include::src/solution.kt[]
+....

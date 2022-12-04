@@ -1,0 +1,83 @@
+== Day 2: Rock Paper Scissors ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/2[AoC|2022|2].
+
+=== Input ===
+
+I have two enums to parse the first column (A, B, C to `RockPaperScissors`) and the second column (X, Y, Z to `XYZ`).
+
+It would have been much simpler to parse both into 0, 1, 2 and than use some simple formulas later on (which I did as an alternative, see below), but my solution fails gracefully if something unexpected comes in the input ;)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+For star 1 I directly convert `XYZ`s to `RockPaperScissors`' using
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=convert_star_1]
+----
+
+The scores are calculated with
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=score]
+----
+
+And the solution is
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+I was expecting an optimization for the second part of the kind, "Figure out what X, Y, Z need to be so you end up with the highest score possible" or "... so that you end up with the lowest score possible that with more than 50% wins". Maybe that would have been too much for day 2.
+
+The scores are still calculated in the same way but the conversion is now done using
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=convert_star_2]
+----
+
+The solution is
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+I made a mistake in my scoring function in the first place. So I wrote tests this time to debug this...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Today I learned ===
+
+I think it was the first time I used `Result::and_then` in a (maybe) meaningful way.
+
+=== Alternative based on direct calculations ===
+
+I could not stop myself from implementing an alternative solution using direct calculations. Run the alternative solution with `cargo run --release --features modulo`
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=alternative]
+----
+
+I also implemented a parse function which does not check any inputs and will probably result in panics if something unexpected is in the input (to parse without error handling run `cargo run --release --features unchecked_parse`; this will automatically use the direct calculation variant)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=parse_variants]
+----
+
+Interestingly, not doing any error handling in parsing the input does not lead to any measurable speed-up. Maybe this is because the overall solution time is so small, that the differences are not distinguishable from noise?
+

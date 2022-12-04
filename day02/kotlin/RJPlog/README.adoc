@@ -1,0 +1,30 @@
+==  Day 2: Rock Paper Scissors  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/2
+
+
+=== First Star
+
+How does it work: +
+
+Inside function _rockPaperScissors_ the puzzle input is read line by line. With a simple _when_ construct for each game the result is added to a final result.
+[source, kotlin, numbered]
+....
+include::day2202_1_2.kt[tags=RPS]
+....
+
+
+=== Second Star
+
+How does it work: +
+
+The same function call is used only with a different input parameter and therefore a second _when_ construct is taking care for adding up the correct scores of each game.
+
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2202_1_2.kt[tags=output]
+....

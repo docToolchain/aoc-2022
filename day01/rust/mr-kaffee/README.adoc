@@ -6,7 +6,7 @@ Nothing very interesting today.
 
 === Input ===
 
-Parse everything in a vec of vecs (after having read instructions for part 1 and 2, vec of sums would have been sufficient)
+Parse everything in a vec of sums (initially I used a vec of vecs; since individual elements are never needed sums are enough)
 
 [source,rust,numbered]
 ----
@@ -38,3 +38,5 @@ No tests today. It was too simple.
 === Today I learned ===
 
 Not so much. My template works.
+
+Iterating/refactoring the solution, I learned that `std::iter::Sum` has an implementation `impl<T, U, E> Sum<Result<U, E>> for Result<T, E>`.
