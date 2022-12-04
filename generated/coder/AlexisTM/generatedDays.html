@@ -162,7 +162,12 @@
 </li>
 <li><a href="#_day_03_rust">Day 03: rust</a>
 <ul class="sectlevel3">
-<li><a href="#_day_02_rock_paper_scissors_2">Day 02: Rock Paper Scissors</a></li>
+<li><a href="#_day_03">Day 03</a></li>
+</ul>
+</li>
+<li><a href="#_day_04_rust">Day 04: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_04">Day 04</a></li>
 </ul>
 </li>
 </ul>
@@ -328,7 +333,7 @@ fn main() {
 <div class="sect2">
 <h3 id="_day_03_rust"><a class="anchor" href="#_day_03_rust"></a><a class="link" href="#_day_03_rust">Day 03: rust</a></h3>
 <div class="sect3">
-<h4 id="_day_02_rock_paper_scissors_2"><a class="anchor" href="#_day_02_rock_paper_scissors_2"></a><a class="link" href="#_day_02_rock_paper_scissors_2">Day 02: Rock Paper Scissors</a></h4>
+<h4 id="_day_03"><a class="anchor" href="#_day_03"></a><a class="link" href="#_day_03">Day 03</a></h4>
 <div class="paragraph">
 <p>Today&#8217;s problem is solved in few steps:
 - Split the input in the slices to compare
@@ -390,6 +395,74 @@ fn common_chars(b1: &amp;str, b2: &amp;str, b3: &amp;str) -&gt; Option&lt;char&g
         let values: Vec&lt;&amp;str&gt; = chunk.collect();
         common_chars(values[0], values[1], values[2])
      }).fold(0u64, accumulate_letters);</code></pre>
+</div>
+</div>
+<a id="day04" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_04_rust"><a class="anchor" href="#_day_04_rust"></a><a class="link" href="#_day_04_rust">Day 04: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_04"><a class="anchor" href="#_day_04"></a><a class="link" href="#_day_04">Day 04</a></h4>
+<div class="paragraph">
+<p>Both problems are identical today, just the condition for summing is different.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>First convert the string into an array of string slices.</p>
+</li>
+<li>
+<p>Convert the slices to int, expecting 4 of them. (it will panic on unwrap if we don&#8217;t have 4)</p>
+</li>
+<li>
+<p>Apply the condition of the problem, return 1 for success</p>
+</li>
+<li>
+<p>Sum</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>Solution 1</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    let part1: u32 = input
+        .lines()
+        .map(|f| f.split(|f| f == ',' || f == '-'))
+        .map(|mut f| {
+            (
+                (
+                    f.next().unwrap().parse::&lt;u32&gt;().unwrap(),
+                    f.next().unwrap().parse::&lt;u32&gt;().unwrap(),
+                ),
+                (
+                    f.next().unwrap().parse::&lt;u32&gt;().unwrap(),
+                    f.next().unwrap().parse::&lt;u32&gt;().unwrap(),
+                ),
+            )
+        })
+        .map(|(elf1, elf2)| {
+            if (elf1.0 &lt;= elf2.0 &amp;&amp; elf2.1 &lt;= elf1.1) || (elf2.0 &lt;= elf1.0 &amp;&amp; elf1.1 &lt;= elf2.1) {
+                return 1;
+            }
+            return 0;
+        })
+        .sum();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>Solution 2</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">        .map(|(elf1, elf2)| {
+            if (elf1.0 &lt;= elf2.0 &amp;&amp; elf2.0 &lt;= elf1.1) || (elf2.0 &lt;= elf1.0 &amp;&amp; elf1.0 &lt;= elf2.1) {
+                return 1;
+            }
+            return 0;
+        })</code></pre>
 </div>
 </div>
 </div>
