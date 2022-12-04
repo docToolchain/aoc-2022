@@ -1,0 +1,45 @@
+== Day 4: Camp Cleanup ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/4[AoC|2022|4].
+
+=== Input ===
+
+Today, input parsing was the biggest challenge. Mainly because I decided to not use `unwrap` but try some proper error handling and to avoid intermediate `collect` calls. This leads to a lot of `and_then` (to short-circuit on the first error) followed by `map` (to combine results). Let's see whether I find a cleaner ways throughout this year's AoC journey.
+
+So here is my parsing functions (admittedly not how it looked like when I submitted my results)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+The actual solution is simple for part 1 ...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+\... as well as for part 2 (I was afraid to be asked to look for overlaps across pairs in part 2 ...)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+Today I even did test-driven development in the sense that I did not write any functional code before I had a failing test case ;)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Today I learned ===
+
+`and_then` - `map` - `and_then` - `map` - `map_err` ...
