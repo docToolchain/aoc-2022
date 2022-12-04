@@ -9,7 +9,7 @@ The original puzzle can be found at https://adventofcode.com/2022/day/4
 
 How does it work: +
 
-Inside function _RuRePartOne_ the puzzle input is read line by line. Each line is split into the ranges of the elfs and all complete overlaps are counted at input == 1
+Inside function _CampCleanUp_ the puzzle input is read line by line. Each line is split into the ranges of the elfs and all complete overlaps are counted at input == 1
 [source, kotlin, numbered]
 ....
 include::day2204_1_2.kt[tags=CampCleanUp]
@@ -20,7 +20,7 @@ include::day2204_1_2.kt[tags=CampCleanUp]
 
 How does it work: +
 
-Inside function _RuRePartOne_ the puzzle input is read line by line. Each line is split into the ranges of the elfs and all partly overlaps are counted at input != 1
+Inside function _CampCleanUp_ the puzzle input is read line by line. Each line is split into the ranges of the elfs and all partly overlaps are counted at input != 1
 
 
 At the end, both solutions are printed out. 
