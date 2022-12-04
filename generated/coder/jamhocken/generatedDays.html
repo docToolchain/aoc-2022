@@ -172,6 +172,13 @@
 <li><a href="#_run_script_4">Run script</a></li>
 </ul>
 </li>
+<li><a href="#_day_04_python">Day 04: python</a>
+<ul class="sectlevel3">
+<li><a href="#_what_i_learned_4">What I learned</a></li>
+<li><a href="#_approach_4">Approach</a></li>
+<li><a href="#_run_script_5">Run script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -462,6 +469,79 @@ def main():
 
     scores = [ord(item)-96 if ord(item)&gt;96 else ord(item)-64+26 for item in badge]
     print("The sum of the priorities is ",sum(scores))
+
+main()</code></pre>
+</div>
+</div>
+<a id="day04" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_04_python"><a class="anchor" href="#_day_04_python"></a><a class="link" href="#_day_04_python">Day 04: python</a></h3>
+<div class="paragraph">
+<p>Day 4 of year 2022
+<a href="https://adventofcode.com/2022/day/4" class="bare">https://adventofcode.com/2022/day/4</a></p>
+</div>
+<div class="sect3">
+<h4 id="_what_i_learned_4"><a class="anchor" href="#_what_i_learned_4"></a><a class="link" href="#_what_i_learned_4">What I learned</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Remembered more or less how to use regex again.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_approach_4"><a class="anchor" href="#_approach_4"></a><a class="link" href="#_approach_4">Approach</a></h4>
+<div class="paragraph">
+<p>I use a regex to fish out the 4 numbers on each line and put them into a list of lists.</p>
+</div>
+<div class="paragraph">
+<p><strong>Star 1</strong><br>
+I just checked if the first pair is contained in the second or vice versa and put a 1 in a list if true. Then you just sum that list.</p>
+</div>
+<div class="paragraph">
+<p><strong>Star 2</strong><br>
+It&#8217;s similar. You just check essentially that the 2 pairs are not disjoint. If so, put a 1 in the list. Sum the list.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_run_script_5"><a class="anchor" href="#_run_script_5"></a><a class="link" href="#_run_script_5">Run script</a></h4>
+<div class="paragraph">
+<p>Run the solution with <code>python solution.py</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-python" data-lang="python">import regex as re
+
+def process_input(file_contents):
+    lines_stripped = [line.strip() for line in file_contents]
+    input_pattern = re.compile("(\d+)-(\d+),(\d+)-(\d+)")
+    sections=[]
+    for line in lines_stripped:
+        input_match = re.match(input_pattern, line)
+        section = [int(input_match.group(i)) for i in [1, 2, 3,4]]
+        sections.append(section)
+    return sections
+
+def main():
+    with open("input.txt",'r') as input_file:
+        input_lines = input_file.readlines()
+
+    sections = process_input(input_lines)
+
+    #star 1
+    fully_contain = [1 if (pair[0]&lt;=pair[2] and pair[1]&gt;=pair[3]) or
+                     (pair[0]&gt;=pair[2] and pair[1]&lt;=pair[3]) else 0
+                     for pair in sections]
+    print(sum(fully_contain),"pairs have one range fully contained by the other.")
+
+    #star 2
+    overlap = [1 if (pair[0]&lt;=pair[2] and pair[1]&gt;=pair[2]) or
+                     (pair[0]&gt;=pair[2] and pair[0]&lt;=pair[3]) else 0
+                     for pair in sections]
+    print(sum(overlap),"pairs overlap.")
 
 main()</code></pre>
 </div>
