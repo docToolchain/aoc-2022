@@ -1,0 +1,51 @@
+== Day 04 - Camp Cleanup
+
+I wasted some time today because I misunderstood the *fully contains* applying to a pair of assignments. I was trying to check across assignments. Re-reading when I got the wrong answer meant some _facepalms_.
+
+We needed to convert the input depicting 2 ranges into sets of sections representing by numbers. So that meant converting `2-4,6-8` to a `Pair` of `IntRange` and then to a `Pair` of `Set<Int>` which it as simple as:
+
+[source,kotlin]
+....
+fun convertRange(input: String): IntRange {
+  val values = input.split("-")
+  return values[0].toInt()..values[1].toInt()
+}
+
+fun convertRanges(input: List<String>): List<Pair<Set<Int>, Set<Int>>> =
+  input.map { it.split(",") }
+    .map { Pair(convertRange(it[0]).toSet(), convertRange(it[1]).toSet()) }
+....
+
+=== Part 1
+Determining *fully contains* for part 1 was as simple as:
+
+[source,kotlin]
+....
+fun calcContains(ranges: List<Pair<Set<Int>, Set<Int>>>): Int {
+  return ranges.count {
+    it.first.containsAll(it.second) || it.second.containsAll(it.first)
+  }
+}
+....
+
+=== Part 2
+And determining an *overlap* for part1 was as simple as:
+
+[source,kotlin]
+....
+fun calcOverlap(ranges: List<Pair<Set<Int>, Set<Int>>>): Int {
+  return ranges.count { it.first.intersect(it.second).isNotEmpty() }
+}
+....
+
+=== Takeaways
+Re-read the problem because a lot of effort was made to explain with a complete example.
+
+*If you first answer is incorrect you may have misunderstood something.*
+
+=== Full source
+
+[source,kotlin]
+....
+include::src/solution.kt[]
+....
