@@ -1,0 +1,25 @@
+== Day ??
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea of this solution is to:
+
+* check the boundaries of the ranges
+* use the filter function
+
+
+=== What did I learn
+
+If you type lamdba istead of lambda it can take quite some time to find the error.
+
+=== How to run
+
+Run using:
+`$ python day_04.py --help`
