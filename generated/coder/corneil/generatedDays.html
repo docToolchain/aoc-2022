@@ -152,23 +152,35 @@
 </li>
 <li><a href="#_day_01_kotlin">Day 01: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_01_calorie_counting">Day 01 Calorie Counting</a></li>
+<li><a href="#_day_01_calorie_counting">Day 01 - Calorie Counting</a></li>
 </ul>
 </li>
 <li><a href="#_day_02_kotlin">Day 02: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_02_rock_paper_scissors">Day 02 Rock Paper Scissors</a></li>
+<li><a href="#_day_02_rock_paper_scissors">Day 02 - Rock Paper Scissors</a></li>
 </ul>
 </li>
 <li><a href="#_day_03_kotlin">Day 03: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_02_rucksack_reorganization">Day 02 Rucksack Reorganization</a>
+<li><a href="#_day_02_rucksack_reorganization">Day 02 - Rucksack Reorganization</a>
 <ul class="sectlevel4">
 <li><a href="#_calculating_the_priority">Calculating the priority</a></li>
 <li><a href="#_part1">Part1</a></li>
 <li><a href="#_part_2">Part 2</a></li>
 <li><a href="#_takeaways">Takeaways</a></li>
 <li><a href="#_full_source">Full source</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_day_04_kotlin">Day 04: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_04_camp_cleanup">Day 04 - Camp Cleanup</a>
+<ul class="sectlevel4">
+<li><a href="#_part_1">Part 1</a></li>
+<li><a href="#_part_2_2">Part 2</a></li>
+<li><a href="#_takeaways_2">Takeaways</a></li>
+<li><a href="#_full_source_2">Full source</a></li>
 </ul>
 </li>
 </ul>
@@ -225,7 +237,7 @@ Feel free to reach out with comments at the links above.</p>
 <div class="sect2">
 <h3 id="_day_01_kotlin"><a class="anchor" href="#_day_01_kotlin"></a><a class="link" href="#_day_01_kotlin">Day 01: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_01_calorie_counting"><a class="anchor" href="#_day_01_calorie_counting"></a><a class="link" href="#_day_01_calorie_counting">Day 01 Calorie Counting</a></h4>
+<h4 id="_day_01_calorie_counting"><a class="anchor" href="#_day_01_calorie_counting"></a><a class="link" href="#_day_01_calorie_counting">Day 01 - Calorie Counting</a></h4>
 <div class="paragraph">
 <p>The day was lines representing the calories of food items carried by elves and separated by blank lines.
 Kotlin File has a readLines function that makes it easy to parse the input, calculate the calories for each elf and add to a list.
@@ -272,7 +284,7 @@ For part one the max value it the answer.</p>
 <div class="sect2">
 <h3 id="_day_02_kotlin"><a class="anchor" href="#_day_02_kotlin"></a><a class="link" href="#_day_02_kotlin">Day 02: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_02_rock_paper_scissors"><a class="anchor" href="#_day_02_rock_paper_scissors"></a><a class="link" href="#_day_02_rock_paper_scissors">Day 02 Rock Paper Scissors</a></h4>
+<h4 id="_day_02_rock_paper_scissors"><a class="anchor" href="#_day_02_rock_paper_scissors"></a><a class="link" href="#_day_02_rock_paper_scissors">Day 02 - Rock Paper Scissors</a></h4>
 <div class="paragraph">
 <p>Part 1 meant we needed to parse input representing an opponent hand when playing RPS, and we had to assume the 2nd input was an answer we needed to provide while "cheating".</p>
 </div>
@@ -410,7 +422,7 @@ fun main() {
 <div class="sect2">
 <h3 id="_day_03_kotlin"><a class="anchor" href="#_day_03_kotlin"></a><a class="link" href="#_day_03_kotlin">Day 03: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_02_rucksack_reorganization"><a class="anchor" href="#_day_02_rucksack_reorganization"></a><a class="link" href="#_day_02_rucksack_reorganization">Day 02 Rucksack Reorganization</a></h4>
+<h4 id="_day_02_rucksack_reorganization"><a class="anchor" href="#_day_02_rucksack_reorganization"></a><a class="link" href="#_day_02_rucksack_reorganization">Day 02 - Rucksack Reorganization</a></h4>
 <div class="paragraph">
 <p>Today puzzle was about manipulating strings and calculating the values of characters according rules.</p>
 </div>
@@ -543,6 +555,121 @@ fun main() {
     val priorities = calcBadges(readInput("day03"))
     println("Priorities = $priorities")
     check(priorities == 2620)
+  }
+  part1()
+  part2()
+}</code></pre>
+</div>
+</div>
+<a id="day04" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_04_kotlin"><a class="anchor" href="#_day_04_kotlin"></a><a class="link" href="#_day_04_kotlin">Day 04: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_04_camp_cleanup"><a class="anchor" href="#_day_04_camp_cleanup"></a><a class="link" href="#_day_04_camp_cleanup">Day 04 - Camp Cleanup</a></h4>
+<div class="paragraph">
+<p>I wasted some time today because I misunderstood the <strong>fully contains</strong> applying to a pair of assignments. I was trying to check across assignments. Re-reading when I got the wrong answer meant some <em>facepalms</em>.</p>
+</div>
+<div class="paragraph">
+<p>We needed to convert the input depicting 2 ranges into sets of sections representing by numbers. So that meant converting <code>2-4,6-8</code> to a <code>Pair</code> of <code>IntRange</code> and then to a <code>Pair</code> of <code>Set&lt;Int&gt;</code> which it as simple as:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun convertRange(input: String): IntRange {
+  val values = input.split("-")
+  return values[0].toInt()..values[1].toInt()
+}
+
+fun convertRanges(input: List&lt;String&gt;): List&lt;Pair&lt;Set&lt;Int&gt;, Set&lt;Int&gt;&gt;&gt; =
+  input.map { it.split(",") }
+    .map { Pair(convertRange(it[0]).toSet(), convertRange(it[1]).toSet()) }</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_1"><a class="anchor" href="#_part_1"></a><a class="link" href="#_part_1">Part 1</a></h5>
+<div class="paragraph">
+<p>Determining <strong>fully contains</strong> for part 1 was as simple as:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcContains(ranges: List&lt;Pair&lt;Set&lt;Int&gt;, Set&lt;Int&gt;&gt;&gt;): Int {
+  return ranges.count {
+    it.first.containsAll(it.second) || it.second.containsAll(it.first)
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_2_2"><a class="anchor" href="#_part_2_2"></a><a class="link" href="#_part_2_2">Part 2</a></h5>
+<div class="paragraph">
+<p>And determining an <strong>overlap</strong> for part1 was as simple as:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcOverlap(ranges: List&lt;Pair&lt;Set&lt;Int&gt;, Set&lt;Int&gt;&gt;&gt;): Int {
+  return ranges.count { it.first.intersect(it.second).isNotEmpty() }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_takeaways_2"><a class="anchor" href="#_takeaways_2"></a><a class="link" href="#_takeaways_2">Takeaways</a></h5>
+<div class="paragraph">
+<p>Re-read the problem because a lot of effort was made to explain with a complete example.</p>
+</div>
+<div class="paragraph">
+<p><strong>If you first answer is incorrect you may have misunderstood something.</strong></p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_full_source_2"><a class="anchor" href="#_full_source_2"></a><a class="link" href="#_full_source_2">Full source</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun main() {
+  fun convertRange(input: String): IntRange {
+    val values = input.split("-")
+    return values[0].toInt()..values[1].toInt()
+  }
+
+  fun convertRanges(input: List&lt;String&gt;): List&lt;Pair&lt;Set&lt;Int&gt;, Set&lt;Int&gt;&gt;&gt; =
+    input.map { it.split(",") }
+      .map { Pair(convertRange(it[0]).toSet(), convertRange(it[1]).toSet()) }
+
+  fun calcContains(ranges: List&lt;Pair&lt;Set&lt;Int&gt;, Set&lt;Int&gt;&gt;&gt;): Int {
+    return ranges.count {
+      it.first.containsAll(it.second) || it.second.containsAll(it.first)
+    }
+  }
+
+  fun calcOverlap(ranges: List&lt;Pair&lt;Set&lt;Int&gt;, Set&lt;Int&gt;&gt;&gt;): Int {
+    return ranges.count { it.first.intersect(it.second).isNotEmpty() }
+  }
+
+  fun part1() {
+    val testInput = readInput("day04_test")
+    val testCount = calcContains(convertRanges(testInput))
+    println("Part 1 Test Count = $testCount")
+    check(testCount == 2)
+
+    val input = readInput("day04")
+    val count = calcContains(convertRanges(input))
+    println("Part 1 Count = $count")
+    check(count == 524)
+  }
+
+  fun part2() {
+    val testInput = readInput("day04_test")
+    val testCount = calcOverlap(convertRanges(testInput))
+    println("Part 2 Test Count = $testCount")
+    check(testCount == 4)
+
+    val input = readInput("day04")
+    val count = calcOverlap(convertRanges(input))
+    println("Part 2 Count = $count")
+    check(count == 798)
   }
   part1()
   part2()
