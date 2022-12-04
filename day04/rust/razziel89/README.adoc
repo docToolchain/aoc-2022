@@ -1,0 +1,48 @@
+== Day 04: Camp Cleanup ==
+
+This is my implementation for both rounds of the camp cleanup puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+This one was straightforward, which is why I tried my luck with a generic pair
+type.
+It worked out nicely as I only had to implemeng the parsing logic once but could
+use it for two concrete types.
+Then, it was just a matter of creating the methods that compute whether there is
+a full (part 1) or partial (part 2) overlap between two ranges and to check for
+overlaps in both directions (which is strictly not needed for part 2 but doesn't
+hurt).
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are currently no tests.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
