@@ -1,4 +1,4 @@
-== Day 02: Rock Paper Scissors ==
+== Day 03 ==
 
 Today's problem is solved in few steps:
 - Split the input in the slices to compare
