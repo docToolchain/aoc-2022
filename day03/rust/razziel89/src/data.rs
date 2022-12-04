@@ -26,10 +26,6 @@ impl FromStr for Rucksack {
 }
 
 fn str_to_set(s: &str) -> HashSet<char> {
-    let mut set = HashSet::with_capacity(s.len());
-    for c in s.chars() {
-        set.insert(c);
-    }
-    set
+    HashSet::from_iter(s.chars())
 }
 // end::data[]
