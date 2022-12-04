@@ -889,7 +889,7 @@ CrZsJsPPZsGzwwsLwLmpwMDw"#;
 <div class="sect4">
 <h5 id="_input_4"><a class="anchor" href="#_input_4"></a><a class="link" href="#_input_4">Input</a></h5>
 <div class="paragraph">
-<p>Today, input parsing was the biggest challenge. Mainly because I decided to not use <code>unwrap</code> but try some proper error handling and to avoid intermediate <code>collect</code> calls. This leads to a lot of <code>and_then</code> (to short-circuit on the first error) followed by <code>map</code> (to combine results). Let&#8217;s see whether I find a cleaner ways throughout this year&#8217;s AoC journey.</p>
+<p>Today, input parsing was the biggest challenge. Mainly because I decided to not use <code>unwrap</code> but try some proper error handling and to avoid intermediate <code>collect</code> calls. Until I figured out that the code is much simplified if I create a separate function to parse a single line (because <code>?</code> can be used in that function but not in a clojure within an iterator&#8217;s <code>map</code> function), I had to use a lot of <code>and_then</code>, <code>map</code>, <code>map_error</code>, &#8230;&#8203;</p>
 </div>
 <div class="paragraph">
 <p>So here is my parsing functions (admittedly not how it looked like when I submitted my results)</p>
@@ -904,23 +904,26 @@ CrZsJsPPZsGzwwsLwLmpwMDw"#;
         pub range_pairs: Vec&lt;((usize, usize), (usize, usize))&gt;,
     }
 
-    fn parse_pair&lt;'a, T: Iterator&lt;Item = &amp;'a str&gt;&gt;(
-        iter: &amp;mut T,
-    ) -&gt; Result&lt;((usize, usize), (usize, usize)), PuzzleError&gt; {
-        parse_tuple(iter).and_then(|t1| parse_tuple(iter).map(|t2| (t1, t2)))
-    }
-
-    fn parse_tuple&lt;'a, T: Iterator&lt;Item = &amp;'a str&gt;&gt;(
-        iter: &amp;mut T,
-    ) -&gt; Result&lt;(usize, usize), PuzzleError&gt; {
-        iter.next()
-            .ok_or_else(|| PuzzleError::from("Missing first item"))
-            .and_then(|a| a.parse::&lt;usize&gt;().map_err(|e| e.into()))
-            .and_then(|a| {
+    fn parse_pair(line: &amp;str) -&gt; Result&lt;((usize, usize), (usize, usize)), PuzzleError&gt; {
+        let mut iter = line.split(|c: char| c == '-' || c == ',');
+        Ok((
+            (
                 iter.next()
-                    .ok_or_else(|| PuzzleError::from("Missing second item"))
-                    .and_then(|b| b.parse::&lt;usize&gt;().map(|b| (a, b)).map_err(|e| e.into()))
-            })
+                    .ok_or_else(|| format!("Missing start 1 '{line}'"))?
+                    .parse()?,
+                iter.next()
+                    .ok_or_else(|| format!("Missing end 1 in '{line}'"))?
+                    .parse()?,
+            ),
+            (
+                iter.next()
+                    .ok_or_else(|| format!("Missing start 2 in '{line}'"))?
+                    .parse()?,
+                iter.next()
+                    .ok_or_else(|| format!("Missing end 2 in '{line}'"))?
+                    .parse()?,
+            ),
+        ))
     }
 
     impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
@@ -929,7 +932,7 @@ CrZsJsPPZsGzwwsLwLmpwMDw"#;
         /// parse the puzzle input
         fn try_from(s: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
             s.lines()
-                .map(|l| parse_pair(&amp;mut l.split(|c: char| c == '-' || c == ',')))
+                .map(parse_pair)
                 .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()
                 .map(|range_pairs| Self { range_pairs })
         }
@@ -1015,7 +1018,7 @@ mod tests {
 <div class="sect4">
 <h5 id="_today_i_learned_4"><a class="anchor" href="#_today_i_learned_4"></a><a class="link" href="#_today_i_learned_4">Today I learned</a></h5>
 <div class="paragraph">
-<p><code>and_then</code> - <code>map</code> - <code>and_then</code> - <code>map</code> - <code>map_err</code> &#8230;&#8203;</p>
+<p><code>and_then</code> - <code>map</code> - <code>and_then</code> - <code>map</code> - <code>map_err</code> &#8230;&#8203; is all not needed if some parsing functionality for one line is moved to a separate function where the <code>?</code> shortcut operator can be used for error propagation and conversion</p>
 </div>
 </div>
 </div>
