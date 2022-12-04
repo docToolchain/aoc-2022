@@ -218,7 +218,7 @@ include::../../../../profiles/allUsers.adoc[]
 2+^.>|  ${stats.days.size()}+^| Day .2+^.>| Sum
 2+^.>| Developer ^| ${stats.days.collect{"$it"}.join(' ^| ')}
 """
-        def emojis=['👋','🕯','🎄','🎶','❄','🔔','🧦','☃','🕯🕯','🎁','🎄','🔔','☃','❄','⛪','🕯🕯🕯','🦌','🧝','🤶','🎄','☃','❄','🕯🕯🕯🕯','🎶','🎅','👪👼🦌']
+        def emojis=['👋','🎄','🎶','🔔','🕯🕯','☃','🧦','❄','🎁','🎅','🦌','🕯🕯🕯','🧝','🤶','⛪','🎄','🎶','🔔','🕯🕯🕯🕯','☃','❄','🎁','🎅','🦌','🧝','👪👼🦌']
         stats.stars.sort{e1, e2 -> e2.value.size() <=> e1.value.size()}.each{ coder, stars ->
             statsFile += "a| image::{${coder}-avatar}[width=32px] a| link:/generated/coder/${coder}/generatedDays.html[$coder] "
             def dayList = stats.days.collect {
