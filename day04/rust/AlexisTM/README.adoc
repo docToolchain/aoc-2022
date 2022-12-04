@@ -1,0 +1,20 @@
+== Day 04 ==
+
+Both problems are identical today, just the condition for summing is different.
+
+- First convert the string into an array of string slices.
+- Convert the slices to int, expecting 4 of them. (it will panic on unwrap if we don't have 4)
+- Apply the condition of the problem, return 1 for success
+- Sum
+
+`Solution 1`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=solution_part1]
+----
+
+`Solution 2`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=solution_part2]
+----
