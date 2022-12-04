@@ -1,0 +1,24 @@
+
+Day 4 of year 2022
+https://adventofcode.com/2022/day/4
+
+== What I learned
+
+. Remembered more or less how to use regex again.
+
+== Approach
+I use a regex to fish out the 4 numbers on each line and put them into a list of lists.
+
+**Star 1** +
+I just checked if the first pair is contained in the second or vice versa and put a 1 in a list if true. Then you just sum that list.
+
+**Star 2** +
+It's similar. You just check essentially that the 2 pairs are not disjoint. If so, put a 1 in the list. Sum the list.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
