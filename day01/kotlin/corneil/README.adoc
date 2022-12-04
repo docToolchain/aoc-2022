@@ -1,4 +1,4 @@
-== Day 01 Calorie Counting ==
+== Day 01 - Calorie Counting ==
 
 The day was lines representing the calories of food items carried by elves and separated by blank lines.
 Kotlin File has a readLines function that makes it easy to parse the input, calculate the calories for each elf and add to a list.
