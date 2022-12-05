@@ -192,6 +192,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_05_kotlin">Day 05: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_5_supply_stacks">Day 5: Supply Stacks</a>
+<ul class="sectlevel4">
+<li><a href="#_first_star_5">First Star</a></li>
+<li><a href="#_second_star_5">Second Star</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -644,6 +654,109 @@ fun RuReOneAlt2() = File("day2203_puzzle_input.txt").readLines()
 	println("***************************")
 	println("Solution for part2")
 	println("   $solution2 assignment pairs do the ranges overlap")
+	println()</code></pre>
+</div>
+</div>
+<a id="day05" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_05_kotlin"><a class="anchor" href="#_day_05_kotlin"></a><a class="link" href="#_day_05_kotlin">Day 05: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_5_supply_stacks"><a class="anchor" href="#_day_5_supply_stacks"></a><a class="link" href="#_day_5_supply_stacks">Day 5: Supply Stacks</a></h4>
+<div class="paragraph">
+<p>This solution is written in Kotlin.</p>
+</div>
+<div class="paragraph">
+<p>The original puzzle can be found at <a href="https://adventofcode.com/2022/day/5" class="bare">https://adventofcode.com/2022/day/5</a></p>
+</div>
+<div class="sect4">
+<h5 id="_first_star_5"><a class="anchor" href="#_first_star_5"></a><a class="link" href="#_first_star_5">First Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>Today I am not happy with my solution, it works but I have to rework it, so do not take this as an example.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun SuSa(in1: Int): String {
+
+	var stackStaples = mutableListOf&lt;String&gt;()
+
+	stackStaples.add("TVJWNRMS")
+	stackStaples.add("VCPQJDWB")
+	stackStaples.add("PRDHFJB")
+	stackStaples.add("DNMBPRF")
+	stackStaples.add("BTPRVH")
+	stackStaples.add("TPBC")
+	stackStaples.add("LPRJB")
+	stackStaples.add("WBZTLSCN")
+	stackStaples.add("GSL")
+
+	File("day2205_puzzle_input.txt").forEachLine {
+
+		if (it.contains("move")) {
+			var num = it.substringAfter("move ").substringBefore(" from").toInt()
+			var stFrom = it.substringAfter("from ").substringBefore(" to").toInt()
+			var stTo = it.substringAfter("to ").toInt()
+
+			if (in1 == 1) {
+				for (i in 1..num) {
+					var newTo = stackStaples[stFrom - 1].take(1) + stackStaples[stTo - 1]
+					var newFrom = stackStaples[stFrom - 1].drop(1)
+					stackStaples.removeAt(stFrom - 1)
+					stackStaples.add(stFrom - 1, newFrom)
+					stackStaples.removeAt(stTo - 1)
+					stackStaples.add(stTo - 1, newTo)
+				}
+			} else {
+					var newTo = stackStaples[stFrom - 1].take(num) + stackStaples[stTo - 1]
+					var newFrom = stackStaples[stFrom - 1].drop(num)
+					stackStaples.removeAt(stFrom - 1)
+					stackStaples.add(stFrom - 1, newFrom)
+					stackStaples.removeAt(stTo - 1)
+					stackStaples.add(stTo - 1, newTo)
+			}
+		}
+
+	}
+
+	var result: String = ""
+	stackStaples.forEach {
+		result = result + it.take(1)
+	}
+
+	return result
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_second_star_5"><a class="anchor" href="#_second_star_5"></a><a class="link" href="#_second_star_5">Second Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>See first star</p>
+</div>
+<div class="paragraph">
+<p>At the end, both solutions are printed out.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">// print solution for part 1
+	println("****************************")
+	println("--- Day 5: Supply Stacks ---")
+	println("****************************")
+	println("Solution for part1")
+	println("   $solution1 crate ends up on top of each stack")
+	println()
+// print solution for part 2
+	println("*******************************")
+	println("Solution for part2")
+	println("   $solution2 are those Elves carrying")
 	println()</code></pre>
 </div>
 </div>
