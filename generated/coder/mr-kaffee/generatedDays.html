@@ -208,6 +208,19 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_05_rust">Day 05: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_5_supply_stacks">Day 5: Supply Stacks</a>
+<ul class="sectlevel4">
+<li><a href="#_input_5">Input</a></li>
+<li><a href="#_star_1_5">Star 1</a></li>
+<li><a href="#_star_2_5">Star 2</a></li>
+<li><a href="#_tests_6">Tests</a></li>
+<li><a href="#_today_i_learned_5">Today I learned</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1019,6 +1032,231 @@ mod tests {
 <h5 id="_today_i_learned_4"><a class="anchor" href="#_today_i_learned_4"></a><a class="link" href="#_today_i_learned_4">Today I learned</a></h5>
 <div class="paragraph">
 <p><code>and_then</code> - <code>map</code> - <code>and_then</code> - <code>map</code> - <code>map_err</code> &#8230;&#8203; is all not needed if some parsing functionality for one line is moved to a separate function where the <code>?</code> shortcut operator can be used for error propagation and conversion</p>
+</div>
+<a id="day05" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_05_rust"><a class="anchor" href="#_day_05_rust"></a><a class="link" href="#_day_05_rust">Day 05: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_5_supply_stacks"><a class="anchor" href="#_day_5_supply_stacks"></a><a class="link" href="#_day_5_supply_stacks">Day 5: Supply Stacks</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/5">AoC|2022|5</a>.</p>
+</div>
+<div class="paragraph">
+<p>Today, there where two main challenges for me:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Parsing the input</p>
+</li>
+<li>
+<p>Rust&#8217;s mutability &amp; borrowing concept for part 2</p>
+</li>
+</ol>
+</div>
+<div class="sect4">
+<h5 id="_input_5"><a class="anchor" href="#_input_5"></a><a class="link" href="#_input_5">Input</a></h5>
+<div class="paragraph">
+<p>Today, it was not just "process input line by line", but in the end almost &#8230;&#8203;</p>
+</div>
+<div class="paragraph">
+<p>First, I split the input in one part describing the stacks and a second part describing the moves. Parsing the moves in tuples <code>(n, from, to)</code> is easy. I make the <code>from</code> and <code>to</code> parts zero-based on the fly.</p>
+</div>
+<div class="paragraph">
+<p>Parsing the stacks of crates is a bit more tricky. I did not (could not) use a simple iterator / collect scheme but allocated the stacks upfront and than process line by line starting at the last and pushing elements on the stack.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    use mr_kaffee_aoc::err::PuzzleError;
+
+    #[derive(Debug, PartialEq, Eq)]
+    pub struct PuzzleData {
+        pub crates: Vec&lt;Vec&lt;char&gt;&gt;,
+        pub moves: Vec&lt;(usize, usize, usize)&gt;,
+    }
+
+    fn parse_move(mv: &amp;str) -&gt; Result&lt;(usize, usize, usize), PuzzleError&gt; {
+        let mut parts = mv.split(" ");
+
+        parts.next(); // skip "move"
+        let n = parts
+            .next()
+            .ok_or_else(|| format!("Missing number in move '{mv}'"))?
+            .parse::&lt;usize&gt;()?;
+        parts.next(); // skip "from"
+        let f = parts
+            .next()
+            .ok_or_else(|| format!("Missing from in move '{mv}'"))?
+            .parse::&lt;usize&gt;()?
+            - 1;
+        parts.next(); // skip "to"
+        let t = parts
+            .next()
+            .ok_or_else(|| format!("Missing to in move '{mv}'"))?
+            .parse::&lt;usize&gt;()?
+            - 1;
+
+        Ok((n, f, t))
+    }
+
+    fn parse_crate_layer(crates: &amp;mut Vec&lt;Vec&lt;char&gt;&gt;, layer: &amp;str) -&gt; Result&lt;(), PuzzleError&gt; {
+        for (k, c) in layer.chars().skip(1).step_by(4).enumerate() {
+            if k &gt;= crates.len() {
+                return Err(format!("Inconsistent layer length in '{layer}'").into());
+            }
+            if c != ' ' {
+                crates[k].push(c);
+            }
+        }
+        Ok(())
+    }
+
+    impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
+        type Error = PuzzleError;
+
+        /// parse the puzzle input
+        fn try_from(s: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
+            let (crates_part, moves) = s
+                .split_once("\n\n")
+                .ok_or("Could not separate crates from moves")?;
+
+            let len = (crates_part.lines().next().ok_or("No crates found")?.len() + 1) / 4;
+
+            let mut crates: Vec&lt;Vec&lt;char&gt;&gt; = vec![vec![]; len];
+            for layer in crates_part.lines().rev().skip(1) {
+                parse_crate_layer(&amp;mut crates, layer)?;
+            }
+
+            let moves = moves
+                .lines()
+                .map(parse_move)
+                .collect::&lt;Result&lt;Vec&lt;_&gt;, _&gt;&gt;()?;
+
+            Ok(PuzzleData { crates, moves })
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_5"><a class="anchor" href="#_star_1_5"></a><a class="link" href="#_star_1_5">Star 1</a></h5>
+<div class="paragraph">
+<p>This is straight forward. Just process move by move, and pop from one stack / push to the other stack the correct number of times.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; String {
+    let mut crates = data.crates.clone();
+    for (n, f, t) in &amp;data.moves {
+        for _ in 0..*n {
+            let c = crates[*f].pop().unwrap();
+            crates[*t].push(c);
+        }
+    }
+
+    crates.iter().map(|c| c.last().unwrap()).collect()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_5"><a class="anchor" href="#_star_2_5"></a><a class="link" href="#_star_2_5">Star 2</a></h5>
+<div class="paragraph">
+<p>This is slightly more tricky. Now we have to pop a complete pack of items and push that on top of another stack preserving the order.</p>
+</div>
+<div class="paragraph">
+<p>The challenging part of it is that Rust does not allow mutable references to two items in a vec at the same time. My first solution used intermediate storage. My current solution using <code>slice::split_at_mut</code> to circumvent this (speed-up by a factor 3 to 4 for part 2 compared to intermediate storage). The code gets a bit complicated though.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">fn mut_references&lt;T&gt;(v: &amp;mut Vec&lt;T&gt;, idx1: usize, idx2: usize) -&gt; (&amp;mut T, &amp;mut T) {
+    if idx1 &gt; idx2 {
+        let (left, right) = v.split_at_mut(idx1);
+        (&amp;mut right[0], &amp;mut left[idx2])
+    } else {
+        let (left, right) = v.split_at_mut(idx2);
+        (&amp;mut left[idx1], &amp;mut right[0])
+    }
+}
+
+pub fn star_2(data: &amp;PuzzleData) -&gt; String {
+    let mut crates = data.crates.clone();
+    for (n, f, t) in &amp;data.moves {
+        // I need a mutable reference to the from and the to part at the same time
+        // to avoid creating intermediate storage
+        let (fr, to) = mut_references(&amp;mut crates, *f, *t);
+
+        let len = fr.len();
+        for c in fr.drain(len - n..) {
+            to.push(c);
+        }
+    }
+
+    crates.iter().map(|c| c.last().unwrap()).collect()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_6"><a class="anchor" href="#_tests_6"></a><a class="link" href="#_tests_6">Tests</a></h5>
+<div class="paragraph">
+<p>And there are some tests.</p>
+</div>
+<div class="paragraph">
+<p>Since parsing was not totally obvious, I did an additional test for this part &#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"    [D]
+[N] [C]
+[Z] [M] [P]
+ 1   2   3
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2"#;
+
+    #[test]
+    pub fn test_parse() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(
+            PuzzleData {
+                crates: vec![vec!['Z', 'N'], vec!['M', 'C', 'D'], vec!['P']],
+                moves: vec![(1, 1, 0), (3, 0, 2), (2, 1, 0), (1, 0, 1)]
+            },
+            data
+        );
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!("CMZ", star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!("MCD", star_2(&amp;data));
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_today_i_learned_5"><a class="anchor" href="#_today_i_learned_5"></a><a class="link" href="#_today_i_learned_5">Today I learned</a></h5>
+<div class="paragraph">
+<p>How to mutably access two elements of one vec in Rust.</p>
 </div>
 </div>
 </div>
