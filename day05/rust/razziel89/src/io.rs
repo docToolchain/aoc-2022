@@ -1,3 +1,4 @@
+// tag::io[]
 use anyhow::{Context, Error, Result};
 use std::str::FromStr;
 
@@ -10,7 +11,6 @@ fn read_lines_from_file(path: &str) -> Result<Vec<String>> {
         .collect())
 }
 
-// tag::io[]
 pub type Predicate = fn(&String) -> bool;
 pub type Transform = fn(String) -> String;
 
