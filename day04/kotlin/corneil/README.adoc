@@ -1,4 +1,4 @@
-== Day 04 - Camp Cleanup
+== Camp Cleanup
 
 I wasted some time today because I misunderstood the *fully contains* applying to a pair of assignments. I was trying to check across assignments. Re-reading when I got the wrong answer meant some _facepalms_.
 
