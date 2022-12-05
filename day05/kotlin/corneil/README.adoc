@@ -1,0 +1,136 @@
+== Day 04 - Supply Stacks
+
+Today we had to implement a parser to read the state of stacks of containers and instructions for moving the containers. The result was a list of the top container labels.
+I decided to create a data structure for the instructions and a simple Stack.
+
+=== Data Structures
+[source,kotlin]
+....
+data class Instruction(val count: Int, val from: Int, val to: Int)
+
+class Stack<T>(private val elements: MutableList<T> = mutableListOf<T>()) {
+  fun empty(): Boolean = elements.isEmpty()
+  fun peek(): T = elements[elements.lastIndex]
+  fun pop(): T = elements.removeAt(elements.lastIndex)
+  fun push(value: T) {
+    elements.add(value)
+  }
+
+  fun items() = elements.toList()
+  fun size() = elements.size
+}
+....
+
+=== Parsing
+[source,kotlin]
+....
+fun readStack(lines: List<String>, stack: Int): Stack<Char> {
+  val result = mutableListOf<Char>()
+  val offset = stack * 4 + 1
+  for (line in lines) {
+    if (line.length > offset) {
+      val crate = line[offset]
+      if (crate in 'A'..'Z') {
+        result.add(crate)
+      }
+    }
+  }
+  result.reverse()
+  return Stack(result)
+}
+
+fun loadStacks(input: List<String>): List<Stack<Char>> {
+  val lines = mutableListOf<String>()
+  for (line in input) {
+    if (line.isEmpty()) {
+      break;
+    }
+    lines.add(line)
+  }
+  val numbers = mutableListOf<Int>()
+  for (c in lines.last()) {
+    if (c in '1'..'9') {
+      numbers.add(c - '1' + 1)
+    }
+  }
+  lines.removeAt(lines.lastIndex)
+  val stacks = mutableListOf<Stack<Char>>()
+  for (stack in numbers.indices) {
+    stacks.add(readStack(lines, stack))
+  }
+  return stacks.toList()
+}
+
+fun loadInstructions(input: List<String>): List<Instruction> {
+  var foundBlank = false
+  val result = mutableListOf<Instruction>()
+  for (line in input) {
+    if (line.isEmpty()) {
+      foundBlank = true
+    }
+    if (foundBlank) {
+      val items = line.split(" ")
+      if (items.size > 4) {
+        result.add(Instruction(items[1].toInt(), items[3].toInt(), items[5].toInt()))
+      }
+    }
+  }
+  return result
+}
+....
+
+=== Part 1
+
+Perform all the instructions and provide the list of top level crates:
+
+[source,kotlin]
+....
+fun perform(stacks: List<Stack<Char>>, instruction: Instruction) {
+  for (i in 1..instruction.count) {
+    val crate = stacks[instruction.from - 1].pop()
+    stacks[instruction.to - 1].push(crate)
+  }
+}
+fun performAndFindTops(stacks: List<Stack<Char>>, instructions: List<Instruction>): String {
+  instructions.forEach {
+    perform(stacks, it)
+  }
+  return stacks.joinToString("") { it.peek().toString() }
+}
+....
+
+=== Part 2
+
+The crane can now move multiple containers at the same time retaining their order.
+I decided to use a local stack to pop all the container and then push them again which will retain the order. The alternative would have been to adjust the Stack to remove multiple items at once.
+
+[source,kotlin]
+....
+fun perform9001(stacks: List<Stack<Char>>, instruction: Instruction) {
+  println(instruction)
+  val tmp = Stack<Char>()
+  for (i in 1..instruction.count) {
+    val crate = stacks[instruction.from - 1].pop()
+    tmp.push(crate)
+  }
+  while (!tmp.empty()) {
+    stacks[instruction.to - 1].push(tmp.pop())
+  }
+}
+fun performAndFindTops9001(stacks: List<Stack<Char>>, instructions: List<Instruction>): String {
+  instructions.forEach {
+    perform9001(stacks, it)
+  }
+  return stacks.joinToString("") { it.peek().toString() }
+}
+....
+
+=== Takeaways
+Sometimes a requirement change can impact your data structures in huge ways. Using a stack to represent the piles of crates was fine until we needed to move multiple crates at a time. In a real system the performance differences of moving multiple crates at the same time will be huge if it is a core part of the system.
+
+=== Full source
+
+[source,kotlin]
+....
+include::src/solution.kt[]
+....
