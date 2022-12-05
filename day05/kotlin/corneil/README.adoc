@@ -52,16 +52,13 @@ fun loadStacks(input: List<String>): List<Stack<Char>> {
 }
 
 fun loadInstructions(input: List<String>): List<Instruction> {
-  val result = mutableListOf<Instruction>()
   val regex = """move (\d+) from (\d+) to (\d+)""".toRegex()
-  for (line in input) {
-    val matches = regex.find(line)
-    if (matches != null) {
-      val (count, from, to) = matches.destructured
-      result.add(Instruction(count.toInt(), from.toInt(), to.toInt()))
+  return input.mapNotNull { line ->
+    regex.find(line)?.let {
+      val (count, from, to) = it.destructured
+      Instruction(count.toInt(), from.toInt(), to.toInt())
     }
   }
-  return result
 }
 ....
 
