@@ -147,26 +147,32 @@
 <li><a href="#_about_me">About me</a></li>
 <li><a href="#_day_00_kotlin">Day 00: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_00_hello_world">Day 00 Hello World!</a></li>
+<li><a href="#_hello_world">Hello World!</a></li>
 </ul>
 </li>
 <li><a href="#_day_01_kotlin">Day 01: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_01_calorie_counting">Day 01 - Calorie Counting</a></li>
+<li><a href="#_calorie_counting">Calorie Counting</a>
+<ul class="sectlevel4">
+<li><a href="#_parsing">Parsing</a></li>
+<li><a href="#_part_1">Part 1</a></li>
+<li><a href="#_part_2">Part 2</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#_day_02_kotlin">Day 02: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_02_rock_paper_scissors">Day 02 - Rock Paper Scissors</a></li>
+<li><a href="#_rock_paper_scissors">Rock Paper Scissors</a></li>
 </ul>
 </li>
 <li><a href="#_day_03_kotlin">Day 03: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_02_rucksack_reorganization">Day 02 - Rucksack Reorganization</a>
+<li><a href="#_rucksack_reorganization">Rucksack Reorganization</a>
 <ul class="sectlevel4">
 <li><a href="#_calculating_the_priority">Calculating the priority</a></li>
 <li><a href="#_part1">Part1</a></li>
-<li><a href="#_part_2">Part 2</a></li>
+<li><a href="#_part_2_2">Part 2</a></li>
 <li><a href="#_takeaways">Takeaways</a></li>
 <li><a href="#_full_source">Full source</a></li>
 </ul>
@@ -175,10 +181,10 @@
 </li>
 <li><a href="#_day_04_kotlin">Day 04: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_04_camp_cleanup">Day 04 - Camp Cleanup</a>
+<li><a href="#_camp_cleanup">Camp Cleanup</a>
 <ul class="sectlevel4">
-<li><a href="#_part_1">Part 1</a></li>
-<li><a href="#_part_2_2">Part 2</a></li>
+<li><a href="#_part_1_2">Part 1</a></li>
+<li><a href="#_part_2_3">Part 2</a></li>
 <li><a href="#_takeaways_2">Takeaways</a></li>
 <li><a href="#_full_source_2">Full source</a></li>
 </ul>
@@ -187,12 +193,12 @@
 </li>
 <li><a href="#_day_05_kotlin">Day 05: kotlin</a>
 <ul class="sectlevel3">
-<li><a href="#_day_04_supply_stacks">Day 04 - Supply Stacks</a>
+<li><a href="#_supply_stacks">Supply Stacks</a>
 <ul class="sectlevel4">
 <li><a href="#_data_structures">Data Structures</a></li>
-<li><a href="#_parsing">Parsing</a></li>
-<li><a href="#_part_1_2">Part 1</a></li>
-<li><a href="#_part_2_3">Part 2</a></li>
+<li><a href="#_parsing_2">Parsing</a></li>
+<li><a href="#_part_1_3">Part 1</a></li>
+<li><a href="#_part_2_4">Part 2</a></li>
 <li><a href="#_takeaways_3">Takeaways</a></li>
 <li><a href="#_full_source_3">Full source</a></li>
 </ul>
@@ -237,7 +243,7 @@ Mastodon: <a href="https://mastodon.social/@corneil">@corneil@mastodon.social</a
 <div class="sect2">
 <h3 id="_day_00_kotlin"><a class="anchor" href="#_day_00_kotlin"></a><a class="link" href="#_day_00_kotlin">Day 00: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_00_hello_world"><a class="anchor" href="#_day_00_hello_world"></a><a class="link" href="#_day_00_hello_world">Day 00 Hello World!</a></h4>
+<h4 id="_hello_world"><a class="anchor" href="#_hello_world"></a><a class="link" href="#_hello_world">Hello World!</a></h4>
 <div class="paragraph">
 <p>This is a simple Hello World program in <a href="https://kotlinlang.org">Kotlin</a>, if you want to experiment with Kotlin use the <a href="https://play.kotlinlang.org">Kotlin Playground</a></p>
 </div>
@@ -251,15 +257,16 @@ Feel free to reach out with comments at the links above.</p>
 <div class="sect2">
 <h3 id="_day_01_kotlin"><a class="anchor" href="#_day_01_kotlin"></a><a class="link" href="#_day_01_kotlin">Day 01: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_01_calorie_counting"><a class="anchor" href="#_day_01_calorie_counting"></a><a class="link" href="#_day_01_calorie_counting">Day 01 - Calorie Counting</a></h4>
+<h4 id="_calorie_counting"><a class="anchor" href="#_calorie_counting"></a><a class="link" href="#_calorie_counting">Calorie Counting</a></h4>
 <div class="paragraph">
 <p>In order to follow these solutions you will need to login to <a href="https://adventofcode.com/2022">Advent of Code</a> and complete each day.</p>
 </div>
 <div class="paragraph">
 <p>The day was lines representing the calories of food items carried by elves and separated by blank lines.
-Kotlin File has a readLines function that makes it easy to parse the input, calculate the calories for each elf and add to a list.
-For part one the max value it the answer.</p>
+Kotlin File has a readLines function that makes it easy to parse the input, calculate the calories for each elf and add to a list.</p>
 </div>
+<div class="sect4">
+<h5 id="_parsing"><a class="anchor" href="#_parsing"></a><a class="link" href="#_parsing">Parsing</a></h5>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">  fun findCalories(input: List&lt;String&gt;): List&lt;Int&gt; {
@@ -275,15 +282,26 @@ For part one the max value it the answer.</p>
     }
     elves.add(calories)
     return elves
-  }
-
-
-  fun findMaxCalories(input: List&lt;String&gt;): Int {
+  }</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_1"><a class="anchor" href="#_part_1"></a><a class="link" href="#_part_1">Part 1</a></h5>
+<div class="paragraph">
+<p>For part one the max value it the answer.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">  fun findMaxCalories(input: List&lt;String&gt;): Int {
     val calories = findCalories(input)
     return calories.max()
   }</code></pre>
 </div>
 </div>
+</div>
+<div class="sect4">
+<h5 id="_part_2"><a class="anchor" href="#_part_2"></a><a class="link" href="#_part_2">Part 2</a></h5>
 <div class="paragraph">
 <p>For part two the result is the sum of the first three when sorted in descending order. Kotlin has the <code>take</code> method on collections which is very useful in this case.</p>
 </div>
@@ -298,10 +316,11 @@ For part one the max value it the answer.</p>
 <a id="day02" />
 </div>
 </div>
+</div>
 <div class="sect2">
 <h3 id="_day_02_kotlin"><a class="anchor" href="#_day_02_kotlin"></a><a class="link" href="#_day_02_kotlin">Day 02: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_02_rock_paper_scissors"><a class="anchor" href="#_day_02_rock_paper_scissors"></a><a class="link" href="#_day_02_rock_paper_scissors">Day 02 - Rock Paper Scissors</a></h4>
+<h4 id="_rock_paper_scissors"><a class="anchor" href="#_rock_paper_scissors"></a><a class="link" href="#_rock_paper_scissors">Rock Paper Scissors</a></h4>
 <div class="paragraph">
 <p>Part 1 meant we needed to parse input representing an opponent hand when playing RPS, and we had to assume the 2nd input was an answer we needed to provide while "cheating".</p>
 </div>
@@ -439,7 +458,7 @@ fun main() {
 <div class="sect2">
 <h3 id="_day_03_kotlin"><a class="anchor" href="#_day_03_kotlin"></a><a class="link" href="#_day_03_kotlin">Day 03: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_02_rucksack_reorganization"><a class="anchor" href="#_day_02_rucksack_reorganization"></a><a class="link" href="#_day_02_rucksack_reorganization">Day 02 - Rucksack Reorganization</a></h4>
+<h4 id="_rucksack_reorganization"><a class="anchor" href="#_rucksack_reorganization"></a><a class="link" href="#_rucksack_reorganization">Rucksack Reorganization</a></h4>
 <div class="paragraph">
 <p>Today puzzle was about manipulating strings and calculating the values of characters according rules.</p>
 </div>
@@ -483,7 +502,7 @@ fun main() {
 </div>
 </div>
 <div class="sect4">
-<h5 id="_part_2"><a class="anchor" href="#_part_2"></a><a class="link" href="#_part_2">Part 2</a></h5>
+<h5 id="_part_2_2"><a class="anchor" href="#_part_2_2"></a><a class="link" href="#_part_2_2">Part 2</a></h5>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcBadges(input: List&lt;String&gt;): Int =
@@ -585,7 +604,7 @@ fun main() {
 <div class="sect2">
 <h3 id="_day_04_kotlin"><a class="anchor" href="#_day_04_kotlin"></a><a class="link" href="#_day_04_kotlin">Day 04: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_04_camp_cleanup"><a class="anchor" href="#_day_04_camp_cleanup"></a><a class="link" href="#_day_04_camp_cleanup">Day 04 - Camp Cleanup</a></h4>
+<h4 id="_camp_cleanup"><a class="anchor" href="#_camp_cleanup"></a><a class="link" href="#_camp_cleanup">Camp Cleanup</a></h4>
 <div class="paragraph">
 <p>I wasted some time today because I misunderstood the <strong>fully contains</strong> applying to a pair of assignments. I was trying to check across assignments. Re-reading when I got the wrong answer meant some <em>facepalms</em>.</p>
 </div>
@@ -605,7 +624,7 @@ fun convertRanges(input: List&lt;String&gt;): List&lt;Pair&lt;Set&lt;Int&gt;, Se
 </div>
 </div>
 <div class="sect4">
-<h5 id="_part_1"><a class="anchor" href="#_part_1"></a><a class="link" href="#_part_1">Part 1</a></h5>
+<h5 id="_part_1_2"><a class="anchor" href="#_part_1_2"></a><a class="link" href="#_part_1_2">Part 1</a></h5>
 <div class="paragraph">
 <p>Determining <strong>fully contains</strong> for part 1 was as simple as:</p>
 </div>
@@ -620,7 +639,7 @@ fun convertRanges(input: List&lt;String&gt;): List&lt;Pair&lt;Set&lt;Int&gt;, Se
 </div>
 </div>
 <div class="sect4">
-<h5 id="_part_2_2"><a class="anchor" href="#_part_2_2"></a><a class="link" href="#_part_2_2">Part 2</a></h5>
+<h5 id="_part_2_3"><a class="anchor" href="#_part_2_3"></a><a class="link" href="#_part_2_3">Part 2</a></h5>
 <div class="paragraph">
 <p>And determining an <strong>overlap</strong> for part1 was as simple as:</p>
 </div>
@@ -700,7 +719,7 @@ fun convertRanges(input: List&lt;String&gt;): List&lt;Pair&lt;Set&lt;Int&gt;, Se
 <div class="sect2">
 <h3 id="_day_05_kotlin"><a class="anchor" href="#_day_05_kotlin"></a><a class="link" href="#_day_05_kotlin">Day 05: kotlin</a></h3>
 <div class="sect3">
-<h4 id="_day_04_supply_stacks"><a class="anchor" href="#_day_04_supply_stacks"></a><a class="link" href="#_day_04_supply_stacks">Day 04 - Supply Stacks</a></h4>
+<h4 id="_supply_stacks"><a class="anchor" href="#_supply_stacks"></a><a class="link" href="#_supply_stacks">Supply Stacks</a></h4>
 <div class="paragraph">
 <p>Today we had to implement a parser to read the state of stacks of containers and instructions for moving the containers. The result was a list of the top container labels.
 I decided to create a data structure for the instructions and a simple Stack.</p>
@@ -726,7 +745,7 @@ class Stack&lt;T&gt;(private val elements: MutableList&lt;T&gt; = mutableListOf&
 </div>
 </div>
 <div class="sect4">
-<h5 id="_parsing"><a class="anchor" href="#_parsing"></a><a class="link" href="#_parsing">Parsing</a></h5>
+<h5 id="_parsing_2"><a class="anchor" href="#_parsing_2"></a><a class="link" href="#_parsing_2">Parsing</a></h5>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun readStack(lines: List&lt;String&gt;, stack: Int): Stack&lt;Char&gt; {
@@ -786,7 +805,7 @@ fun loadInstructions(input: List&lt;String&gt;): List&lt;Instruction&gt; {
 </div>
 </div>
 <div class="sect4">
-<h5 id="_part_1_2"><a class="anchor" href="#_part_1_2"></a><a class="link" href="#_part_1_2">Part 1</a></h5>
+<h5 id="_part_1_3"><a class="anchor" href="#_part_1_3"></a><a class="link" href="#_part_1_3">Part 1</a></h5>
 <div class="paragraph">
 <p>Perform all the instructions and provide the list of top level crates:</p>
 </div>
@@ -808,7 +827,7 @@ fun performAndFindTops(stacks: List&lt;Stack&lt;Char&gt;&gt;, instructions: List
 </div>
 </div>
 <div class="sect4">
-<h5 id="_part_2_3"><a class="anchor" href="#_part_2_3"></a><a class="link" href="#_part_2_3">Part 2</a></h5>
+<h5 id="_part_2_4"><a class="anchor" href="#_part_2_4"></a><a class="link" href="#_part_2_4">Part 2</a></h5>
 <div class="paragraph">
 <p>The crane can now move multiple containers at the same time retaining their order.
 I decided to use a local stack to pop all the container and then push them again which will retain the order. The alternative would have been to adjust the Stack to remove multiple items at once.</p>
