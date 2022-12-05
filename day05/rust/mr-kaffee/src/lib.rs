@@ -1,8 +1,15 @@
 use input::*;
-use mr_kaffee_aoc::{Puzzle, Star};
+use mr_kaffee_aoc::{err::PuzzleError, Puzzle, Star};
 
 /// the puzzle
-pub fn puzzle() -> Puzzle<'static, PuzzleData, String, String, String, String> {
+pub fn puzzle() -> Puzzle<
+    'static,
+    PuzzleData,
+    String,
+    Result<String, PuzzleError>,
+    String,
+    Result<String, PuzzleError>,
+> {
     Puzzle {
         year: 2022,
         day: 5,
@@ -26,44 +33,53 @@ pub mod input {
 
     #[derive(Debug, PartialEq, Eq)]
     pub struct PuzzleData {
-        pub crates: Vec<Vec<char>>,
-        pub moves: Vec<(usize, usize, usize)>,
+        stacks: Vec<Vec<char>>,
+        moves: Vec<(usize, usize, usize)>,
     }
 
-    fn parse_move(mv: &str) -> Result<(usize, usize, usize), PuzzleError> {
-        let mut parts = mv.split(" ");
+    fn parse_move(line: &str, len: usize) -> Result<(usize, usize, usize), PuzzleError> {
+        let mut parts = line.split(" ");
 
         parts.next(); // skip "move"
         let n = parts
             .next()
-            .ok_or_else(|| format!("Missing number in move '{mv}'"))?
+            .ok_or_else(|| format!("Missing number in move '{line}'"))?
             .parse::<usize>()?;
         parts.next(); // skip "from"
-        let f = parts
+        let from = parts
             .next()
-            .ok_or_else(|| format!("Missing from in move '{mv}'"))?
+            .ok_or_else(|| format!("Missing from in move '{line}'"))?
             .parse::<usize>()?
             - 1;
         parts.next(); // skip "to"
-        let t = parts
+        let to = parts
             .next()
-            .ok_or_else(|| format!("Missing to in move '{mv}'"))?
+            .ok_or_else(|| format!("Missing to in move '{line}'"))?
             .parse::<usize>()?
             - 1;
 
-        Ok((n, f, t))
+        if from >= len || to >= len {
+            Err(format!("Invalid move: '{line}', <from>, <to> <= {len} required.").into())
+        } else if from == to {
+            Err(format!("Invalid move: '{line}', <from> != <to> required.").into())
+        } else {
+            Ok((n, from, to))
+        }
     }
 
-    fn parse_crate_layer(crates: &mut Vec<Vec<char>>, layer: &str) -> Result<(), PuzzleError> {
-        for (k, c) in layer.chars().skip(1).step_by(4).enumerate() {
-            if k >= crates.len() {
-                return Err(format!("Inconsistent layer length in '{layer}'").into());
+    fn parse_crate_layer(stacks: &mut Vec<Vec<char>>, line: &str) {
+        for (k, item) in line
+            .chars()
+            .skip(1)
+            .step_by(4)
+            .enumerate()
+            .filter(|(_, item)| *item != ' ')
+        {
+            while k >= stacks.len() {
+                stacks.push(Vec::new());
             }
-            if c != ' ' {
-                crates[k].push(c);
-            }
+            stacks[k].push(item);
         }
-        Ok(())
     }
 
     impl TryFrom<&'static str> for PuzzleData {
@@ -71,39 +87,64 @@ pub mod input {
 
         /// parse the puzzle input
         fn try_from(s: &'static str) -> Result<Self, Self::Error> {
-            let (crates_part, moves) = s
+            let (stacks_part, moves_part) = s
                 .split_once("\n\n")
                 .ok_or("Could not separate crates from moves")?;
 
-            let len = (crates_part.lines().next().ok_or("No crates found")?.len() + 1) / 4;
-
-            let mut crates: Vec<Vec<char>> = vec![vec![]; len];
-            for layer in crates_part.lines().rev().skip(1) {
-                parse_crate_layer(&mut crates, layer)?;
+            let mut stacks: Vec<Vec<char>> = vec![];
+            for line in stacks_part.lines().rev().skip(1) {
+                parse_crate_layer(&mut stacks, line);
             }
 
-            let moves = moves
+            let moves = moves_part
                 .lines()
-                .map(parse_move)
+                .map(|line| parse_move(line, stacks.len()))
                 .collect::<Result<Vec<_>, _>>()?;
 
-            Ok(PuzzleData { crates, moves })
+            Ok(PuzzleData { stacks, moves })
+        }
+    }
+
+    impl PuzzleData {
+        /// get moves
+        pub fn moves(&self) -> &[(usize, usize, usize)] {
+            &self.moves
+        }
+
+        /// get cloned crates
+        pub fn stacks(&self) -> Vec<Vec<char>> {
+            self.stacks.clone()
         }
     }
 }
 // end::input[]
 
 // tag::star_1[]
-pub fn star_1(data: &PuzzleData) -> String {
-    let mut crates = data.crates.clone();
-    for (n, f, t) in &data.moves {
+fn msg(stacks: &[Vec<char>]) -> Result<String, PuzzleError> {
+    stacks
+        .iter()
+        .map(|c| {
+            c.last().ok_or_else(|| {
+                PuzzleError::from(format!(
+                    "Can't construct message. Empty stack in {stacks:?}"
+                ))
+            })
+        })
+        .collect()
+}
+
+pub fn star_1(data: &PuzzleData) -> Result<String, PuzzleError> {
+    let mut stacks = data.stacks();
+    for (n, from, to) in data.moves() {
         for _ in 0..*n {
-            let c = crates[*f].pop().unwrap();
-            crates[*t].push(c);
+            let item = stacks[*from]
+                .pop()
+                .ok_or_else(|| format!("Tried to pop from empty stack {from}, stacks: {stacks:?}"))?;
+            stacks[*to].push(item);
         }
     }
 
-    crates.iter().map(|c| c.last().unwrap()).collect()
+    msg(&stacks)
 }
 // end::star_1[]
 
@@ -118,20 +159,26 @@ fn mut_references<T>(v: &mut Vec<T>, idx1: usize, idx2: usize) -> (&mut T, &mut 
     }
 }
 
-pub fn star_2(data: &PuzzleData) -> String {
-    let mut crates = data.crates.clone();
-    for (n, f, t) in &data.moves {
+pub fn star_2(data: &PuzzleData) -> Result<String, PuzzleError> {
+    let mut stacks = data.stacks();
+    for (n, from, to) in data.moves() {
         // I need a mutable reference to the from and the to part at the same time
         // to avoid creating intermediate storage
-        let (fr, to) = mut_references(&mut crates, *f, *t);
+        let (source, dest) = mut_references(&mut stacks, *from, *to);
 
-        let len = fr.len();
-        for c in fr.drain(len - n..) {
-            to.push(c);
+        let len = source.len();
+        if *n > len {
+            return Err(format!(
+                "Trying to pop {n} elements from stack {from} containing {len}, stacks: {stacks:?}"
+            )
+            .into());
+        }
+        for item in source.drain(len - n..) {
+            dest.push(item);
         }
     }
 
-    crates.iter().map(|c| c.last().unwrap()).collect()
+    msg(&stacks)
 }
 // end::star_2[]
 
@@ -154,24 +201,22 @@ move 1 from 1 to 2"#;
     pub fn test_parse() {
         let data = PuzzleData::try_from(CONTENT).unwrap();
         assert_eq!(
-            PuzzleData {
-                crates: vec![vec!['Z', 'N'], vec!['M', 'C', 'D'], vec!['P']],
-                moves: vec![(1, 1, 0), (3, 0, 2), (2, 1, 0), (1, 0, 1)]
-            },
-            data
+            vec![vec!['Z', 'N'], vec!['M', 'C', 'D'], vec!['P']],
+            data.stacks()
         );
+        assert_eq!(&[(1, 1, 0), (3, 0, 2), (2, 1, 0), (1, 0, 1)], data.moves());
     }
 
     #[test]
     pub fn test_star_1() {
         let data = PuzzleData::try_from(CONTENT).unwrap();
-        assert_eq!("CMZ", star_1(&data));
+        assert_eq!("CMZ", star_1(&data).unwrap());
     }
 
     #[test]
     pub fn test_star_2() {
         let data = PuzzleData::try_from(CONTENT).unwrap();
-        assert_eq!("MCD", star_2(&data));
+        assert_eq!("MCD", star_2(&data).unwrap());
     }
 }
 // end::tests[]

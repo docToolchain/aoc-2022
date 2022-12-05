@@ -7,6 +7,8 @@ Today, there where two main challenges for me:
 . Parsing the input
 . Rust's mutability & borrowing concept for part 2
 
+In addition, it turns out quite complicated to handle possible errors (all kind of invalid moves, empty stacks at end of moves, ...). All this effort for code that is never used, because the puzzle inputs are well-formed. I think I will stop this excercise and use plain `unwrap` again for subsequent days.
+
 === Input ===
 
 Today, it was not just "process input line by line", but in the end almost ...
