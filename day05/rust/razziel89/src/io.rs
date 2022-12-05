@@ -24,7 +24,7 @@ where
     T: FromStr<Err = Error>,
 {
     let filter_fn = filter.unwrap_or(|_| true);
-    let transformer = transform.unwrap_or(|el| el.clone());
+    let transformer = transform.unwrap_or(|el| el);
 
     let mut errs: Vec<String> = vec![];
 

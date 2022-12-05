@@ -9,24 +9,13 @@ pub struct Move {
     pub dest: usize,
 }
 
+// We are using out own stack type here just so that the code is easier to read.
+pub type Stack = Vec<char>;
+
+// This is a temporary data type that we use to parse each line of the top part of the input.
 #[derive(Debug)]
 pub struct StackLine {
     pub stacks: Vec<Option<char>>,
-}
-
-#[derive(Debug)]
-pub struct Stack {
-    pub data: Vec<char>,
-}
-
-impl Stack {
-    pub fn push(&mut self, c: char) {
-        self.data.push(c);
-    }
-
-    pub fn pop(&mut self) -> Option<char> {
-        self.data.pop()
-    }
 }
 
 impl FromStr for Move {
@@ -60,6 +49,9 @@ impl FromStr for StackLine {
             stacks: s
                 .chars()
                 .collect::<Vec<_>>()
+                // Chunking is important here. Each stack entry contains at most 4 characters.
+                // Thuds, by chunking this way, we make sure to get one chunk per stack. Luckily,
+                // none of the stacks contains multi-letter crates ^^.
                 .chunks(4)
                 .map(|el| match el {
                     // Case with data.

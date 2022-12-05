@@ -18,9 +18,16 @@ fn lines_to_stacks(lines: &Vec<data::StackLine>) -> Result<Vec<data::Stack>> {
         let mut stacks = vec![];
 
         for stack_idx in 0..num_stacks {
-            let mut stack = data::Stack { data: vec![] };
+            let mut stack: data::Stack = vec![];
 
-            for line in lines.iter() {
+            // We reverse the iterator because we obtained the lines from top to bottom but we need
+            // to build the stacks from the ground up. Thus, we iterate from the ground to the
+            // bottom.
+            for line in lines.iter().rev() {
+                // We cannot be sure that every stack line contains the same number of entries.
+                // Thus, we use the ".get" method to be able to catch the case where one line ends
+                // before another. It turns out that every line has the same number of entries,
+                // making this safeguard unnecessary...
                 if let Some(Some(elem)) = line.stacks.get(stack_idx) {
                     stack.push(*elem);
                 }
@@ -31,7 +38,7 @@ fn lines_to_stacks(lines: &Vec<data::StackLine>) -> Result<Vec<data::Stack>> {
 
         Ok(stacks)
     } else {
-        Err(Error::msg("no stack lines obtaibed"))
+        Err(Error::msg("only empty stacks obtained"))
     }
 }
 
@@ -48,8 +55,8 @@ fn apply_move_part1(stacks: &mut Vec<data::Stack>, mov: &data::Move) -> Result<(
 
 fn apply_move_part2(stacks: &mut Vec<data::Stack>, mov: &data::Move) -> Result<()> {
     // We are being lazy and are using a temporary stack to stash the crates away. That way, we
-    // keep the order intact.
-    let mut temp_stack = data::Stack { data: vec![] };
+    // keep the order intact when putting them back from the temporary stash to the final stash.
+    let mut temp_stack: data::Stack = vec![];
 
     for _ in 0..mov.num {
         if let Some(moved_elem) = &stacks[mov.src].pop() {
@@ -90,16 +97,9 @@ fn solve(
         "stack line",
         Some(|el| el.contains("[")),
         None,
-    )?
-    .into_iter()
-    .rev()
-    .collect::<Vec<_>>();
+    )?;
 
     let mut stacks = lines_to_stacks(&stack_lines)?;
-
-    for stack in &stacks {
-        println!("{:?}", stack);
-    }
 
     for mov in &moves {
         apply_move(&mut stacks, mov)?;
@@ -110,7 +110,6 @@ fn solve(
         stacks
             .iter()
             .map(|el| el
-                .data
                 .last()
                 .expect("none of the stacks should be empty")
                 .to_string())
