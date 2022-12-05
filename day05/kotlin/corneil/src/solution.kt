@@ -30,19 +30,8 @@ fun main() {
   }
 
   fun loadStacks(input: List<String>): List<Stack<Char>> {
-    val lines = mutableListOf<String>()
-    for (line in input) {
-      if (line.isEmpty()) {
-        break;
-      }
-      lines.add(line)
-    }
-    val numbers = mutableListOf<Int>()
-    for (c in lines.last()) {
-      if (c in '1'..'9') {
-        numbers.add(c - '1' + 1)
-      }
-    }
+    val lines = input.toMutableList()
+    val numbers = lines.last().split(" ").mapNotNull { if(it.isNotBlank()) it.toInt() else null }
     lines.removeAt(lines.lastIndex)
     val stacks = mutableListOf<Stack<Char>>()
     for (stack in numbers.indices) {
@@ -52,17 +41,13 @@ fun main() {
   }
 
   fun loadInstructions(input: List<String>): List<Instruction> {
-    var foundBlank = false
     val result = mutableListOf<Instruction>()
+    val regex = """move (\d+) from (\d+) to (\d+)""".toRegex()
     for (line in input) {
-      if (line.isEmpty()) {
-        foundBlank = true
-      }
-      if (foundBlank) {
-        val items = line.split(" ")
-        if (items.size > 4) {
-          result.add(Instruction(items[1].toInt(), items[3].toInt(), items[5].toInt()))
-        }
+      val matches = regex.find(line)
+      if (matches != null) {
+        val (count, from, to) = matches.destructured
+        result.add(Instruction(count.toInt(), from.toInt(), to.toInt()))
       }
     }
     return result
@@ -104,27 +89,38 @@ fun main() {
     return stacks.joinToString("") { it.peek().toString() }
   }
 
+  val test = """    [D]
+[N] [C]
+[Z] [M] [P]
+ 1   2   3
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2
+"""
+
+  val testInputs = test.split("\n\n").map { readText(it) }
+  val input = readFileGroup("day05")
   fun part1() {
-    val testInput = readInput("day05_test")
-    val testTops = performAndFindTops(loadStacks(testInput), loadInstructions(testInput))
+    val testTops = performAndFindTops(loadStacks(testInputs[0]), loadInstructions(testInputs[1]))
     println("Part 1 Test Tops = $testTops")
     check(testTops == "CMZ")
-    val input = readInput("day05")
-    val tops = performAndFindTops(loadStacks(input), loadInstructions(input))
+    val tops = performAndFindTops(loadStacks(input[0]), loadInstructions(input[1]))
     println("Part 1 Tops = $tops")
     check(tops == "PTWLTDSJV")
   }
 
   fun part2() {
-    val testInput = readInput("day05_test")
-    val testTops = performAndFindTops9001(loadStacks(testInput), loadInstructions(testInput))
+    val testTops = performAndFindTops9001(loadStacks(testInputs[0]), loadInstructions(testInputs[1]))
     println("Part 2 Test Tops = $testTops")
     check(testTops == "MCD")
-    val input = readInput("day05")
-    val tops = performAndFindTops9001(loadStacks(input), loadInstructions(input))
+    val tops = performAndFindTops9001(loadStacks(input[0]), loadInstructions(input[1]))
     println("Part 2 Tops = $tops")
     check(tops == "WZMFVGGZP")
   }
+
   part1()
   part2()
+
 }
