@@ -776,16 +776,13 @@ fun loadStacks(input: List&lt;String&gt;): List&lt;Stack&lt;Char&gt;&gt; {
 }
 
 fun loadInstructions(input: List&lt;String&gt;): List&lt;Instruction&gt; {
-  val result = mutableListOf&lt;Instruction&gt;()
   val regex = """move (\d+) from (\d+) to (\d+)""".toRegex()
-  for (line in input) {
-    val matches = regex.find(line)
-    if (matches != null) {
-      val (count, from, to) = matches.destructured
-      result.add(Instruction(count.toInt(), from.toInt(), to.toInt()))
+  return input.mapNotNull { line -&gt;
+    regex.find(line)?.let {
+      val (count, from, to) = it.destructured
+      Instruction(count.toInt(), from.toInt(), to.toInt())
     }
   }
-  return result
 }</code></pre>
 </div>
 </div>
@@ -893,20 +890,16 @@ fun main() {
   }
 
   fun loadInstructions(input: List&lt;String&gt;): List&lt;Instruction&gt; {
-    val result = mutableListOf&lt;Instruction&gt;()
     val regex = """move (\d+) from (\d+) to (\d+)""".toRegex()
-    for (line in input) {
-      val matches = regex.find(line)
-      if (matches != null) {
-        val (count, from, to) = matches.destructured
-        result.add(Instruction(count.toInt(), from.toInt(), to.toInt()))
+    return input.mapNotNull { line -&gt;
+      regex.find(line)?.let {
+        val (count, from, to) = it.destructured
+        Instruction(count.toInt(), from.toInt(), to.toInt())
       }
     }
-    return result
   }
 
   fun perform(stacks: List&lt;Stack&lt;Char&gt;&gt;, instruction: Instruction) {
-    println(instruction)
     for (i in 1..instruction.count) {
       val crate = stacks[instruction.from - 1].pop()
       stacks[instruction.to - 1].push(crate)
@@ -914,7 +907,6 @@ fun main() {
   }
 
   fun perform9001(stacks: List&lt;Stack&lt;Char&gt;&gt;, instruction: Instruction) {
-    println(instruction)
     val tmp = Stack&lt;Char&gt;()
     for (i in 1..instruction.count) {
       val crate = stacks[instruction.from - 1].pop()
