@@ -1,0 +1,22 @@
+== Day ??
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea of this solution is to use Python list as stacks. This can be done with the
+`pop()` and `append()` functions.
+
+=== What did I learn
+
+Parsing text files results in ugly code.
+
+=== How to run
+
+Run using:
+`$ python day_05.py --help`
