@@ -1,5 +1,6 @@
 // tag::io[]
 use anyhow::{Context, Error, Result};
+use std::fmt::Debug;
 use std::str::FromStr;
 
 fn read_lines_from_file(path: &str) -> Result<Vec<String>> {
@@ -56,4 +57,31 @@ where
         Err(Error::msg(errs.join("\n------------------\n")))
     }
 }
+
+// Convert Result to Option but make sure to add all errors messages to a vector of strings. Use
+// "process_errs" to check whethere there are any errors in the vector.
+pub fn filter_and_remember_errs<I, E>(item: Result<I, E>, errs: &mut Vec<String>) -> Option<I>
+where
+    E: Debug,
+{
+    match item {
+        Ok(val) => Some(val),
+        Err(err) => {
+            errs.push(format!("{:?}", err));
+            None
+        }
+    }
+}
+
+// If there is any element in the string vector, concatenate all ements into an error. Do not
+// return an error otherwise.
+pub fn process_remembered_errs(errs: Vec<String>) -> Result<()> {
+    if errs.len() == 0 {
+        Ok(())
+    } else {
+        // Concatenate errors into one giant error message in case there were any in the file.
+        Err(Error::msg(errs.join("\n------------------\n")))
+    }
+}
+
 // end::io[]

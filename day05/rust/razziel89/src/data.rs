@@ -1,4 +1,5 @@
 // tag::data[]
+use crate::io;
 use anyhow::{Error, Result};
 use std::str::FromStr;
 
@@ -9,7 +10,7 @@ pub struct Move {
     pub dest: usize,
 }
 
-// We are using out own stack type here just so that the code is easier to read.
+// We are using our own stack type here just so that the code is easier to read.
 pub type Stack = Vec<char>;
 
 // This is a temporary data type that we use to parse each line of the top part of the input.
@@ -30,42 +31,56 @@ impl FromStr for Move {
                 src: src
                     .parse::<usize>()?
                     .checked_sub(1)
-                    .expect("all numbers shal be >1"),
+                    .ok_or(Error::msg(format!("{} is not >1", src)))?,
                 dest: dest
                     .parse::<usize>()?
                     .checked_sub(1)
-                    .expect("all numbers shal be >1"),
+                    .ok_or(Error::msg(format!("{} is not >1", dest)))?,
             }),
             _ => Err(Error::msg(format!("cannot parse {} as move", s))),
         }
     }
 }
 
+// A hybrid between a result and an option.
+pub enum Hybrid<T, E> {
+    Some(T),
+    Err(E),
+    None,
+}
+
 impl FromStr for StackLine {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        Ok(Self {
-            stacks: s
-                .chars()
-                .collect::<Vec<_>>()
-                // Chunking is important here. Each stack entry contains at most 4 characters.
-                // Thuds, by chunking this way, we make sure to get one chunk per stack. Luckily,
-                // none of the stacks contains multi-letter crates ^^.
-                .chunks(4)
-                .map(|el| match el {
-                    // Case with data.
-                    ['[', ch, ']', ' '] | ['[', ch, ']'] => Some(ch.clone()),
-                    // Case without data.
-                    [' ', ' ', ' ', ' '] | [' ', ' ', ' '] => None,
-                    // Error case. We only print the error to stderr this time.
-                    _ => {
-                        eprintln!("cannot parse line {} as stack line", s);
-                        None
-                    }
-                })
-                .collect::<Vec<_>>(),
-        })
+        let mut errs = vec![];
+
+        let stacks = s
+            .chars()
+            .collect::<Vec<_>>()
+            // Chunking is important here. Each stack entry contains at most 4 characters.
+            // Thus, by chunking this way, we make sure to get exactly one chunk per stack.
+            // Luckily, none of the stacks contains multi-letter crates ^^.
+            .chunks(4)
+            .map(|el| match el {
+                // Case with data, can be 3 or 4 characters long.
+                ['[', ch, ']', ' '] | ['[', ch, ']'] => Hybrid::Some(ch.clone()),
+                // Case without data.
+                [' ', ' ', ' ', ' '] | [' ', ' ', ' '] => Hybrid::None,
+                // Error case.
+                _ => Hybrid::Err(Error::msg(format!("cannot parse line {} as stack line", s))),
+            })
+            .map(|el| match el {
+                Hybrid::Some(val) => Some(val),
+                Hybrid::Err(err) => {
+                    errs.push(format!("{:?}", err));
+                    None
+                }
+                Hybrid::None => None,
+            })
+            .collect::<Vec<_>>();
+
+        io::process_remembered_errs(errs).map(|_| Self { stacks })
     }
 }
 // end::data[]
