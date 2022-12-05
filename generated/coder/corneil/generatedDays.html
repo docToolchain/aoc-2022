@@ -185,6 +185,20 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_05_kotlin">Day 05: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_04_supply_stacks">Day 04 - Supply Stacks</a>
+<ul class="sectlevel4">
+<li><a href="#_data_structures">Data Structures</a></li>
+<li><a href="#_parsing">Parsing</a></li>
+<li><a href="#_part_1_2">Part 1</a></li>
+<li><a href="#_part_2_3">Part 2</a></li>
+<li><a href="#_takeaways_3">Takeaways</a></li>
+<li><a href="#_full_source_3">Full source</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -238,6 +252,9 @@ Feel free to reach out with comments at the links above.</p>
 <h3 id="_day_01_kotlin"><a class="anchor" href="#_day_01_kotlin"></a><a class="link" href="#_day_01_kotlin">Day 01: kotlin</a></h3>
 <div class="sect3">
 <h4 id="_day_01_calorie_counting"><a class="anchor" href="#_day_01_calorie_counting"></a><a class="link" href="#_day_01_calorie_counting">Day 01 - Calorie Counting</a></h4>
+<div class="paragraph">
+<p>In order to follow these solutions you will need to login to <a href="https://adventofcode.com/2022">Advent of Code</a> and complete each day.</p>
+</div>
 <div class="paragraph">
 <p>The day was lines representing the calories of food items carried by elves and separated by blank lines.
 Kotlin File has a readLines function that makes it easy to parse the input, calculate the calories for each elf and add to a list.
@@ -670,6 +687,290 @@ fun convertRanges(input: List&lt;String&gt;): List&lt;Pair&lt;Set&lt;Int&gt;, Se
     val count = calcOverlap(convertRanges(input))
     println("Part 2 Count = $count")
     check(count == 798)
+  }
+  part1()
+  part2()
+}</code></pre>
+</div>
+</div>
+<a id="day05" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_05_kotlin"><a class="anchor" href="#_day_05_kotlin"></a><a class="link" href="#_day_05_kotlin">Day 05: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_04_supply_stacks"><a class="anchor" href="#_day_04_supply_stacks"></a><a class="link" href="#_day_04_supply_stacks">Day 04 - Supply Stacks</a></h4>
+<div class="paragraph">
+<p>Today we had to implement a parser to read the state of stacks of containers and instructions for moving the containers. The result was a list of the top container labels.
+I decided to create a data structure for the instructions and a simple Stack.</p>
+</div>
+<div class="sect4">
+<h5 id="_data_structures"><a class="anchor" href="#_data_structures"></a><a class="link" href="#_data_structures">Data Structures</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">data class Instruction(val count: Int, val from: Int, val to: Int)
+
+class Stack&lt;T&gt;(private val elements: MutableList&lt;T&gt; = mutableListOf&lt;T&gt;()) {
+  fun empty(): Boolean = elements.isEmpty()
+  fun peek(): T = elements[elements.lastIndex]
+  fun pop(): T = elements.removeAt(elements.lastIndex)
+  fun push(value: T) {
+    elements.add(value)
+  }
+
+  fun items() = elements.toList()
+  fun size() = elements.size
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_parsing"><a class="anchor" href="#_parsing"></a><a class="link" href="#_parsing">Parsing</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun readStack(lines: List&lt;String&gt;, stack: Int): Stack&lt;Char&gt; {
+  val result = mutableListOf&lt;Char&gt;()
+  val offset = stack * 4 + 1
+  for (line in lines) {
+    if (line.length &gt; offset) {
+      val crate = line[offset]
+      if (crate in 'A'..'Z') {
+        result.add(crate)
+      }
+    }
+  }
+  result.reverse()
+  return Stack(result)
+}
+
+fun loadStacks(input: List&lt;String&gt;): List&lt;Stack&lt;Char&gt;&gt; {
+  val lines = mutableListOf&lt;String&gt;()
+  for (line in input) {
+    if (line.isEmpty()) {
+      break;
+    }
+    lines.add(line)
+  }
+  val numbers = mutableListOf&lt;Int&gt;()
+  for (c in lines.last()) {
+    if (c in '1'..'9') {
+      numbers.add(c - '1' + 1)
+    }
+  }
+  lines.removeAt(lines.lastIndex)
+  val stacks = mutableListOf&lt;Stack&lt;Char&gt;&gt;()
+  for (stack in numbers.indices) {
+    stacks.add(readStack(lines, stack))
+  }
+  return stacks.toList()
+}
+
+fun loadInstructions(input: List&lt;String&gt;): List&lt;Instruction&gt; {
+  var foundBlank = false
+  val result = mutableListOf&lt;Instruction&gt;()
+  for (line in input) {
+    if (line.isEmpty()) {
+      foundBlank = true
+    }
+    if (foundBlank) {
+      val items = line.split(" ")
+      if (items.size &gt; 4) {
+        result.add(Instruction(items[1].toInt(), items[3].toInt(), items[5].toInt()))
+      }
+    }
+  }
+  return result
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_1_2"><a class="anchor" href="#_part_1_2"></a><a class="link" href="#_part_1_2">Part 1</a></h5>
+<div class="paragraph">
+<p>Perform all the instructions and provide the list of top level crates:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun perform(stacks: List&lt;Stack&lt;Char&gt;&gt;, instruction: Instruction) {
+  for (i in 1..instruction.count) {
+    val crate = stacks[instruction.from - 1].pop()
+    stacks[instruction.to - 1].push(crate)
+  }
+}
+fun performAndFindTops(stacks: List&lt;Stack&lt;Char&gt;&gt;, instructions: List&lt;Instruction&gt;): String {
+  instructions.forEach {
+    perform(stacks, it)
+  }
+  return stacks.joinToString("") { it.peek().toString() }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_2_3"><a class="anchor" href="#_part_2_3"></a><a class="link" href="#_part_2_3">Part 2</a></h5>
+<div class="paragraph">
+<p>The crane can now move multiple containers at the same time retaining their order.
+I decided to use a local stack to pop all the container and then push them again which will retain the order. The alternative would have been to adjust the Stack to remove multiple items at once.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun perform9001(stacks: List&lt;Stack&lt;Char&gt;&gt;, instruction: Instruction) {
+  println(instruction)
+  val tmp = Stack&lt;Char&gt;()
+  for (i in 1..instruction.count) {
+    val crate = stacks[instruction.from - 1].pop()
+    tmp.push(crate)
+  }
+  while (!tmp.empty()) {
+    stacks[instruction.to - 1].push(tmp.pop())
+  }
+}
+fun performAndFindTops9001(stacks: List&lt;Stack&lt;Char&gt;&gt;, instructions: List&lt;Instruction&gt;): String {
+  instructions.forEach {
+    perform9001(stacks, it)
+  }
+  return stacks.joinToString("") { it.peek().toString() }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_takeaways_3"><a class="anchor" href="#_takeaways_3"></a><a class="link" href="#_takeaways_3">Takeaways</a></h5>
+<div class="paragraph">
+<p>Sometimes a requirement change can impact your data structures in huge ways. Using a stack to represent the piles of crates was fine until we needed to move multiple crates at a time. In a real system the performance differences of moving multiple crates at the same time will be huge if it is a core part of the system.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_full_source_3"><a class="anchor" href="#_full_source_3"></a><a class="link" href="#_full_source_3">Full source</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">data class Instruction(val count: Int, val from: Int, val to: Int)
+class Stack&lt;T&gt;(private val elements: MutableList&lt;T&gt; = mutableListOf&lt;T&gt;()) {
+  fun empty(): Boolean = elements.isEmpty()
+  fun peek(): T = elements[elements.lastIndex]
+  fun pop(): T = elements.removeAt(elements.lastIndex)
+  fun push(value: T) {
+    elements.add(value)
+  }
+
+  fun items() = elements.toList()
+  fun size() = elements.size
+}
+
+fun main() {
+
+  fun readStack(lines: List&lt;String&gt;, stack: Int): Stack&lt;Char&gt; {
+    val result = mutableListOf&lt;Char&gt;()
+    val offset = stack * 4 + 1
+    for (line in lines) {
+      if (line.length &gt; offset) {
+        val crate = line[offset]
+        if (crate in 'A'..'Z') {
+          result.add(crate)
+        }
+      }
+    }
+    result.reverse()
+    println("Stack[${stack + 1}]=${result.joinToString("")}")
+    return Stack(result)
+  }
+
+  fun loadStacks(input: List&lt;String&gt;): List&lt;Stack&lt;Char&gt;&gt; {
+    val lines = mutableListOf&lt;String&gt;()
+    for (line in input) {
+      if (line.isEmpty()) {
+        break;
+      }
+      lines.add(line)
+    }
+    val numbers = mutableListOf&lt;Int&gt;()
+    for (c in lines.last()) {
+      if (c in '1'..'9') {
+        numbers.add(c - '1' + 1)
+      }
+    }
+    lines.removeAt(lines.lastIndex)
+    val stacks = mutableListOf&lt;Stack&lt;Char&gt;&gt;()
+    for (stack in numbers.indices) {
+      stacks.add(readStack(lines, stack))
+    }
+    return stacks.toList()
+  }
+
+  fun loadInstructions(input: List&lt;String&gt;): List&lt;Instruction&gt; {
+    var foundBlank = false
+    val result = mutableListOf&lt;Instruction&gt;()
+    for (line in input) {
+      if (line.isEmpty()) {
+        foundBlank = true
+      }
+      if (foundBlank) {
+        val items = line.split(" ")
+        if (items.size &gt; 4) {
+          result.add(Instruction(items[1].toInt(), items[3].toInt(), items[5].toInt()))
+        }
+      }
+    }
+    return result
+  }
+
+  fun perform(stacks: List&lt;Stack&lt;Char&gt;&gt;, instruction: Instruction) {
+    println(instruction)
+    for (i in 1..instruction.count) {
+      val crate = stacks[instruction.from - 1].pop()
+      stacks[instruction.to - 1].push(crate)
+    }
+  }
+
+  fun perform9001(stacks: List&lt;Stack&lt;Char&gt;&gt;, instruction: Instruction) {
+    println(instruction)
+    val tmp = Stack&lt;Char&gt;()
+    for (i in 1..instruction.count) {
+      val crate = stacks[instruction.from - 1].pop()
+      tmp.push(crate)
+    }
+    while (!tmp.empty()) {
+      stacks[instruction.to - 1].push(tmp.pop())
+    }
+  }
+
+  fun performAndFindTops(stacks: List&lt;Stack&lt;Char&gt;&gt;, instructions: List&lt;Instruction&gt;): String {
+    instructions.forEach {
+      perform(stacks, it)
+    }
+    stacks.forEach { stack -&gt; println("[${stack.items().joinToString("")}]") }
+    return stacks.joinToString("") { it.peek().toString() }
+  }
+
+  fun performAndFindTops9001(stacks: List&lt;Stack&lt;Char&gt;&gt;, instructions: List&lt;Instruction&gt;): String {
+    instructions.forEach {
+      perform9001(stacks, it)
+    }
+    stacks.forEach { stack -&gt; println("[${stack.items().joinToString("")}]") }
+    return stacks.joinToString("") { it.peek().toString() }
+  }
+
+  fun part1() {
+    val testInput = readInput("day05_test")
+    val testTops = performAndFindTops(loadStacks(testInput), loadInstructions(testInput))
+    println("Part 1 Test Tops = $testTops")
+    check(testTops == "CMZ")
+    val input = readInput("day05")
+    val tops = performAndFindTops(loadStacks(input), loadInstructions(input))
+    println("Part 1 Tops = $tops")
+    check(tops == "PTWLTDSJV")
+  }
+
+  fun part2() {
+    val testInput = readInput("day05_test")
+    val testTops = performAndFindTops9001(loadStacks(testInput), loadInstructions(testInput))
+    println("Part 2 Test Tops = $testTops")
+    check(testTops == "MCD")
+    val input = readInput("day05")
+    val tops = performAndFindTops9001(loadStacks(input), loadInstructions(input))
+    println("Part 2 Tops = $tops")
+    check(tops == "WZMFVGGZP")
   }
   part1()
   part2()
