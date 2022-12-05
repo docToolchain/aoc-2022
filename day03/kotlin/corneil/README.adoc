@@ -1,4 +1,4 @@
-== Day 02 - Rucksack Reorganization
+== Rucksack Reorganization
 
 Today puzzle was about manipulating strings and calculating the values of characters according rules.
 

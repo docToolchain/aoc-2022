@@ -1,4 +1,4 @@
-== Day 04 - Supply Stacks
+== Supply Stacks
 
 Today we had to implement a parser to read the state of stacks of containers and instructions for moving the containers. The result was a list of the top container labels.
 I decided to create a data structure for the instructions and a simple Stack.

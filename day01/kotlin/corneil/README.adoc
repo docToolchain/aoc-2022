@@ -1,9 +1,17 @@
-== Day 01 - Calorie Counting ==
+== Calorie Counting
 
 In order to follow these solutions you will need to login to https://adventofcode.com/2022[Advent of Code] and complete each day.
 
 The day was lines representing the calories of food items carried by elves and separated by blank lines.
 Kotlin File has a readLines function that makes it easy to parse the input, calculate the calories for each elf and add to a list.
+
+=== Parsing
+[source,kotlin]
+....
+include::src/solution.kt[tag=parse]
+....
+
+=== Part 1
 For part one the max value it the answer.
 
 [source,kotlin]
@@ -11,6 +19,7 @@ For part one the max value it the answer.
 include::src/solution.kt[tag=part1]
 ....
 
+=== Part 2
 For part two the result is the sum of the first three when sorted in descending order. Kotlin has the `take` method on collections which is very useful in this case.
 
 [source,kotlin]

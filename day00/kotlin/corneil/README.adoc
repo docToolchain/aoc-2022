@@ -1,4 +1,4 @@
-== Day 00 Hello World! ==
+== Hello World!
 
 This is a simple Hello World program in https://kotlinlang.org[Kotlin], if you want to experiment with Kotlin use the https://play.kotlinlang.org[Kotlin Playground]
 

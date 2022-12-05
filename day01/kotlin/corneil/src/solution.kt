@@ -2,7 +2,7 @@ fun readInput(name: String) = File("src", "$name.txt")
   .readLines()
 
 fun main() {
-  // tag::part1[]
+  // tag::parse[]
   fun findCalories(input: List<String>): List<Int> {
     val elves = mutableListOf<Int>()
     var calories = 0
@@ -17,8 +17,9 @@ fun main() {
     elves.add(calories)
     return elves
   }
+  // end::parse[]
 
-
+  // tag::part1[]
   fun findMaxCalories(input: List<String>): Int {
     val calories = findCalories(input)
     return calories.max()
@@ -32,15 +33,20 @@ fun main() {
   }
   // end::part2[]
   val testInput = readInput("day01_input1")
-  val testMax = findMaxCalories(testInput)
-  println("Test Max Calories = $testMax")
-  check(testMax == 24000)
   val input = readInput("day01")
-  val maxCalories = findMaxCalories(input)
-  println("Max Calories = $maxCalories")
+  fun part1() {
+    val testMax = findMaxCalories(testInput)
+    println("Test Max Calories = $testMax")
+    check(testMax == 24000)
 
-  val testTop3 = topThree(testInput)
-  println("Test Top3 = $testTop3")
-  val top3 = topThree(input)
-  println("Top3 = $top3")
+    val maxCalories = findMaxCalories(input)
+    println("Max Calories = $maxCalories")
+  }
+
+  fun part2() {
+    val testTop3 = topThree(testInput)
+    println("Test Top3 = $testTop3")
+    val top3 = topThree(input)
+    println("Top3 = $top3")
+  }
 }
