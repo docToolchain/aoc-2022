@@ -1,0 +1,30 @@
+
+Day 5 of year 2022
+https://adventofcode.com/2022/day/5
+
+== What I learned
+
+. I was reminded that copy in python is a shallow copy.
+
+== Approach
+The hardest part was parsing the file.
+
+. I parse the first lines of the file to figure out how many stacks there are and the maximum starting stack height.
+
+. Then I fish out the initial stack contents for each stack and put them into a list of stacks (deque).
+
+. Then I parse the instructions and put the 3 numbers for each of the instructions into a list of lists. This was straightforward with regex since the pattern of each line is fixed.
+
+**Star 1** +
+I go through the instructions and pop the right number of crates from the giving stack and immediately append each to the stack of the receiving stack.
+
+**Star 2** +
+It's similar. The popped stacks go onto a temporary stack. Then I pop them from the temporary stack and append them to the receiving stack.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
