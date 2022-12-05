@@ -1,0 +1,56 @@
+== Day 5: Supply Stacks ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/5[AoC|2022|5].
+
+Today, there where two main challenges for me:
+
+. Parsing the input
+. Rust's mutability & borrowing concept for part 2
+
+=== Input ===
+
+Today, it was not just "process input line by line", but in the end almost ...
+
+First, I split the input in one part describing the stacks and a second part describing the moves. Parsing the moves in tuples `(n, from, to)` is easy. I make the `from` and `to` parts zero-based on the fly.
+
+Parsing the stacks of crates is a bit more tricky. I did not (could not) use a simple iterator / collect scheme but allocated the stacks upfront and than process line by line starting at the last and pushing elements on the stack.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+This is straight forward. Just process move by move, and pop from one stack / push to the other stack the correct number of times.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+This is slightly more tricky. Now we have to pop a complete pack of items and push that on top of another stack preserving the order.
+
+The challenging part of it is that Rust does not allow mutable references to two items in a vec at the same time. My first solution used intermediate storage. My current solution using `slice::split_at_mut` to circumvent this (speed-up by a factor 3 to 4 for part 2 compared to intermediate storage). The code gets a bit complicated though.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+And there are some tests.
+
+Since parsing was not totally obvious, I did an additional test for this part ...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Today I learned ===
+
+How to mutably access two elements of one vec in Rust.
