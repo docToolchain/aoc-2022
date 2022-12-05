@@ -7,6 +7,8 @@ Today, there where two main challenges for me:
 . Parsing the input
 . Rust's mutability & borrowing concept for part 2
 
+In addition, it turns out quite complicated to handle possible errors (all kind of invalid moves, empty stacks at end of moves, ...). All this effort for code that is never used, because the puzzle inputs are well-formed. I think I will stop this excercise and use plain `unwrap` again for subsequent days.
+
 === Input ===
 
 Today, it was not just "process input line by line", but in the end almost ...
@@ -33,7 +35,7 @@ include::src/lib.rs[tags=star_1]
 
 This is slightly more tricky. Now we have to pop a complete pack of items and push that on top of another stack preserving the order.
 
-The challenging part of it is that Rust does not allow mutable references to two items in a vec at the same time. My first solution used intermediate storage. My current solution using `slice::split_at_mut` to circumvent this (speed-up by a factor 3 to 4 for part 2 compared to intermediate storage). The code gets a bit complicated though.
+The challenging part of it is that Rust does not allow mutable references to two items in a vec at the same time. My first solution used intermediate storage. My current solution uses `slice::split_at_mut` to circumvent this (speed-up by a factor 3 to 4 for part 2 compared to intermediate storage). The code gets a bit complicated though -- I extracted the complicated part to a function `mut_references`.
 
 [source,rust,numbered]
 ----
