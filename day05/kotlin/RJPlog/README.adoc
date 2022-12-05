@@ -1,0 +1,30 @@
+==  Day 5: Supply Stacks  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/5
+
+
+=== First Star
+
+How does it work: +
+
+Today I am not happy with my solution, it works but I have to rework it, so do not take this as an example.
+[source, kotlin, numbered]
+....
+include::day2205_1_2.kt[tags=SupplyStack]
+....
+
+
+=== Second Star
+
+How does it work: +
+
+See first star
+
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2205_1_2.kt[tags=output]
+....
