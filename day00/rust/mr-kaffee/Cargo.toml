@@ -20,6 +20,7 @@ regex = "1.*"
 lazy_static = "1.*"
 
 # INCLUDE_PUZZLES:START
+mr-kaffee-2022-6 = { path = "../../../day06/rust/mr-kaffee/"}
 mr-kaffee-2022-5 = { path = "../../../day05/rust/mr-kaffee/"}
 mr-kaffee-2022-4 = { path = "../../../day04/rust/mr-kaffee/"}
 mr-kaffee-2022-3 = { path = "../../../day03/rust/mr-kaffee/"}
