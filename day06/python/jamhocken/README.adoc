@@ -1,0 +1,25 @@
+
+Day 6 of year 2022
+https://adventofcode.com/2022/day/6
+
+== What I learned
+
+. I am much faster if the parsing work at the beginning isn't complicated. :-)
+
+== Approach
+
+I read in the string to start.
+
+**Star 1** +
+I use a moving window of 4 characters through the string. I convert the window to a set. If the set has a length of 4, that's the marker.
+
+**Star 2** +
+It's similar; you just use a window of 14 instead.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
