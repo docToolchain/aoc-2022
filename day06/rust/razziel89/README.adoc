@@ -1,0 +1,57 @@
+== Day 06: Tuning Trouble ==
+
+This is my implementation for both rounds of the touning trouble puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Overview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+For this one, input parsing was non-existent.
+Processing, on the other hand, was a bit harder.
+At first, I thought about implementing the uniqueness condition manually,
+considering that we only had to compare four entries in a pairwise fashion.
+I'm glad I didn't do that, though, because of part two.
+Instead, it became clear that a set (`HashSet` in rust) could be used.
+
+A set is a collection of unique entris.
+Imagine converting a list of somethings into a set of somethings
+The only way both the list and the set can have the same number of entries is if
+and only if all entries in the list are unique.
+That's what this code uses.
+
+My biggest struggle was rust's ownership system and unsatisfied trait bounds
+that I didn't even know existed.
+After the first functioning implementation, I cleaned the code up a bit.
+It's surprisingly concise.
+
+I was happy to have discovered the `windows(size)` method usable with slices
+that produces an iterator over overlapping chunks of `size` elements.
+Now, I only had to check each of them for uniqueness.
+That involved some slice-vector-iterator comversions, which appear to be very
+common in rust.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+There are currently no tests.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.

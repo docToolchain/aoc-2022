@@ -20,33 +20,26 @@ fn solve(file: &str, win: usize) -> Result<()> {
     let lines = io::read_lines_from_file(file)?;
 
     for line in lines {
-        let first_match_vec = line
+        let first_match = line
             .chars()
             .collect::<Vec<_>>()
             .as_slice()
             .windows(win)
             .enumerate()
             .filter_map(|(idx, el)| {
-                let char_vec = el.to_vec();
-                let string_iter = char_vec.iter().map(|el| String::from(el.clone()));
-                let set: HashSet<String> = HashSet::from_iter(string_iter);
-                if set.len() == win {
+                // If the size of a set is equal to the window size, then we have only unique
+                // entries. There is no other way.
+                if HashSet::<char>::from_iter(el.to_vec().into_iter()).len() == win {
                     Some(idx)
                 } else {
                     None
                 }
             })
             .take(1)
-            .collect::<Vec<_>>();
+            .next()
+            .ok_or(Error::msg("cannot find matching entry"))?;
 
-        println!(
-            "first line that fits: {}",
-            first_match_vec
-                .get(0)
-                .ok_or(Error::msg("cannot find matching entry"))?
-                .checked_add(win)
-                .ok_or(Error::msg("cannot increase by window size"))?
-        )
+        println!("first line that fits: {}", first_match + win)
     }
 
     Ok(())
