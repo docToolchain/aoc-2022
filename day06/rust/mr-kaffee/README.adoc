@@ -1,0 +1,31 @@
+== Day 6: Tuning Trouble ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/6[AoC|2022|6].
+
+=== Input ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
