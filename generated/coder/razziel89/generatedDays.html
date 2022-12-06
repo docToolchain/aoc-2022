@@ -199,6 +199,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_06_rust">Day 06: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_06_tuning_trouble">Day 06: Tuning Trouble</a>
+<ul class="sectlevel4">
+<li><a href="#_overview_2">Overview</a></li>
+<li><a href="#_solution_5">Solution</a></li>
+<li><a href="#_how_to_run_6">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1115,7 +1126,22 @@ fn lines_to_stacks(lines: &amp;Vec&lt;data::StackLine&gt;) -&gt; Result&lt;Vec&l
     }
 }
 
+fn check_bounds(idx: usize, len: usize, name: &amp;str) -&gt; Result&lt;()&gt; {
+    if idx &gt; len {
+        return Err(Error::msg(format!(
+            "{} stack {} is out of bounds",
+            name, idx
+        )));
+    } else {
+        Ok(())
+    }
+}
+
 fn apply_move_part1(stacks: &amp;mut Vec&lt;data::Stack&gt;, mov: &amp;data::Move) -&gt; Result&lt;()&gt; {
+    // Thanks to these two bounds checks, we know that the index operations below will never panic.
+    check_bounds(mov.src, stacks.len(), "source")?;
+    check_bounds(mov.dest, stacks.len(), "dest")?;
+
     for _ in 0..mov.num {
         if let Some(moved_elem) = &amp;stacks[mov.src].pop() {
             stacks[mov.dest].push(*moved_elem);
@@ -1127,6 +1153,10 @@ fn apply_move_part1(stacks: &amp;mut Vec&lt;data::Stack&gt;, mov: &amp;data::Mov
 }
 
 fn apply_move_part2(stacks: &amp;mut Vec&lt;data::Stack&gt;, mov: &amp;data::Move) -&gt; Result&lt;()&gt; {
+    // Thanks to these two bounds checks, we know that the index operations below will never panic.
+    check_bounds(mov.src, stacks.len(), "source")?;
+    check_bounds(mov.dest, stacks.len(), "dest")?;
+
     // We are being lazy and are using a temporary stack to stash the crates away. That way, we
     // keep the order intact when putting them back from the temporary stash to the final stash.
     let mut temp_stack: data::Stack = vec![];
@@ -1178,19 +1208,23 @@ fn solve(
         apply_move(&amp;mut stacks, mov)?;
     }
 
+    let mut errs = vec![];
+
     println!(
         "the top elements are: {}",
         stacks
             .iter()
-            .map(|el| el
+            .enumerate()
+            .map(|(idx, el)| el
                 .last()
-                .expect("none of the stacks should be empty")
-                .to_string())
+                .map(|el| el.to_string())
+                .ok_or(Error::msg(format!("stack {} is empty", idx))))
+            .filter_map(|el| io::filter_and_remember_errs(el, &amp;mut errs))
             .collect::&lt;Vec&lt;_&gt;&gt;()
             .join("")
     );
 
-    Ok(())
+    io::process_remembered_errs(errs)
 }
 
 fn main() -&gt; Result&lt;()&gt; {
@@ -1209,7 +1243,8 @@ fn main() -&gt; Result&lt;()&gt; {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use crate::io;
+use anyhow::{Error, Result};
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -1219,7 +1254,7 @@ pub struct Move {
     pub dest: usize,
 }
 
-// We are using out own stack type here just so that the code is easier to read.
+// We are using our own stack type here just so that the code is easier to read.
 pub type Stack = Vec&lt;char&gt;;
 
 // This is a temporary data type that we use to parse each line of the top part of the input.
@@ -1240,42 +1275,56 @@ impl FromStr for Move {
                 src: src
                     .parse::&lt;usize&gt;()?
                     .checked_sub(1)
-                    .expect("all numbers shal be &gt;1"),
+                    .ok_or(Error::msg(format!("{} is not &gt;1", src)))?,
                 dest: dest
                     .parse::&lt;usize&gt;()?
                     .checked_sub(1)
-                    .expect("all numbers shal be &gt;1"),
+                    .ok_or(Error::msg(format!("{} is not &gt;1", dest)))?,
             }),
             _ =&gt; Err(Error::msg(format!("cannot parse {} as move", s))),
         }
     }
 }
 
+// A hybrid between a result and an option.
+pub enum Hybrid&lt;T, E&gt; {
+    Some(T),
+    Err(E),
+    None,
+}
+
 impl FromStr for StackLine {
     type Err = Error;
 
     fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
-        Ok(Self {
-            stacks: s
-                .chars()
-                .collect::&lt;Vec&lt;_&gt;&gt;()
-                // Chunking is important here. Each stack entry contains at most 4 characters.
-                // Thuds, by chunking this way, we make sure to get one chunk per stack. Luckily,
-                // none of the stacks contains multi-letter crates ^^.
-                .chunks(4)
-                .map(|el| match el {
-                    // Case with data.
-                    ['[', ch, ']', ' '] | ['[', ch, ']'] =&gt; Some(ch.clone()),
-                    // Case without data.
-                    [' ', ' ', ' ', ' '] | [' ', ' ', ' '] =&gt; None,
-                    // Error case. We only print the error to stderr this time.
-                    _ =&gt; {
-                        eprintln!("cannot parse line {} as stack line", s);
-                        None
-                    }
-                })
-                .collect::&lt;Vec&lt;_&gt;&gt;(),
-        })
+        let mut errs = vec![];
+
+        let stacks = s
+            .chars()
+            .collect::&lt;Vec&lt;_&gt;&gt;()
+            // Chunking is important here. Each stack entry contains at most 4 characters.
+            // Thus, by chunking this way, we make sure to get exactly one chunk per stack.
+            // Luckily, none of the stacks contains multi-letter crates ^^.
+            .chunks(4)
+            .map(|el| match el {
+                // Case with data, can be 3 or 4 characters long.
+                ['[', ch, ']', ' '] | ['[', ch, ']'] =&gt; Hybrid::Some(ch.clone()),
+                // Case without data.
+                [' ', ' ', ' ', ' '] | [' ', ' ', ' '] =&gt; Hybrid::None,
+                // Error case.
+                _ =&gt; Hybrid::Err(Error::msg(format!("cannot parse line {} as stack line", s))),
+            })
+            .map(|el| match el {
+                Hybrid::Some(val) =&gt; Some(val),
+                Hybrid::Err(err) =&gt; {
+                    errs.push(format!("{:?}", err));
+                    None
+                }
+                Hybrid::None =&gt; None,
+            })
+            .collect::&lt;Vec&lt;_&gt;&gt;();
+
+        io::process_remembered_errs(errs).map(|_| Self { stacks })
     }
 }</code></pre>
 </div>
@@ -1286,6 +1335,7 @@ impl FromStr for StackLine {
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Context, Error, Result};
+use std::fmt::Debug;
 use std::str::FromStr;
 
 fn read_lines_from_file(path: &amp;str) -&gt; Result&lt;Vec&lt;String&gt;&gt; {
@@ -1341,6 +1391,32 @@ where
         // Concatenate errors into one giant error message in case there were any in the file.
         Err(Error::msg(errs.join("\n------------------\n")))
     }
+}
+
+// Convert Result to Option but make sure to add all errors messages to a vector of strings. Use
+// "process_errs" to check whethere there are any errors in the vector.
+pub fn filter_and_remember_errs&lt;I, E&gt;(item: Result&lt;I, E&gt;, errs: &amp;mut Vec&lt;String&gt;) -&gt; Option&lt;I&gt;
+where
+    E: Debug,
+{
+    match item {
+        Ok(val) =&gt; Some(val),
+        Err(err) =&gt; {
+            errs.push(format!("{:?}", err));
+            None
+        }
+    }
+}
+
+// If there is any element in the string vector, concatenate all ements into an error. Do not
+// return an error otherwise.
+pub fn process_remembered_errs(errs: Vec&lt;String&gt;) -&gt; Result&lt;()&gt; {
+    if errs.len() == 0 {
+        Ok(())
+    } else {
+        // Concatenate errors into one giant error message in case there were any in the file.
+        Err(Error::msg(errs.join("\n------------------\n")))
+    }
 }</code></pre>
 </div>
 </div>
@@ -1350,6 +1426,126 @@ where
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_5"><a class="anchor" href="#_how_to_run_5"></a><a class="link" href="#_how_to_run_5">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day06" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_06_rust"><a class="anchor" href="#_day_06_rust"></a><a class="link" href="#_day_06_rust">Day 06: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_06_tuning_trouble"><a class="anchor" href="#_day_06_tuning_trouble"></a><a class="link" href="#_day_06_tuning_trouble">Day 06: Tuning Trouble</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of the touning trouble puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_overview_2"><a class="anchor" href="#_overview_2"></a><a class="link" href="#_overview_2">Overview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_5"><a class="anchor" href="#_solution_5"></a><a class="link" href="#_solution_5">Solution</a></h5>
+<div class="paragraph">
+<p>For this one, input parsing was non-existent.
+Processing, on the other hand, was a bit harder.
+At first, I thought about implementing the uniqueness condition manually,
+considering that we only had to compare four entries in a pairwise fashion.
+I&#8217;m glad I didn&#8217;t do that, though, because of part two.
+Instead, it became clear that a set (<code>HashSet</code> in rust) could be used.</p>
+</div>
+<div class="paragraph">
+<p>A set is a collection of unique entris.
+Imagine converting a list of somethings into a set of somethings
+The only way both the list and the set can have the same number of entries is if
+and only if all entries in the list are unique.
+That&#8217;s what this code uses.</p>
+</div>
+<div class="paragraph">
+<p>My biggest struggle was rust&#8217;s ownership system and unsatisfied trait bounds
+that I didn&#8217;t even know existed.
+After the first functioning implementation, I cleaned the code up a bit.
+It&#8217;s surprisingly concise.</p>
+</div>
+<div class="paragraph">
+<p>I was happy to have discovered the <code>windows(size)</code> method usable with slices
+that produces an iterator over overlapping chunks of <code>size</code> elements.
+Now, I only had to check each of them for uniqueness.
+That involved some slice-vector-iterator comversions, which appear to be very
+common in rust.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::HashSet;
+// Constants.
+
+fn solve(file: &amp;str, win: usize) -&gt; Result&lt;()&gt; {
+    eprintln!("PROCESSING {}", file);
+
+    // Read file.
+    let lines = io::read_lines_from_file(file)?;
+
+    for line in lines {
+        let first_match = line
+            .chars()
+            .collect::&lt;Vec&lt;_&gt;&gt;()
+            .as_slice()
+            .windows(win)
+            .enumerate()
+            .filter_map(|(idx, el)| {
+                // If the size of a set is equal to the window size, then we have only unique
+                // entries. There is no other way.
+                if HashSet::&lt;char&gt;::from_iter(el.to_vec().into_iter()).len() == win {
+                    Some(idx)
+                } else {
+                    None
+                }
+            })
+            .take(1)
+            .next()
+            .ok_or(Error::msg("cannot find matching entry"))?;
+
+        println!("first line that fits: {}", first_match + win)
+    }
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE, 4)?;
+    solve(REAL, 4)?;
+
+    solve(SAMPLE, 14)?;
+    solve(REAL, 14)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are currently no tests.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_6"><a class="anchor" href="#_how_to_run_6"></a><a class="link" href="#_how_to_run_6">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
