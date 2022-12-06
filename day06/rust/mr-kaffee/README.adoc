@@ -1,0 +1,62 @@
+== Day 6: Tuning Trouble ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/6[AoC|2022|6].
+
+Today I totally screwed up for the second star for no specific reason :(
+
+Too little sleep probably. 
+
+=== Input ===
+
+I parse the input directly into a slice of bytes. That should be very cheap...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+Hand-crafted solution
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Solution with a bit of iterators.
+
+It feels bad to search the same thing again and again. If a duplicate is found in a window, the search could skip everything until the character just after the first occurance of the duplicate. I implemented this as an alternative (see below)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Alternative ===
+
+As an alternative, I implemented a generic solution which skips parts of the search already covered. Interestingly, this solution tends to be slightly slower (the difference is close to measurement noise in my not very professional time measurements)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=generic]
+----
+
+
+=== Tests ===
+
+Tests for all variants
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Today I learned ===
+
+Take a second cup of coffee before solving the puzzle, don't forget to wear glasses, and 
+
+* it is cool to not allocate any intermediate storage but work directly on byte slices.
+* it is possible to destructure slices with `match`
