@@ -2,25 +2,15 @@
 
 Today was probably the easiest one so far from my perspective. We had to write a simple parser to find the first unique sequence of characters with a given length and report the number of characters read.
 
-I decided to treat the input and current packet as a list of characters instead of a string.
+The Kotlin collections method `windowed` provides a way to create a window over an `Iterable` and provides a simple way to solve this. Checking that the content of the window as a unique set is the same size as the window.
 
 === Solution
 [source,kotlin]
 ....
-fun findPacketStart(input: String, packetSize: Int): Int {
-  val data = input.toList()
-  val packet = mutableListOf<Char>()
-
-  for (index in data.indices) {
-    packet.add(data[index])
-    if (packet.size > packetSize) {
-      packet.removeAt(0)
-    }
-    if (packet.size == packetSize && packet.toSet().size == packetSize) {
-      return index + 1
-    }
-  }
-  return input.length
+fun findUniquePacketEnd(input: String, packetSize: Int): Int {
+  return input.toList()
+    .windowed(packetSize)
+    .indexOfFirst { it.toSet().size == packetSize } + packetSize
 }
 ....
 
