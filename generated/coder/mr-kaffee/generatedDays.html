@@ -221,6 +221,20 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_06_rust">Day 06: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_6_tuning_trouble">Day 6: Tuning Trouble</a>
+<ul class="sectlevel4">
+<li><a href="#_input_6">Input</a></li>
+<li><a href="#_star_1_6">Star 1</a></li>
+<li><a href="#_star_2_6">Star 2</a></li>
+<li><a href="#_alternative">Alternative</a></li>
+<li><a href="#_tests_7">Tests</a></li>
+<li><a href="#_today_i_learned_6">Today I learned</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1298,6 +1312,173 @@ move 1 from 1 to 2"#;
 <h5 id="_today_i_learned_5"><a class="anchor" href="#_today_i_learned_5"></a><a class="link" href="#_today_i_learned_5">Today I learned</a></h5>
 <div class="paragraph">
 <p>How to mutably access two elements of one vec in Rust.</p>
+</div>
+<a id="day06" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_06_rust"><a class="anchor" href="#_day_06_rust"></a><a class="link" href="#_day_06_rust">Day 06: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_6_tuning_trouble"><a class="anchor" href="#_day_6_tuning_trouble"></a><a class="link" href="#_day_6_tuning_trouble">Day 6: Tuning Trouble</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/6">AoC|2022|6</a>.</p>
+</div>
+<div class="paragraph">
+<p>Today I totally screwed up for the second star for no specific reason :(</p>
+</div>
+<div class="paragraph">
+<p>Too little sleep probably.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_6"><a class="anchor" href="#_input_6"></a><a class="link" href="#_input_6">Input</a></h5>
+<div class="paragraph">
+<p>I parse the input directly into a slice of bytes. That should be very cheap&#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    use std::convert::Infallible;
+
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        pub stream: &amp;'static [u8],
+    }
+
+    impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
+        type Error = Infallible;
+
+        /// parse the puzzle input
+        fn try_from(s: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
+            Ok(PuzzleData {
+                stream: s.trim().as_bytes(),
+            })
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_6"><a class="anchor" href="#_star_1_6"></a><a class="link" href="#_star_1_6">Star 1</a></h5>
+<div class="paragraph">
+<p>Hand-crafted solution</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    let (k, _) = data
+        .stream
+        .windows(4)
+        .enumerate()
+        .find(|(_, s)| match s {
+            &amp;[a, b, c, d] =&gt; a != b &amp;&amp; a != c &amp;&amp; a != d &amp;&amp; b != c &amp;&amp; b != d &amp;&amp; c != d,
+            _ =&gt; unreachable!(),
+        })
+        .unwrap();
+
+    k + 4
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_6"><a class="anchor" href="#_star_2_6"></a><a class="link" href="#_star_2_6">Star 2</a></h5>
+<div class="paragraph">
+<p>Solution with a bit of iterators.</p>
+</div>
+<div class="paragraph">
+<p>It feels bad to search the same thing again and again. If a duplicate is found in a window, the search could skip everything until the character just after the first occurance of the duplicate. I implemented this as an alternative (see below)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let (k, _) = data
+        .stream
+        .windows(14)
+        .enumerate()
+        .find(|(_, w)| {
+            w.iter()
+                .enumerate()
+                .skip(1)
+                .all(|(p, c1)| w.iter().take(p).all(|c2| c1 != c2))
+        })
+        .unwrap();
+    k + 14
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_alternative"><a class="anchor" href="#_alternative"></a><a class="link" href="#_alternative">Alternative</a></h5>
+<div class="paragraph">
+<p>As an alternative, I implemented a generic solution which skips parts of the search already covered. Interestingly, this solution tends to be slightly slower (the difference is close to measurement noise in my not very professional time measurements)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn find_distinct(stream: &amp;[u8], n: usize) -&gt; usize {
+    let mut k = 0;
+    while k &lt; stream.len() - n {
+        match (k + 1..k + n).find(|p| stream[*p..k + n].contains(&amp;stream[*p - 1])) {
+            Some(q) =&gt; k = q,
+            None =&gt; return k + n,
+        }
+    }
+
+    panic!("No solution.");
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_7"><a class="anchor" href="#_tests_7"></a><a class="link" href="#_tests_7">Tests</a></h5>
+<div class="paragraph">
+<p>Tests for all variants</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"mjqjpqmgbljsphdztnvjfqwrcgsmlb"#;
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(7, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(19, star_2(&amp;data));
+    }
+
+    #[test]
+    pub fn test_find_distinct() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(7, find_distinct(data.stream, 4));
+        assert_eq!(19, find_distinct(data.stream, 14));
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_today_i_learned_6"><a class="anchor" href="#_today_i_learned_6"></a><a class="link" href="#_today_i_learned_6">Today I learned</a></h5>
+<div class="paragraph">
+<p>Take a second cup of coffee before solving the puzzle, don&#8217;t forget to wear glasses, and</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>it is cool to not allocate any intermediate storage but work directly on byte slices.</p>
+</li>
+<li>
+<p>it is possible to destructure slices with <code>match</code></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
