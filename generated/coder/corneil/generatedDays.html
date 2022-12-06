@@ -992,26 +992,16 @@ move 1 from 1 to 2
 <p>Today was probably the easiest one so far from my perspective. We had to write a simple parser to find the first unique sequence of characters with a given length and report the number of characters read.</p>
 </div>
 <div class="paragraph">
-<p>I decided to treat the input and current packet as a list of characters instead of a string.</p>
+<p>The Kotlin collections method <code>windowed</code> provides a way to create a window over an <code>Iterable</code> and provides a simple way to solve this. Checking that the content of the window as a unique set is the same size as the window.</p>
 </div>
 <div class="sect4">
 <h5 id="_solution"><a class="anchor" href="#_solution"></a><a class="link" href="#_solution">Solution</a></h5>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun findPacketStart(input: String, packetSize: Int): Int {
-  val data = input.toList()
-  val packet = mutableListOf&lt;Char&gt;()
-
-  for (index in data.indices) {
-    packet.add(data[index])
-    if (packet.size &gt; packetSize) {
-      packet.removeAt(0)
-    }
-    if (packet.size == packetSize &amp;&amp; packet.toSet().size == packetSize) {
-      return index + 1
-    }
-  }
-  return input.length
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun findUniquePacketEnd(input: String, packetSize: Int): Int {
+  return input.toList()
+    .windowed(packetSize)
+    .indexOfFirst { it.toSet().size == packetSize } + packetSize
 }</code></pre>
 </div>
 </div>
@@ -1021,39 +1011,28 @@ move 1 from 1 to 2
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun main() {
-  fun findPacketStart(input: String, packetSize: Int): Int {
-    val data = input.toList()
-    val packet = mutableListOf&lt;Char&gt;()
-
-    for (index in data.indices) {
-      packet.add(data[index])
-      if (packet.size &gt; packetSize) {
-        packet.removeAt(0)
-      }
-      if (packet.size == packetSize &amp;&amp; packet.toSet().size == packetSize) {
-        println("Packet=$packet")
-        return index + 1
-      }
-    }
-    return input.length
+  fun findUniquePacketEnd(input: String, packetSize: Int): Int {
+    return input.toList()
+      .windowed(packetSize)
+      .indexOfFirst { it.toSet().size == packetSize } + packetSize
   }
 
   val input = readFileToString("day06")
 
   fun part1() {
-    val testStart = findPacketStart("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 4)
+    val testStart = findUniquePacketEnd("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 4)
     println("Part1 Test Start = $testStart")
     check(testStart == 10)
-    val start = findPacketStart(input, 4)
+    val start = findUniquePacketEnd(input, 4)
     println("Part1 Start = $start")
     check(start == 1965)
   }
 
   fun part2() {
-    val testStart = findPacketStart("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 14)
+    val testStart = findUniquePacketEnd("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg", 14)
     println("Part 2 Test Message = $testStart")
     check(testStart == 29)
-    val start = findPacketStart(input, 14)
+    val start = findUniquePacketEnd(input, 14)
     println("Part 2 Start = $start")
     check(start == 2773)
   }
