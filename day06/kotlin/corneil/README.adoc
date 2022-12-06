@@ -1,0 +1,32 @@
+== Tuning Trouble
+
+Today was probably the easiest one so far from my perspective. We had to write a simple parser to find the first unique sequence of characters with a given length and report the number of characters read.
+
+I decided to treat the input and current packet as a list of characters instead of a string.
+
+=== Solution
+[source,kotlin]
+....
+fun findPacketStart(input: String, packetSize: Int): Int {
+  val data = input.toList()
+  val packet = mutableListOf<Char>()
+
+  for (index in data.indices) {
+    packet.add(data[index])
+    if (packet.size > packetSize) {
+      packet.removeAt(0)
+    }
+    if (packet.size == packetSize && packet.toSet().size == packetSize) {
+      return index + 1
+    }
+  }
+  return input.length
+}
+....
+
+=== Full source
+
+[source,kotlin]
+....
+include::src/solution.kt[]
+....

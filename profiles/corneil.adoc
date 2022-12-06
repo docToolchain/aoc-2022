@@ -13,7 +13,7 @@ a| **corneil** +
 {corneil-realName} +
 Github: https://github.com/corneil[corneil] +
 Twitter: https://twitter.com/corneil[@corneil] +
-Mastodon: https://mastodon.social/@corneil[@corneil@mastodon.social]
+Mastodon: https://hachyderm.io/@corneil[@corneil@hachyderm.io]
 |===
 
 === About me
