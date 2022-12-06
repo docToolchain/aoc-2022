@@ -2,6 +2,7 @@ use input::*;
 use mr_kaffee_aoc::{Puzzle, Star};
 
 /// the puzzle
+#[cfg(not(feature = "variant"))]
 pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
     Puzzle {
         year: 2022,
@@ -20,13 +21,32 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
     }
 }
 
+#[cfg(feature = "variant")]
+pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
+    Puzzle {
+        year: 2022,
+        day: 6,
+        input: include_str!("../input.txt"),
+        star1: Some(Star {
+            name: "Star 1",
+            f: &(|data| find_distinct(data.stream, 4)),
+            exp: Some(1_912),
+        }),
+        star2: Some(Star {
+            name: "Star 2",
+            f: &(|data| find_distinct(data.stream, 14)),
+            exp: Some(2_122),
+        }),
+    }
+}
+
 // tag::input[]
 pub mod input {
     use std::convert::Infallible;
 
     #[derive(Debug)]
     pub struct PuzzleData {
-        pub stream: Vec<char>,
+        pub stream: &'static [u8],
     }
 
     impl TryFrom<&'static str> for PuzzleData {
@@ -35,12 +55,26 @@ pub mod input {
         /// parse the puzzle input
         fn try_from(s: &'static str) -> Result<Self, Self::Error> {
             Ok(PuzzleData {
-                stream: s.trim().chars().collect(),
+                stream: s.trim().as_bytes(),
             })
         }
     }
 }
 // end::input[]
+
+// tag::generic[]
+pub fn find_distinct(stream: &[u8], n: usize) -> usize {
+    let mut k = 0;
+    while k < stream.len() - n {
+        match (k + 1..k + n).find(|p| stream[*p..k + n].contains(&stream[*p - 1])) {
+            Some(q) => k = q,
+            None => return k + n,
+        }
+    }
+
+    panic!("No solution.");
+}
+// end::generic[]
 
 // tag::star_1[]
 pub fn star_1(data: &PuzzleData) -> usize {
@@ -92,6 +126,13 @@ mod tests {
     pub fn test_star_2() {
         let data = PuzzleData::try_from(CONTENT).unwrap();
         assert_eq!(19, star_2(&data));
+    }
+
+    #[test]
+    pub fn test_find_distinct() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(7, find_distinct(data.stream, 4));
+        assert_eq!(19, find_distinct(data.stream, 14));
     }
 }
 // end::tests[]
