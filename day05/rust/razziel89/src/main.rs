@@ -42,7 +42,22 @@ fn lines_to_stacks(lines: &Vec<data::StackLine>) -> Result<Vec<data::Stack>> {
     }
 }
 
+fn check_bounds(idx: usize, len: usize, name: &str) -> Result<()> {
+    if idx > len {
+        return Err(Error::msg(format!(
+            "{} stack {} is out of bounds",
+            name, idx
+        )));
+    } else {
+        Ok(())
+    }
+}
+
 fn apply_move_part1(stacks: &mut Vec<data::Stack>, mov: &data::Move) -> Result<()> {
+    // Thanks to these two bounds checks, we know that the index operations below will never panic.
+    check_bounds(mov.src, stacks.len(), "source")?;
+    check_bounds(mov.dest, stacks.len(), "dest")?;
+
     for _ in 0..mov.num {
         if let Some(moved_elem) = &stacks[mov.src].pop() {
             stacks[mov.dest].push(*moved_elem);
@@ -54,6 +69,10 @@ fn apply_move_part1(stacks: &mut Vec<data::Stack>, mov: &data::Move) -> Result<(
 }
 
 fn apply_move_part2(stacks: &mut Vec<data::Stack>, mov: &data::Move) -> Result<()> {
+    // Thanks to these two bounds checks, we know that the index operations below will never panic.
+    check_bounds(mov.src, stacks.len(), "source")?;
+    check_bounds(mov.dest, stacks.len(), "dest")?;
+
     // We are being lazy and are using a temporary stack to stash the crates away. That way, we
     // keep the order intact when putting them back from the temporary stash to the final stash.
     let mut temp_stack: data::Stack = vec![];
@@ -105,19 +124,23 @@ fn solve(
         apply_move(&mut stacks, mov)?;
     }
 
+    let mut errs = vec![];
+
     println!(
         "the top elements are: {}",
         stacks
             .iter()
-            .map(|el| el
+            .enumerate()
+            .map(|(idx, el)| el
                 .last()
-                .expect("none of the stacks should be empty")
-                .to_string())
+                .map(|el| el.to_string())
+                .ok_or(Error::msg(format!("stack {} is empty", idx))))
+            .filter_map(|el| io::filter_and_remember_errs(el, &mut errs))
             .collect::<Vec<_>>()
             .join("")
     );
 
-    Ok(())
+    io::process_remembered_errs(errs)
 }
 
 fn main() -> Result<()> {
