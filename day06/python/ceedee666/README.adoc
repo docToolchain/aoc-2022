@@ -1,0 +1,20 @@
+== Day ??
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea of this solution is to group the input string into substrings of a given length and use
+a `set` to check how many different characters are in the substring.
+
+=== What did I learn
+
+=== How to run
+
+Run using:
+`$ python day_06.py --help`
