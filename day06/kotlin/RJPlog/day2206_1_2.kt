@@ -26,8 +26,7 @@ fun main() {
 
 	var solution1 = TuTr(4)
 	var solution2 = TuTr(14) 
-    
-    
+     
 // tag::output[]
 // print solution for part 1
 	println("*****************************")
