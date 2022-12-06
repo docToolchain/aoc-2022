@@ -20,7 +20,7 @@ include::day2206_1_2.kt[tags=TunningTrouble]
 
 How does it work: +
 
-Part two takes the same function _TuTr_ as part one.
+Part two takes the same function _TuTr_ as part one but uses a different input parameter.
 
 
 At the end, both solutions are printed out. 
