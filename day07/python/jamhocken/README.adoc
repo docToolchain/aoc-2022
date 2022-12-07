@@ -1,0 +1,34 @@
+
+Day 7 of year 2022
+https://adventofcode.com/2022/day/7
+
+== What I learned
+
+. Don't use something as a key if it is not unique. (Which I knew principally, but I forgot to check for uniqueness before starting).
+
+== Approach
+
+. I read in the commands and put them into a list of lists. 
+
+. I set up a dictionary. 
+.. The keys are the directory names with an additional counter (since the names are *not* unique), represented as a tuple. 
+.. The values are lists with:
+... The parent directory
+... The size of the directory and its sub-directories and files (initialized to zero).
+... The size of each file in the directory and the tuples for any child directories.
+
+I calculate the size of each directory recursively and put those values into the dictionary.
+
+**Star 1** +
+You just go through the dictionary and sum up all values below the threshold.
+
+**Star 2** +
+It's similar. I go through and if a value is big enough but less than the last one found, it's the new minimum.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
