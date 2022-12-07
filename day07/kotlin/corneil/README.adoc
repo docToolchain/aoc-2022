@@ -1,0 +1,159 @@
+== No Space Left On Device
+
+We had to parse a series of commands and output representing changing to and listing directories as in the example below.
+
+[source,shell]
+....
+$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k
+....
+
+The aim was to determine directory sizes.
+In the first case the challenge was to find directories with a total size including children of below a threshold and the second problem was to find the smallest directory above a certain size.
+
+
+=== Data Model
+[source,kotlin]
+....
+  data class FileInfo(val name: String, val size: Int)
+
+  class Directory(val name: String) {
+    private val files = mutableMapOf<String, FileInfo>()
+    private val directories = mutableMapOf<String, Directory>()
+    fun listDirectories() = directories.values.toList()
+    fun hasDir(dirname: String): Boolean = directories.containsKey(dirname)
+    fun getDir(dirname: String) = directories[dirname]
+    fun addDir(dirname: String): Directory = directories.getOrPut(dirname) { Directory(dirname) }
+    fun addFile(name: String, size: Int): FileInfo {
+      val file = FileInfo(name, size)
+      files[name] = file
+      return file
+    }
+    fun listFiles(): List<FileInfo> = files.values.toList()
+    fun fileSizes(): Int = files.values.sumOf { it.size }
+    fun totalSize(): Int = fileSizes() + directories.values.sumOf { it.totalSize() }
+
+    override fun toString(): String {
+      return "Directory(name='$name'," +
+                "directories=${directories.values.map { it.name }.toList()}," +
+                "files=${files.values.map { "${it.name}:${it.size}" }}" +
+              ")"
+    }
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (javaClass != other?.javaClass) return false
+
+      other as Directory
+
+      if (name != other.name) return false
+
+      return true
+    }
+    override fun hashCode(): Int {
+      return name.hashCode()
+    }
+}
+....
+
+
+=== Parsing
+
+The parsing meant keeping track of the directory tree and the current directory.
+I used the `Stack` from Day 05 to maintain the parent directories.
+
+[source,kotlin]
+....
+fun parseCommandsAndOutput(lines: List<String>): Directory {
+  val root = Directory("/")
+  val dirs = Stack<Directory>()
+  dirs.push(root)
+  var current = root
+  for(line in lines) {
+    val data = line.split(" ")
+    when {
+      data[0] == "$" && data[1] == "cd" && data[2] == "/" -> { dirs.clear(); dirs.push(root) }
+      data[0] == "$" && data[1] == "cd" && data[2] == ".." -> { dirs.pop(); current = dirs.peek()}
+      data[0] == "$" && data[1] == "cd" -> { dirs.push(current.addDir(data[2])); current = dirs.peek() }
+      data[0] == "$" && data[1] == "ls" -> println("listing ${dirs.items().joinToString("/") { it.name }}")
+      data[0] == "dir" -> current.addDir(data[1])
+      else -> {
+        val file = current.addFile(data[1], data[0].toInt())
+        println("file=dir:${current.name} + ${file.name}:${file.size}")
+      }
+    }
+  }
+  return root
+}
+....
+
+=== Solutions
+
+Both solutions need to obtain a list of all directories.
+
+==== Shared
+[source,kotlin]
+....
+fun listAllDirectories(directories: Directory): List<Directory> {
+  val result = mutableListOf<Directory>()
+  directories.listDirectories().forEach {
+    result.add(it)
+    result.addAll(listAllDirectories(it))
+  }
+  return result
+}
+....
+
+==== Part 1
+
+Find the directory sizes at most 100000 and calculate the total.
+
+[source,kotlin]
+....
+fun calcDirectoriesBelow(input: List<String>, maxValue: Int): Int {
+  val root = parseCommandsAndOutput(input)
+  val directories = listAllDirectories(root)
+  return directories.map { it.totalSize() }.filter { it <= maxValue }.sum()
+}
+....
+
+==== Part 2
+
+Find the small of the directories large enough to delete in order to free up enough space so that at least 30000000 of 70000000 is unused.
+
+[source,kotlin]
+....
+fun calcDirectoriesToFree(input: List<String>, diskSize: Int, freeSpace: Int): Int {
+  val root = parseCommandsAndOutput(input)
+  val directories = listAllDirectories(root)
+  val unused = diskSize - root.totalSize()
+  val requiredDelete = freeSpace - unused
+  return directories.map { it.totalSize() }.filter { it > requiredDelete }.min()
+}
+....
+
+=== Full source
+[source,kotlin]
+....
+include::src/solution.kt[]
+....
