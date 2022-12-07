@@ -1,0 +1,37 @@
+==  Day 7: No Space Left On Device  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/7
+
+
+=== First Star
+
+How does it work: +
+
+Today it got more difficult for me. I thought that may be a good oportunity to deal with data classes, so first I had to figure out how to work with data classes. I defined a _Directory_ data class, which contains folder name, parent folder name, a list of subfolder names (also of class _Directory_) and the cummulated size of the files directly in this folder.
+
+With the function _NoSpace_ first the input is parsed line by line, whenever there occurs a new directory, a new data class is generated, and all data classes are stored in one list of _Directory_, containing all parsed information.
+
+In a loop then this list will be aggregated to the total size of all files contained in a folder and it's subfolders.
+
+For the solution of part one all folders > 100000 are cummulated. Could have done also with .filter, but works also with forEach.
+
+[source, kotlin, numbered]
+....
+include::day2207_1_2.kt[tags=NoSpace]
+....
+
+
+=== Second Star
+
+How does it work: +
+
+For part two the same aggregated list is used to find the smallest folder with a size still above the needed space to be deleted
+
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2207_1_2.kt[tags=output]
+....
