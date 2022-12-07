@@ -1,6 +1,7 @@
 import java.io.File
 import kotlin.math.*
 
+// define data class containing all necessary data of one folder
 data class Directory(val name: String) {
 	var subDirectories = mutableListOf<Directory>()
 	var parentDirectory: String = ""
@@ -10,12 +11,11 @@ data class Directory(val name: String) {
 // tag::NoSpace[]
 fun NoSpace(in1: Int): Long {
 
+	// create Folderstructure
 	var folderList = mutableListOf<Directory>()
 	var currentFolder: String = ""
 
 	File("day2207_puzzle_input.txt").forEachLine {
-
-		// create Folderstructure
 		if (it.contains("$ cd")) {
 			var parameter = it.split(" ")[2]
 			if (parameter != "..") {
@@ -40,15 +40,6 @@ fun NoSpace(in1: Int): Long {
 			)
 		}
 	}
-
-
-	println("*********** FolderList *******************")
-	folderList.forEach {
-		println("Foldername: ${it.name}, Subdirectories: ${it.subDirectories}, parentDirectory ${it.parentDirectory}, Size: ${it.sizeOfFiles}")
-	}
-	println("*********** FolderList *******************")
-	println()
-
 
 	// aggregate all folder sizes
 	var aggEnd = false
