@@ -1524,26 +1524,26 @@ mod tests {
 
     #[derive(Debug)]
     pub struct Directory {
-        parent_dir: Option&lt;usize&gt;,
-        child_dirs: HashMap&lt;&amp;'static str, usize&gt;,
-        child_file_sizes: usize,
+        parent: Option&lt;usize&gt;,
+        children: HashMap&lt;&amp;'static str, usize&gt;,
+        size: usize,
     }
 
     impl Directory {
-        fn new(parent_dir: Option&lt;usize&gt;) -&gt; Self {
+        fn new(parent: Option&lt;usize&gt;) -&gt; Self {
             Self {
-                parent_dir,
-                child_dirs: HashMap::new(),
-                child_file_sizes: 0,
+                parent,
+                children: HashMap::new(),
+                size: 0,
             }
         }
 
         pub fn total_size(&amp;self, dirs: &amp;[Directory]) -&gt; usize {
-            self.child_file_sizes
+            self.size
                 + self
-                    .child_dirs
-                    .iter()
-                    .map(|(_, idx)| dirs[*idx].total_size(dirs))
+                    .children
+                    .values()
+                    .map(|idx| dirs[*idx].total_size(dirs))
                     .sum::&lt;usize&gt;()
         }
     }
@@ -1564,24 +1564,21 @@ mod tests {
             for line in s.lines() {
                 match line {
                     "$ cd /" =&gt; current = 0,
-                    "$ cd .." =&gt; current = dirs[current].parent_dir.unwrap(),
+                    "$ cd .." =&gt; current = dirs[current].parent.unwrap(),
                     "$ ls" =&gt; (),
-                    v if v.starts_with("$ cd ") =&gt; {
-                        current = *dirs[current]
-                            .child_dirs
-                            .get(v.strip_prefix("$ cd ").unwrap())
-                            .unwrap()
+                    _ if line.starts_with("$ cd ") =&gt; {
+                        current = dirs[current].children[line.strip_prefix("$ cd ").unwrap()];
                     }
-                    v if v.starts_with("dir ") =&gt; {
-                        let idx = dirs.len();
+                    _ if line.starts_with("dir ") =&gt; {
+                        let dir = dirs.len();
                         dirs.push(Directory::new(Some(current)));
                         dirs[current]
-                            .child_dirs
-                            .insert(v.strip_prefix("dir ").unwrap(), idx);
+                            .children
+                            .insert(line.strip_prefix("dir ").unwrap(), dir);
                     }
-                    v =&gt; {
-                        let (size, _) = v.split_once(" ").unwrap();
-                        dirs[current].child_file_sizes += size.parse::&lt;usize&gt;().unwrap()
+                    _ =&gt; {
+                        let (size, _) = line.split_once(" ").unwrap();
+                        dirs[current].size += size.parse::&lt;usize&gt;().unwrap();
                     }
                 }
             }
@@ -1611,7 +1608,7 @@ mod tests {
     data.dirs()
         .iter()
         .filter_map(|d| {
-            let s = d.total_size(&amp;data.dirs());
+            let s = d.total_size(data.dirs());
             if s &lt;= 100000 {
                 Some(s)
             } else {
@@ -1631,12 +1628,12 @@ mod tests {
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
-    let required = data.dirs()[0].total_size(&amp;data.dirs()) - 40_000_000;
+    let required = data.dirs()[0].total_size(data.dirs()) - 40_000_000;
 
     data.dirs()
         .iter()
         .filter_map(|d| {
-            let s = d.total_size(&amp;data.dirs());
+            let s = d.total_size(data.dirs());
             if s &gt;= required {
                 Some(s)
             } else {
