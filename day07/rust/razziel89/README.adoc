@@ -1,0 +1,63 @@
+== Day 07: No Space Left On device ==
+
+This is my implementation for both rounds of this day's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+This solution is not pretty but I kind of messed up a bit at first and then ran
+out of time.
+A lack of sleep could have contributed.
+
+Parsing the input into a native data structure was straightforward thanks to
+rust's powerful enums.
+But then the problems started.
+For some reason, I decided to implement a fake directory structure manually as
+an excercise and lost a lot of time that way.
+As an alternative, I decided to take an idea from rsync's cookbook and represent
+files and directories a strings but ensure that direcotries always end with a
+slash.
+That way, I could have one set mapping paths to sizes but could easily determine
+whether something was a file or a directory.
+
+Then, the process was "just" building such a set of paths, finding all files
+under a directory, and applying some operations to that.
+I'm not happy with how the solution turned out but it works.
+I was surprised by how much special care is needed when working with the root
+directory `/`.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+This time, I've even added some tests for some helper functions.
+Those tests lets me ensure that any special handling of the root direcotry works
+as intended.
+Adding tests to a file in rust was pretty easy and a nice experience.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
