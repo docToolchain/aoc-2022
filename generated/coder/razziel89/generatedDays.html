@@ -210,6 +210,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_07_rust">Day 07: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_07_no_space_left_on_device">Day 07: No Space Left On device</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_5">Oveview</a></li>
+<li><a href="#_solution_6">Solution</a></li>
+<li><a href="#_how_to_run_7">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1546,6 +1557,305 @@ fn main() -&gt; Result&lt;()&gt; {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_6"><a class="anchor" href="#_how_to_run_6"></a><a class="link" href="#_how_to_run_6">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day07" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_07_rust"><a class="anchor" href="#_day_07_rust"></a><a class="link" href="#_day_07_rust">Day 07: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_07_no_space_left_on_device"><a class="anchor" href="#_day_07_no_space_left_on_device"></a><a class="link" href="#_day_07_no_space_left_on_device">Day 07: No Space Left On device</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of this day&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_5"><a class="anchor" href="#_oveview_5"></a><a class="link" href="#_oveview_5">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_6"><a class="anchor" href="#_solution_6"></a><a class="link" href="#_solution_6">Solution</a></h5>
+<div class="paragraph">
+<p>This solution is not pretty but I kind of messed up a bit at first and then ran
+out of time.
+A lack of sleep could have contributed.</p>
+</div>
+<div class="paragraph">
+<p>Parsing the input into a native data structure was straightforward thanks to
+rust&#8217;s powerful enums.
+But then the problems started.
+For some reason, I decided to implement a fake directory structure manually as
+an excercise and lost a lot of time that way.
+As an alternative, I decided to take an idea from rsync&#8217;s cookbook and represent
+files and directories a strings but ensure that direcotries always end with a
+slash.
+That way, I could have one set mapping paths to sizes but could easily determine
+whether something was a file or a directory.</p>
+</div>
+<div class="paragraph">
+<p>Then, the process was "just" building such a set of paths, finding all files
+under a directory, and applying some operations to that.
+I&#8217;m not happy with how the solution turned out but it works.
+I was surprised by how much special care is needed when working with the root
+directory <code>/</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::HashMap;
+// Constants.
+// Part 1.
+const MAX_SIZE: usize = 100000;
+// Part 2.
+const TOTAL_SIZE: usize = 70000000;
+const REQUIRED_SIZE: usize = 30000000;
+
+// This could probably be improved but it works.
+fn join(first: &amp;String, second: String, trail_slash: bool) -&gt; String {
+    match (first.as_str(), trail_slash) {
+        ("/", true) =&gt; format!("/{}/", second),
+        ("/", false) =&gt; format!("/{}", second),
+        (_, true) =&gt; format!("{}/{}/", first, second),
+        (_, false) =&gt; format!("{}/{}", first, second),
+    }
+}
+
+// This finds the parent directory. There is a lot of special handling here for the root directory.
+fn parent(dir: String) -&gt; String {
+    if dir == "/" {
+        "/".to_string()
+    } else {
+        let parent = dir
+            .as_str()
+            // This reverses the direction of iteration.
+            .rsplit("/")
+            .skip(1)
+            // We need to collect here because we need to reverse the direction of iteration later
+            // but the return type of `skip` doesn't allow that.
+            .collect::&lt;Vec&lt;_&gt;&gt;()
+            .into_iter()
+            .rev()
+            .collect::&lt;Vec&lt;_&gt;&gt;()
+            .join("/");
+        if parent.starts_with("/") {
+            parent
+        } else {
+            format!("/{}", parent)
+        }
+    }
+}
+
+// We don'tuse a tree to represent the file system because trees are hard. Instead, we use a map
+// mapping slash-separated strings to size values. An entry ending in a slash is a directory. That
+// way, we can build everything up at once.
+fn build_fs(entries: Vec&lt;data::Entry&gt;) -&gt; Result&lt;HashMap&lt;String, usize&gt;&gt; {
+    let mut cwd = "/".to_string();
+    let mut fs = HashMap::&lt;String, usize&gt;::new();
+    // This boolean serves as a way to check that we retrieve listed values only after the ls
+    // command has been issued. It's just a sanity check for the input.
+    let mut listing = false;
+
+    fs.insert("/".to_string(), 0);
+
+    // Build up the file system. We fill in directory sizes later down below, which simplifies that
+    // but is less efficient.
+    for entry in entries {
+        match entry {
+            data::Entry::CD(dir) =&gt; {
+                listing = false;
+                cwd = match dir.as_str() {
+                    ".." =&gt; parent(cwd),
+                    "/" =&gt; dir,
+                    _ =&gt; join(&amp;cwd, dir, false),
+                };
+                if cwd != "/" &amp;&amp; !fs.contains_key(&amp;cwd) {
+                    // Entries with a trailing slash are directories.
+                    fs.insert(format!("{}/", cwd), 0);
+                }
+            }
+            data::Entry::LS =&gt; {
+                listing = true;
+            }
+            data::Entry::DIR(dir) =&gt; {
+                if !listing {
+                    return Err(Error::msg("found dir entry but not not in list mode"));
+                }
+                fs.insert(join(&amp;cwd, dir, true), 0);
+            }
+            data::Entry::FILE { name, size } =&gt; {
+                if !listing {
+                    return Err(Error::msg("found file entry but not not in list mode"));
+                }
+                if cwd != "/" &amp;&amp; !fs.contains_key(format!("{}/", cwd).as_str()) {
+                    return Err(Error::msg(format!("missing parent node {}", cwd)));
+                }
+                fs.insert(join(&amp;cwd, name, false), size);
+            }
+        }
+    }
+
+    // I did not bother trying to find a solution tha works without copying.
+    let dirs = fs
+        .iter()
+        .filter_map(|(name, _)| {
+            if name.ends_with("/") {
+                Some(name.clone())
+            } else {
+                None
+            }
+        })
+        .collect::&lt;Vec&lt;_&gt;&gt;();
+
+    // Accumulate sizes for all dirs. We iterate over all dirs and then add up the sizes of all
+    // files underneath them. That's inefficient but OK enough here.
+    for dir in dirs {
+        let dir_size = fs
+            .iter()
+            .filter_map(|(name, size)| {
+                // Is a file underneath `dir`, emit its size. Otherwise, skip it.
+                if !name.ends_with("/") &amp;&amp; name.starts_with(&amp;dir) {
+                    Some(size)
+                } else {
+                    None
+                }
+            })
+            .sum::&lt;usize&gt;();
+
+        fs.insert(dir.to_string(), dir_size);
+    }
+
+    Ok(fs)
+}
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    eprintln!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let entries = io::parse_lines_to_data::&lt;data::Entry&gt;(file, "entry", None, None)?;
+
+    let filesystem = build_fs(entries)?;
+
+    // Part 1.
+    let result_part1 = filesystem
+        .iter()
+        .filter_map(|(name, size)| {
+            if name.ends_with("/") &amp;&amp; size &lt;= &amp;MAX_SIZE {
+                Some(size)
+            } else {
+                None
+            }
+        })
+        .sum::&lt;usize&gt;();
+
+    println!("requested size is {}", result_part1);
+
+    // Part 2.
+    // We already accumulated sizes, so getting this is easy. The amount of free space is the total
+    // size minus what we currently occupy, which is the size of the root directory.
+    // Note the use of checked_sub here because I wanted to try it out for subtracting from
+    // unsigned values. Those checked_* methods allow graceful handling of overflows. Without them,
+    // rust would panic if there was a violation of a type's value range.
+    let used_space = *filesystem
+        .get("/")
+        .ok_or(Error::msg("cannot retrieve used space"))?;
+    let free_space = TOTAL_SIZE
+        .checked_sub(used_space)
+        .ok_or(Error::msg("cannot compute free space"))?;
+    let required_space = REQUIRED_SIZE
+        .checked_sub(free_space)
+        .ok_or(Error::msg("cannot compute required space"))?;
+
+    eprintln!("need to free up at least {}", required_space);
+
+    // Find the smallest directory that fulfils that condition.
+    let min_free_size = filesystem
+        .iter()
+        .filter_map(|(name, size)| {
+            if name.ends_with("/") &amp;&amp; size &gt;= &amp;required_space {
+                Some(size)
+            } else {
+                None
+            }
+        })
+        .min()
+        .ok_or(Error::msg("cannot find any directory for part 2"))?;
+
+    println!("freeing {} is enough", min_free_size);
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE)?;
+    solve(REAL)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use crate::io;
+use anyhow::{Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub enum Entry {
+    CD(String),
+    LS,
+    DIR(String),
+    FILE { name: String, size: usize },
+}
+
+impl FromStr for Entry {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+            ["$", "cd", dir] =&gt; Ok(Self::CD(dir.to_string())),
+            ["$", "ls"] =&gt; Ok(Self::LS),
+            ["dir", dir] =&gt; Ok(Self::DIR(dir.to_string())),
+            [size, name] =&gt; Ok(Self::FILE {
+                name: name.to_string(),
+                size: size.parse::&lt;usize&gt;()?,
+            }),
+            _ =&gt; Err(Error::msg(format!("canot parse {}", s))),
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This time, I&#8217;ve even added some tests for some helper functions.
+Those tests lets me ensure that any special handling of the root direcotry works
+as intended.
+Adding tests to a file in rust was pretty easy and a nice experience.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_7"><a class="anchor" href="#_how_to_run_7"></a><a class="link" href="#_how_to_run_7">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
