@@ -193,6 +193,13 @@
 <li><a href="#_run_script_7">Run script</a></li>
 </ul>
 </li>
+<li><a href="#_day_07_python">Day 07: python</a>
+<ul class="sectlevel3">
+<li><a href="#_what_i_learned_7">What I learned</a></li>
+<li><a href="#_approach_7">Approach</a></li>
+<li><a href="#_run_script_8">Run script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -735,6 +742,153 @@ def main():
     #star 2
     position = check_window(input_lines,14)
     print(position)
+
+main()</code></pre>
+</div>
+</div>
+<a id="day07" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_07_python"><a class="anchor" href="#_day_07_python"></a><a class="link" href="#_day_07_python">Day 07: python</a></h3>
+<div class="paragraph">
+<p>Day 7 of year 2022
+<a href="https://adventofcode.com/2022/day/7" class="bare">https://adventofcode.com/2022/day/7</a></p>
+</div>
+<div class="sect3">
+<h4 id="_what_i_learned_7"><a class="anchor" href="#_what_i_learned_7"></a><a class="link" href="#_what_i_learned_7">What I learned</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Don&#8217;t use something as a key if it is not unique. (Which I knew principally, but I forgot to check for uniqueness before starting).</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_approach_7"><a class="anchor" href="#_approach_7"></a><a class="link" href="#_approach_7">Approach</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I read in the commands and put them into a list of lists.</p>
+</li>
+<li>
+<p>I set up a dictionary.</p>
+<div class="olist loweralpha">
+<ol class="loweralpha" type="a">
+<li>
+<p>The keys are the directory names with an additional counter (since the names are <strong>not</strong> unique), represented as a tuple.</p>
+</li>
+<li>
+<p>The values are lists with:</p>
+<div class="olist lowerroman">
+<ol class="lowerroman" type="i">
+<li>
+<p>The parent directory</p>
+</li>
+<li>
+<p>The size of the directory and its sub-directories and files (initialized to zero).</p>
+</li>
+<li>
+<p>The size of each file in the directory and the tuples for any child directories.</p>
+</li>
+</ol>
+</div>
+</li>
+</ol>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>I calculate the size of each directory recursively and put those values into the dictionary.</p>
+</div>
+<div class="paragraph">
+<p><strong>Star 1</strong><br>
+You just go through the dictionary and sum up all values below the threshold.</p>
+</div>
+<div class="paragraph">
+<p><strong>Star 2</strong><br>
+It&#8217;s similar. I go through and if a value is big enough but less than the last one found, it&#8217;s the new minimum.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_run_script_8"><a class="anchor" href="#_run_script_8"></a><a class="link" href="#_run_script_8">Run script</a></h4>
+<div class="paragraph">
+<p>Run the solution with <code>python solution.py</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-python" data-lang="python">def process_input(file_contents):
+    lines_stripped = [line.strip() for line in file_contents]
+    commands = [line.split() for line in lines_stripped]
+
+    return commands
+
+def dir_size(parent_child, directory):
+    if parent_child[directory][1] == 0:
+        for item in parent_child[directory][2:]:
+            if type(item) != tuple:
+                parent_child[directory][1] = parent_child[directory][1] + item
+            else:
+                dir_size(parent_child,item)
+                parent_child[directory][1] = parent_child[directory][1] + parent_child[item][1]
+    return
+
+def main():
+    with open("input.txt",'r') as input_file:
+        input_lines = input_file.readlines()
+
+    commands = process_input(input_lines)
+
+    current_directory = ("/",0)
+    parent_child = {}
+    parent = ("/",0)
+    parent_child[parent] = [current_directory,0]
+    keys_used = {"/":0}
+    for command in commands:
+        if command[0] == "$" and command[1] == "cd":
+            if command[2] != ".." and command[2] != "/":
+                parent = current_directory
+                for value in parent_child[current_directory]:
+                    if type(value) == tuple:
+                        if value[0] == command[2]:
+                            current_directory = value
+            else:
+                current_directory = parent
+                parent = parent_child[current_directory][0]
+        elif command[0] == "$" and command[1] == "ls":
+            parent_child[current_directory] = [parent,0]
+        else:
+            if command[0] != "dir":
+                parent_child[current_directory].append(int(command[0]))
+            elif command[1] not in keys_used.keys():
+                keys_used[command[1]] = 0
+                parent_child[current_directory].append((command[1],0))
+            else:
+                keys_used[command[1]] = keys_used[command[1]]+1
+                parent_child[current_directory].append((command[1],keys_used[command[1]]))
+
+    dir_size(parent_child,("/",0))
+
+    #star 1
+    count = 0
+    for value in parent_child.values():
+        if value[1] &lt;= 100000:
+            count += value[1]
+
+    print(count)
+
+    #star 2
+    space_free = 70000000 - parent_child[("/",0)][1]
+    space_needed = 30000000 - space_free
+
+    smallest = 70000000
+    for value in parent_child.values():
+        if value[1] &gt; space_needed and value[1] &lt; smallest:
+            smallest = value[1]
+
+    print(smallest)
 
 main()</code></pre>
 </div>
