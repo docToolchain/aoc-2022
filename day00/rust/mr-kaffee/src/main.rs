@@ -12,6 +12,7 @@ fn main() {
     let puzzles: &[&dyn GenericPuzzle] = &[
         &mr_kaffee_2022_0::puzzle(),
         // INCLUDE_PUZZLES:START
+        &mr_kaffee_2022_7::puzzle(),
         &mr_kaffee_2022_6::puzzle(),
         &mr_kaffee_2022_5::puzzle(),
         &mr_kaffee_2022_4::puzzle(),
