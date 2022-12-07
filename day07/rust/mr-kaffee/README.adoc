@@ -1,0 +1,45 @@
+== Day 7: No Space Left On Device ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/7[AoC|2022|7].
+
+When reading the puzzle today, I thought it would get complicated. Finally, it was quite straight-forward.
+
+=== Input ===
+
+The description asks for recursion / recursive data structures, which I find a pain in Rust. My solution is to create a vec of `Directory` elements. Each directory contains references to children and the parent directory as index to this vec.
+
+The directories are created by processing the input line by line. When an `ls` command yields a directory, a new `Directory` element is added, its index is added to the children to of the current directory and its parent is set to the current directorie's index.
+
+File sizes are directly summed up (initially, child files were stored in a vec, but once part 2 was unveiled, it was clear that the sum is the only thing needed)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+Simple iter - filter - fold
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Another simple iter - filter - fold
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+The standard tests.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
