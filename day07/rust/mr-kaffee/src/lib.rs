@@ -24,58 +24,24 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
 pub mod input {
     use std::{collections::HashMap, convert::Infallible};
 
-    #[derive(Debug, Eq, PartialEq)]
-    pub enum InOut {
-        CdRoot,
-        CdDown(&'static str),
-        CdUp,
-
-        Ls,
-
-        Dir(&'static str),
-        File(&'static str, usize),
-    }
-
     #[derive(Debug)]
     pub struct Directory {
-        pub parent_dir: Option<usize>,
-        pub child_dirs: HashMap<&'static str, usize>,
-        pub child_file_sizes: Vec<usize>,
+        parent_dir: Option<usize>,
+        child_dirs: HashMap<&'static str, usize>,
+        child_file_sizes: usize,
     }
 
     impl Directory {
-        fn parse(items: &[InOut]) -> Vec<Self> {
-            let mut dirs = vec![Directory::new(None)];
-
-            let mut current = 0;
-            for item in items {
-                match item {
-                    InOut::CdRoot => current = 0,
-                    InOut::CdDown(name) => current = *dirs[current].child_dirs.get(name).unwrap(),
-                    InOut::CdUp => current = dirs[current].parent_dir.unwrap(),
-                    InOut::Ls => (),
-                    InOut::Dir(name) => {
-                        let idx = dirs.len();
-                        dirs.push(Directory::new(Some(current)));
-                        dirs[current].child_dirs.insert(name, idx);
-                    }
-                    InOut::File(_, size) => dirs[current].child_file_sizes.push(*size),
-                }
-            }
-
-            dirs
-        }
-
         fn new(parent_dir: Option<usize>) -> Self {
             Self {
                 parent_dir,
                 child_dirs: HashMap::new(),
-                child_file_sizes: vec![],
+                child_file_sizes: 0,
             }
         }
 
         pub fn total_size(&self, dirs: &[Directory]) -> usize {
-            self.child_file_sizes.iter().sum::<usize>()
+            self.child_file_sizes
                 + self
                     .child_dirs
                     .iter()
@@ -86,7 +52,7 @@ pub mod input {
 
     #[derive(Debug)]
     pub struct PuzzleData {
-        pub dirs: Vec<Directory>,
+        dirs: Vec<Directory>,
     }
 
     impl TryFrom<&'static str> for PuzzleData {
@@ -94,23 +60,42 @@ pub mod input {
 
         /// parse the puzzle input
         fn try_from(s: &'static str) -> Result<Self, Self::Error> {
-            let items = s
-                .lines()
-                .map(|l| match l {
-                    "$ cd /" => InOut::CdRoot,
-                    "$ cd .." => InOut::CdUp,
-                    "$ ls" => InOut::Ls,
-                    v if v.starts_with("$ cd ") => InOut::CdDown(v.strip_prefix("$ cd ").unwrap()),
-                    v if v.starts_with("dir ") => InOut::Dir(v.strip_prefix("dir ").unwrap()),
-                    v => {
-                        let (size, name) = v.split_once(" ").unwrap();
-                        InOut::File(name, size.parse().unwrap())
+            let mut dirs = vec![Directory::new(None)];
+
+            let mut current = 0;
+            for line in s.lines() {
+                match line {
+                    "$ cd /" => current = 0,
+                    "$ cd .." => current = dirs[current].parent_dir.unwrap(),
+                    "$ ls" => (),
+                    v if v.starts_with("$ cd ") => {
+                        current = *dirs[current]
+                            .child_dirs
+                            .get(v.strip_prefix("$ cd ").unwrap())
+                            .unwrap()
                     }
-                })
-                .collect::<Vec<_>>();
-            Ok(Self {
-                dirs: Directory::parse(&items),
-            })
+                    v if v.starts_with("dir ") => {
+                        let idx = dirs.len();
+                        dirs.push(Directory::new(Some(current)));
+                        dirs[current]
+                            .child_dirs
+                            .insert(v.strip_prefix("dir ").unwrap(), idx);
+                    }
+                    v => {
+                        let (size, _) = v.split_once(" ").unwrap();
+                        dirs[current].child_file_sizes += size.parse::<usize>().unwrap()
+                    }
+                }
+            }
+
+            Ok(Self { dirs })
+        }
+    }
+
+    impl PuzzleData {
+        /// immutable access to directories as slice
+        pub fn dirs(&self) -> &[Directory] {
+            &self.dirs
         }
     }
 }
@@ -118,10 +103,10 @@ pub mod input {
 
 // tag::star_1[]
 pub fn star_1(data: &PuzzleData) -> usize {
-    data.dirs
+    data.dirs()
         .iter()
         .filter_map(|d| {
-            let s = d.total_size(&data.dirs);
+            let s = d.total_size(&data.dirs());
             if s <= 100000 {
                 Some(s)
             } else {
@@ -134,12 +119,12 @@ pub fn star_1(data: &PuzzleData) -> usize {
 
 // tag::star_2[]
 pub fn star_2(data: &PuzzleData) -> usize {
-    let required = data.dirs[0].total_size(&data.dirs) - 40_000_000;
+    let required = data.dirs()[0].total_size(&data.dirs()) - 40_000_000;
 
-    data.dirs
+    data.dirs()
         .iter()
         .filter_map(|d| {
-            let s = d.total_size(&data.dirs);
+            let s = d.total_size(&data.dirs());
             if s >= required {
                 Some(s)
             } else {
@@ -178,12 +163,6 @@ $ ls
 8033020 d.log
 5626152 d.ext
 7214296 k"#;
-
-    #[test]
-    pub fn test_try_from() {
-        let data = PuzzleData::try_from(CONTENT).unwrap();
-        println!("{data:?}");
-    }
 
     #[test]
     pub fn test_star_1() {
