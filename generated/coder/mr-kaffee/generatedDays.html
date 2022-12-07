@@ -235,6 +235,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_07_rust">Day 07: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_7_no_space_left_on_device">Day 7: No Space Left On Device</a>
+<ul class="sectlevel4">
+<li><a href="#_input_7">Input</a></li>
+<li><a href="#_star_1_7">Star 1</a></li>
+<li><a href="#_star_2_7">Star 2</a></li>
+<li><a href="#_tests_8">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1479,6 +1491,211 @@ mod tests {
 <p>it is possible to destructure slices with <code>match</code></p>
 </li>
 </ul>
+</div>
+<a id="day07" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_07_rust"><a class="anchor" href="#_day_07_rust"></a><a class="link" href="#_day_07_rust">Day 07: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_7_no_space_left_on_device"><a class="anchor" href="#_day_7_no_space_left_on_device"></a><a class="link" href="#_day_7_no_space_left_on_device">Day 7: No Space Left On Device</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/7">AoC|2022|7</a>.</p>
+</div>
+<div class="paragraph">
+<p>When reading the puzzle today, I thought it would get complicated. Finally, it was quite straight-forward.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_7"><a class="anchor" href="#_input_7"></a><a class="link" href="#_input_7">Input</a></h5>
+<div class="paragraph">
+<p>The description asks for recursion / recursive data structures, which I find a pain in Rust. My solution is to create a vec of <code>Directory</code> elements. Each directory contains references to children and the parent directory as index to this vec.</p>
+</div>
+<div class="paragraph">
+<p>The directories are created by processing the input line by line. When an <code>ls</code> command yields a directory, a new <code>Directory</code> element is added, its index is added to the children to of the current directory and its parent is set to the current directorie&#8217;s index.</p>
+</div>
+<div class="paragraph">
+<p>File sizes are directly summed up (initially, child files were stored in a vec, but once part 2 was unveiled, it was clear that the sum is the only thing needed)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    use std::{collections::HashMap, convert::Infallible};
+
+    #[derive(Debug)]
+    pub struct Directory {
+        parent_dir: Option&lt;usize&gt;,
+        child_dirs: HashMap&lt;&amp;'static str, usize&gt;,
+        child_file_sizes: usize,
+    }
+
+    impl Directory {
+        fn new(parent_dir: Option&lt;usize&gt;) -&gt; Self {
+            Self {
+                parent_dir,
+                child_dirs: HashMap::new(),
+                child_file_sizes: 0,
+            }
+        }
+
+        pub fn total_size(&amp;self, dirs: &amp;[Directory]) -&gt; usize {
+            self.child_file_sizes
+                + self
+                    .child_dirs
+                    .iter()
+                    .map(|(_, idx)| dirs[*idx].total_size(dirs))
+                    .sum::&lt;usize&gt;()
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        dirs: Vec&lt;Directory&gt;,
+    }
+
+    impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
+        type Error = Infallible;
+
+        /// parse the puzzle input
+        fn try_from(s: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
+            let mut dirs = vec![Directory::new(None)];
+
+            let mut current = 0;
+            for line in s.lines() {
+                match line {
+                    "$ cd /" =&gt; current = 0,
+                    "$ cd .." =&gt; current = dirs[current].parent_dir.unwrap(),
+                    "$ ls" =&gt; (),
+                    v if v.starts_with("$ cd ") =&gt; {
+                        current = *dirs[current]
+                            .child_dirs
+                            .get(v.strip_prefix("$ cd ").unwrap())
+                            .unwrap()
+                    }
+                    v if v.starts_with("dir ") =&gt; {
+                        let idx = dirs.len();
+                        dirs.push(Directory::new(Some(current)));
+                        dirs[current]
+                            .child_dirs
+                            .insert(v.strip_prefix("dir ").unwrap(), idx);
+                    }
+                    v =&gt; {
+                        let (size, _) = v.split_once(" ").unwrap();
+                        dirs[current].child_file_sizes += size.parse::&lt;usize&gt;().unwrap()
+                    }
+                }
+            }
+
+            Ok(Self { dirs })
+        }
+    }
+
+    impl PuzzleData {
+        /// immutable access to directories as slice
+        pub fn dirs(&amp;self) -&gt; &amp;[Directory] {
+            &amp;self.dirs
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_7"><a class="anchor" href="#_star_1_7"></a><a class="link" href="#_star_1_7">Star 1</a></h5>
+<div class="paragraph">
+<p>Simple iter - filter - fold</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    data.dirs()
+        .iter()
+        .filter_map(|d| {
+            let s = d.total_size(&amp;data.dirs());
+            if s &lt;= 100000 {
+                Some(s)
+            } else {
+                None
+            }
+        })
+        .sum()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_7"><a class="anchor" href="#_star_2_7"></a><a class="link" href="#_star_2_7">Star 2</a></h5>
+<div class="paragraph">
+<p>Another simple iter - filter - fold</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let required = data.dirs()[0].total_size(&amp;data.dirs()) - 40_000_000;
+
+    data.dirs()
+        .iter()
+        .filter_map(|d| {
+            let s = d.total_size(&amp;data.dirs());
+            if s &gt;= required {
+                Some(s)
+            } else {
+                None
+            }
+        })
+        .fold(usize::MAX, |mn, s| mn.min(s))
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_8"><a class="anchor" href="#_tests_8"></a><a class="link" href="#_tests_8">Tests</a></h5>
+<div class="paragraph">
+<p>The standard tests.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k"#;
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(95_437, star_1(&amp;data))
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(24_933_642, star_2(&amp;data))
+    }
+}</code></pre>
+</div>
 </div>
 </div>
 </div>
