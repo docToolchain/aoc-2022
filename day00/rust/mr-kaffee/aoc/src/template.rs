@@ -13,7 +13,7 @@ pub fn write_files(
     lib_path: &Path,
     input_provider: &dyn InputProvider,
     year: u16,
-    day: u8,
+    day: u16,
     force: bool,
 ) -> Result<(), Error> {
     let lib_path = lib_path
@@ -76,11 +76,11 @@ pub fn write_files(
 }
 
 pub trait InputProvider {
-    fn load_input(&self, year: u16, day: u8) -> Result<String, Error>;
+    fn load_input(&self, year: u16, day: u16) -> Result<String, Error>;
 }
 
 impl<'a> InputProvider for PuzzleIO<'a> {
-    fn load_input(&self, year: u16, day: u8) -> Result<String, Error> {
+    fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
         PuzzleIO::load_input(self, year, day)
     }
 }
@@ -104,7 +104,7 @@ fn write_file(
     Ok(())
 }
 
-pub fn update_files(runner_path: &Path, year: u16, day: u8) -> Result<(), Error> {
+pub fn update_files(runner_path: &Path, year: u16, day: u16) -> Result<(), Error> {
     update_file(
         "INCLUDE_PUZZLES",
         format!("&mr_kaffee_{year}_{day}::puzzle(),").as_str(),
@@ -306,7 +306,7 @@ mod tests {
     struct TestInputProvider {}
 
     impl InputProvider for TestInputProvider {
-        fn load_input(&self, year: u16, day: u8) -> Result<String, Error> {
+        fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
             Ok(format!("Test input for {}/{}\n", year, day))
         }
     }

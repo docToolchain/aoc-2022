@@ -14,8 +14,8 @@ struct Cli {
     #[arg(short, long, value_parser = clap::value_parser!(u16).range(2015..=2022))]
     year: u16,
 
-    #[arg(short, long, value_parser = clap::value_parser!(u8).range(1..=25))]
-    day: u8,
+    #[arg(short, long, value_parser = clap::value_parser!(u16).range(1..=25))]
+    day: u16,
 
     #[arg(short, long)]
     force: bool,
