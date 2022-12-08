@@ -1,0 +1,25 @@
+== Day 08
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+I got a little stuck with the first part today by trying to solve this puzzle using just list comprehension.
+I worked on rows and cols separately and tried to combine the results by just summing the visible trees in both.
+However, this does not work as it would count some trees multiple times.
+
+Finally, I changed my approach an iterated through the grid using `range`s.
+
+=== What did I learn
+
+If you want to use a `range` to count down the indices of a list be sure
+to use `range(start, -1, -1)`. Otherwise some of the elements might be missing.
+=== How to run
+
+Run using:
+`$ python day_08.py --help`
