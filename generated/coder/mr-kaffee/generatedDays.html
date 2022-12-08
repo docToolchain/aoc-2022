@@ -1707,7 +1707,7 @@ $ ls
 <div class="sect4">
 <h5 id="_input_8"><a class="anchor" href="#_input_8"></a><a class="link" href="#_input_8">Input</a></h5>
 <div class="paragraph">
-<p>I directly use the bytes from the input. I scan for the first occurance of a line break. Its index is the width of the grid. The <code>PuzzeData</code> struct&#8217;s implementation has an additional field for the <code>height</code> of the grid.</p>
+<p>I directly use the bytes from the input. I scan for the first occurrence of a line break. Its index is the width of the grid. The <code>PuzzleData</code> struct&#8217;s implementation has an additional field for the <code>height</code> of the grid.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1748,7 +1748,13 @@ $ ls
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust"></code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    pub fn is_visible(&amp;self, x: usize, y: usize) -&gt; bool {
+        let h = self.trees[x + (self.width + 1) * y];
+        (0..x).all(|x| self.trees[x + (self.width + 1) * y] &lt; h)
+            || (x + 1..self.width).all(|x| self.trees[x + (self.width + 1) * y] &lt; h)
+            || (0..y).all(|y| self.trees[x + (self.width + 1) * y] &lt; h)
+            || (y + 1..self.height).all(|y| self.trees[x + (self.width + 1) * y] &lt; h)
+    }</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1774,7 +1780,29 @@ $ ls
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust"></code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    pub fn scenic_score(&amp;self, x: usize, y: usize) -&gt; usize {
+        let h = self.trees[x + (self.width + 1) * y];
+        let left = x
+            - (0..x)
+                .rev()
+                .find(|x| self.trees[x + (self.width + 1) * y] &gt;= h)
+                .unwrap_or(0);
+        let right = (x + 1..self.width)
+            .find(|x| self.trees[x + (self.width + 1) * y] &gt;= h)
+            .unwrap_or(self.width - 1)
+            - x;
+        let top = y
+            - (0..y)
+                .rev()
+                .find(|y| self.trees[x + (self.width + 1) * y] &gt;= h)
+                .unwrap_or(0);
+        let bottom = (y + 1..self.height)
+            .find(|y| self.trees[x + (self.width + 1) * y] &gt;= h)
+            .unwrap_or(self.height - 1)
+            - y;
+
+        left * right * top * bottom
+    }</code></pre>
 </div>
 </div>
 <div class="listingblock">
