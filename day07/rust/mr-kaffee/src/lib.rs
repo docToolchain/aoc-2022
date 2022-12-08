@@ -68,19 +68,15 @@ pub mod input {
                     "$ cd /" => current = 0,
                     "$ cd .." => current = dirs[current].parent.unwrap(),
                     "$ ls" => (),
-                    _ if line.starts_with("$ cd ") => {
-                        current = dirs[current].children[line.strip_prefix("$ cd ").unwrap()];
-                    }
+                    _ if line.starts_with("$ cd ") => current = dirs[current].children[&line[5..]],
                     _ if line.starts_with("dir ") => {
                         let dir = dirs.len();
                         dirs.push(Directory::new(Some(current)));
-                        dirs[current]
-                            .children
-                            .insert(line.strip_prefix("dir ").unwrap(), dir);
+                        dirs[current].children.insert(&line[4..], dir);
                     }
                     _ => {
-                        let (size, _) = line.split_once(" ").unwrap();
-                        dirs[current].size += size.parse::<usize>().unwrap();
+                        dirs[current].size +=
+                            line[..line.find(' ').unwrap()].parse::<usize>().unwrap();
                     }
                 }
             }
@@ -102,14 +98,8 @@ pub mod input {
 pub fn star_1(data: &PuzzleData) -> usize {
     data.dirs()
         .iter()
-        .filter_map(|d| {
-            let s = d.total_size(data.dirs());
-            if s <= 100000 {
-                Some(s)
-            } else {
-                None
-            }
-        })
+        .map(|d| d.total_size(data.dirs()))
+        .filter(|&s| s <= 100_000)
         .sum()
 }
 // end::star_1[]
@@ -120,14 +110,8 @@ pub fn star_2(data: &PuzzleData) -> usize {
 
     data.dirs()
         .iter()
-        .filter_map(|d| {
-            let s = d.total_size(data.dirs());
-            if s >= required {
-                Some(s)
-            } else {
-                None
-            }
-        })
+        .map(|d| d.total_size(data.dirs()))
+        .filter(|&s| s >= required)
         .fold(usize::MAX, |mn, s| mn.min(s))
 }
 // end::star_2[]
