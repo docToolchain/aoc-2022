@@ -247,6 +247,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_08_rust">Day 08: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_8_treetop_tree_house">Day 8: Treetop Tree House</a>
+<ul class="sectlevel4">
+<li><a href="#_input_8">Input</a></li>
+<li><a href="#_star_1_8">Star 1</a></li>
+<li><a href="#_star_2_8">Star 2</a></li>
+<li><a href="#_tests_9">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1566,19 +1578,15 @@ mod tests {
                     "$ cd /" =&gt; current = 0,
                     "$ cd .." =&gt; current = dirs[current].parent.unwrap(),
                     "$ ls" =&gt; (),
-                    _ if line.starts_with("$ cd ") =&gt; {
-                        current = dirs[current].children[line.strip_prefix("$ cd ").unwrap()];
-                    }
+                    _ if line.starts_with("$ cd ") =&gt; current = dirs[current].children[&amp;line[5..]],
                     _ if line.starts_with("dir ") =&gt; {
                         let dir = dirs.len();
                         dirs.push(Directory::new(Some(current)));
-                        dirs[current]
-                            .children
-                            .insert(line.strip_prefix("dir ").unwrap(), dir);
+                        dirs[current].children.insert(&amp;line[4..], dir);
                     }
                     _ =&gt; {
-                        let (size, _) = line.split_once(" ").unwrap();
-                        dirs[current].size += size.parse::&lt;usize&gt;().unwrap();
+                        dirs[current].size +=
+                            line[..line.find(' ').unwrap()].parse::&lt;usize&gt;().unwrap();
                     }
                 }
             }
@@ -1607,14 +1615,8 @@ mod tests {
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
     data.dirs()
         .iter()
-        .filter_map(|d| {
-            let s = d.total_size(data.dirs());
-            if s &lt;= 100000 {
-                Some(s)
-            } else {
-                None
-            }
-        })
+        .map(|d| d.total_size(data.dirs()))
+        .filter(|&amp;s| s &lt;= 100_000)
         .sum()
 }</code></pre>
 </div>
@@ -1632,14 +1634,8 @@ mod tests {
 
     data.dirs()
         .iter()
-        .filter_map(|d| {
-            let s = d.total_size(data.dirs());
-            if s &gt;= required {
-                Some(s)
-            } else {
-                None
-            }
-        })
+        .map(|d| d.total_size(data.dirs()))
+        .filter(|&amp;s| s &gt;= required)
         .fold(usize::MAX, |mn, s| mn.min(s))
 }</code></pre>
 </div>
@@ -1690,6 +1686,189 @@ $ ls
     pub fn test_star_2() {
         let data = PuzzleData::try_from(CONTENT).unwrap();
         assert_eq!(24_933_642, star_2(&amp;data))
+    }
+}</code></pre>
+</div>
+</div>
+<a id="day08" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_08_rust"><a class="anchor" href="#_day_08_rust"></a><a class="link" href="#_day_08_rust">Day 08: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_8_treetop_tree_house"><a class="anchor" href="#_day_8_treetop_tree_house"></a><a class="link" href="#_day_8_treetop_tree_house">Day 8: Treetop Tree House</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/8">AoC|2022|8</a>.</p>
+</div>
+<div class="paragraph">
+<p>I took a moment to put my brain in the condition to think in the 2D grid&#8230;&#8203;</p>
+</div>
+<div class="paragraph">
+<p>Ans this is the first puzzle this year, that solves in &gt; 1ms for me.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_8"><a class="anchor" href="#_input_8"></a><a class="link" href="#_input_8">Input</a></h5>
+<div class="paragraph">
+<p>I directly use the bytes from the input. I scan for the first occurance of a line break. Its index is the width of the grid.</p>
+</div>
+<div class="paragraph">
+<p>The <code>PuzzeData</code> struct&#8217;s implementation has an additional method to return the <code>height</code> of the grid.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    use std::convert::Infallible;
+
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        trees: &amp;'static [u8],
+        width: usize,
+    }
+
+    impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
+        type Error = Infallible;
+
+        /// parse the puzzle input
+        fn try_from(s: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
+            let trees = s.as_bytes();
+            let width = s.find('\n').unwrap();
+            Ok(PuzzleData { trees, width })
+        }
+    }
+
+    impl PuzzleData {
+        pub fn width(&amp;self) -&gt; usize {
+            self.width
+        }
+
+        pub fn height(&amp;self) -&gt; usize {
+            // 1 is added to len to work independently of a trailing new line
+            (self.trees.len() + 1) / (self.width + 1)
+        }
+
+        pub fn trees(&amp;self) -&gt; &amp;[u8] {
+            self.trees
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_8"><a class="anchor" href="#_star_1_8"></a><a class="link" href="#_star_1_8">Star 1</a></h5>
+<div class="paragraph">
+<p>The function <code>is_visible</code> verifies in all four directions (left, right, top, bottom), that all trees up to the boundary are smaller. It stops after one such direction is found.</p>
+</div>
+<div class="paragraph">
+<p>Then I count in the <code>star_1</code> function, how many trees are visible. For a tree on the boundary, <code>is_visible</code> always returns true, so no need to handle the boundary separately.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn is_visible(x: usize, y: usize, trees: &amp;[u8], width: usize, height: usize) -&gt; bool {
+    let h = trees[x + (width + 1) * y];
+    (0..x).all(|x| trees[x + (width + 1) * y] &lt; h)
+        || (x + 1..width).all(|x| trees[x + (width + 1) * y] &lt; h)
+        || (0..y).all(|y| trees[x + (width + 1) * y] &lt; h)
+        || (y + 1..height).all(|y| trees[x + (width + 1) * y] &lt; h)
+}
+
+pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    (0..data.width())
+        .map(|x| {
+            (0..data.height())
+                .filter(|&amp;y| is_visible(x, y, data.trees(), data.width(), data.height()))
+                .count()
+        })
+        .sum::&lt;usize&gt;()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_8"><a class="anchor" href="#_star_2_8"></a><a class="link" href="#_star_2_8">Star 2</a></h5>
+<div class="paragraph">
+<p>Similar to star 1. This time, I use the function <code>scenic_score</code> to calculate the scenic score of each tree and the function <code>star_2</code> to find the maximum.</p>
+</div>
+<div class="paragraph">
+<p>In the scenic score calculations, different to the visibility check, the traversal order matters. For left and top directions, the direction is reversed.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn scenic_score(x: usize, y: usize, trees: &amp;[u8], width: usize, height: usize) -&gt; usize {
+    let h = trees[x + (width + 1) * y];
+    let left = x
+        - (0..x)
+            .rev()
+            .find(|x| trees[x + (width + 1) * y] &gt;= h)
+            .unwrap_or(0);
+    let right = (x + 1..width)
+        .find(|x| trees[x + (width + 1) * y] &gt;= h)
+        .unwrap_or(width - 1)
+        - x;
+    let top = y
+        - (0..y)
+            .rev()
+            .find(|y| trees[x + (width + 1) * y] &gt;= h)
+            .unwrap_or(0);
+    let bottom = (y + 1..height)
+        .find(|y| trees[x + (width + 1) * y] &gt;= h)
+        .unwrap_or(height - 1)
+        - y;
+
+    left * right * top * bottom
+}
+
+pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    (0..data.width())
+        .map(|x| {
+            (0..data.height())
+                .map(|y| scenic_score(x, y, data.trees(), data.width(), data.height()))
+                .max()
+                .unwrap()
+        })
+        .max()
+        .unwrap()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_9"><a class="anchor" href="#_tests_9"></a><a class="link" href="#_tests_9">Tests</a></h5>
+<div class="paragraph">
+<p>Tests for <code>star_1</code>, <code>scenic_score</code> and <code>star_2</code> functions based on example defined in puzzle description.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"30373
+25512
+65332
+33549
+35390"#;
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(21, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_scenic_score() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(
+            4,
+            scenic_score(2, 1, data.trees(), data.width(), data.height())
+        );
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::try_from(CONTENT).unwrap();
+        assert_eq!(8, star_2(&amp;data));
     }
 }</code></pre>
 </div>
