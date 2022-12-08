@@ -107,7 +107,7 @@ fn write_file(
 pub fn update_files(runner_path: &Path, year: u16, day: u16) -> Result<(), Error> {
     update_file(
         "INCLUDE_PUZZLES",
-        format!("&mr_kaffee_{year}_{day}::puzzle(),").as_str(),
+        format!("Box::new(mr_kaffee_{year}_{day}::puzzle()),").as_str(),
         runner_path.join("src/main.rs").as_path(),
     )?;
     update_file(

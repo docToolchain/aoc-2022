@@ -88,15 +88,15 @@ where
     /// struct Data {
     ///     data: usize,
     /// }
-    /// 
+    ///
     /// impl <'a> TryFrom<&'a str> for Data {
     ///     type Error = std::num::ParseIntError;
-    /// 
+    ///
     ///     fn try_from(s: &'a str) -> Result<Data, Self::Error> {
     ///         s.parse().map(|data| Self { data })
     ///     }
     /// }
-    /// 
+    ///
     /// let puzzle: Puzzle<'_, Data, usize, usize, usize, usize> = Puzzle {
     ///     year: 2022,
     ///     day: 24,
@@ -149,6 +149,10 @@ pub trait GenericPuzzle {
     /// solve a puzzle and forward errors to caller
     fn solve_report_err(&self) -> Result<(), PuzzleError>;
 
+    fn solve_star_1(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError>;
+
+    fn solve_star_2(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError>;
+
     /// get the year of the puzzle
     fn year(&self) -> u16;
 
@@ -167,6 +171,14 @@ where
 
     fn solve_report_err(&self) -> Result<(), PuzzleError> {
         T::solve_report_err(&self)
+    }
+
+    fn solve_star_1(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError> {
+        T::solve_star_1(&self)
+    }
+
+    fn solve_star_2(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError> {
+        T::solve_star_2(&self)
     }
 
     fn year(&self) -> u16 {
@@ -204,6 +216,24 @@ where
     /// unit type `()`
     fn solve_report_err(&self) -> Result<(), PuzzleError> {
         self.solve().map(|_| ())
+    }
+
+    fn solve_star_1(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError> {
+        let data = self.input.try_into()?;
+
+        self.star1
+            .as_ref()
+            .map(|star| star.solve(&data).map(|r| Box::new(r) as _))
+            .transpose()
+    }
+
+    fn solve_star_2(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError> {
+        let data = self.input.try_into()?;
+
+        self.star2
+            .as_ref()
+            .map(|star| star.solve(&data).map(|r| Box::new(r) as _))
+            .transpose()
     }
 
     fn year(&self) -> u16 {
@@ -260,8 +290,8 @@ where
         }
     }
 
-    /// solve a star & verify result agains expected result [`Star::exp`] if not [`Option::None`].
-    /// Measure time it takes to sovle the puzzle and print to standard out.
+    /// solve a star & verify result against expected result [`Star::exp`] if not [`Option::None`].
+    /// Measure time it takes to solve the puzzle and print to standard out.
     ///
     /// # Examples
     /// ```
@@ -476,7 +506,7 @@ mod test {
         values: Vec<usize>,
     }
 
-    impl <'a> TryFrom<&'a str> for Data {
+    impl<'a> TryFrom<&'a str> for Data {
         type Error = PuzzleError;
 
         fn try_from(s: &'a str) -> Result<Self, Self::Error> {

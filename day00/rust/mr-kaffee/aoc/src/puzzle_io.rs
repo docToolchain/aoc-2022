@@ -11,7 +11,7 @@ const AUTHOR: &str = "Peter Wieland (peter@die-wielands.net)";
 /// Load the input using a [`PuzzleIO`] constructed from a session cookie loaded from the given `path` or
 /// from `session.cookie` if `path` is `None`.
 pub fn load_input(path: Option<&str>, year: u16, day: u16) -> Result<String, Error> {
-    let session = fs::read_to_string(path.unwrap_or("sesssion.cookie"))?;
+    let session = fs::read_to_string(path.unwrap_or("session.cookie"))?;
     PuzzleIO::from(session.trim()).load_input(year, day)
 }
 
@@ -53,7 +53,7 @@ pub fn submit_result<S: std::fmt::Display + ?Sized>(
     star: Star,
     result: &S,
 ) -> Result<SubmitResultResponse, Error> {
-    let session = fs::read_to_string(path.unwrap_or("sesssion.cookie"))?;
+    let session = fs::read_to_string(path.unwrap_or("session.cookie"))?;
     PuzzleIO::from(session.trim()).submit_result(year, day, star, result)
 }
 
