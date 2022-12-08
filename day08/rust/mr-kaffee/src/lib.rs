@@ -51,7 +51,7 @@ pub mod input {
 // end::input[]
 
 impl PuzzleData {
-    // tag:is_visible[]
+    // tag::is_visible[]
     pub fn is_visible(&self, x: usize, y: usize) -> bool {
         let h = self.trees[x + (self.width + 1) * y];
         (0..x).all(|x| self.trees[x + (self.width + 1) * y] < h)
@@ -59,9 +59,9 @@ impl PuzzleData {
             || (0..y).all(|y| self.trees[x + (self.width + 1) * y] < h)
             || (y + 1..self.height).all(|y| self.trees[x + (self.width + 1) * y] < h)
     }
-    // end:is_visible[]
+    // end::is_visible[]
 
-    // tag:scenic_score[]
+    // tag::scenic_score[]
     pub fn scenic_score(&self, x: usize, y: usize) -> usize {
         let h = self.trees[x + (self.width + 1) * y];
         let left = x
@@ -85,7 +85,7 @@ impl PuzzleData {
 
         left * right * top * bottom
     }
-    // end:scenic_score[]
+    // end::scenic_score[]
 }
 
 // tag::star_1[]

@@ -6,7 +6,7 @@ I took a moment to put my brain in the condition to think in the 2D grid...
 
 === Input ===
 
-I directly use the bytes from the input. I scan for the first occurance of a line break. Its index is the width of the grid. The `PuzzeData` struct's implementation has an additional field for the `height` of the grid.
+I directly use the bytes from the input. I scan for the first occurrence of a line break. Its index is the width of the grid. The `PuzzleData` struct's implementation has an additional field for the `height` of the grid.
 
 [source,rust,numbered]
 ----
