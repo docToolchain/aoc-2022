@@ -8,6 +8,8 @@ Today I was a little bit puzzled by the specification, because it named the thir
 
 At the end looking simply at the highest score the puzzle answer was accepted, no matter if this would be the ideal spot.
 
+UPDATE: There was a fault in my code, since solution for part 2 uses parts of code of part 1 the result variable was already pre initialized for part 1 (outline trees visible = 16). For part 2 this did not matter, because the final senic score was higher than the init value, so I did not recogise the bug -> thanks to Peter!
+
 The solution starts with calling a function _TreeTreeHouse_. Here the puzzle input will be read into one string and width and height of the tree area will be determined. After that dependent on the input results of the two parts of the puzzle will be solved using additional functions.
 [source, kotlin, numbered]
 ....
