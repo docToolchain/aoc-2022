@@ -25,7 +25,7 @@ impl Tree {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vec {
     x: i64,
     y: i64,
@@ -45,10 +45,6 @@ impl Vec {
 
     pub fn new(x: i64, y: i64) -> Self {
         Self { x, y }
-    }
-
-    pub fn empty(&self) -> bool {
-        self.x == 0 && self.y == 0
     }
 }
 
