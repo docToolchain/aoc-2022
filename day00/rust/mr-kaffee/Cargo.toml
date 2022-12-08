@@ -12,7 +12,7 @@ edition = "2021"
 
 [dependencies]
 
-mr-kaffee-aoc = { path = "aoc" }
+mr-kaffee-aoc = { path = "aoc", features = ["template", "io"]}
 
 itertools = "0.10.*"
 clap = { version = "4.*", features = ["derive"] }

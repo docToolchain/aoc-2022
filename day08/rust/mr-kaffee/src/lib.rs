@@ -22,29 +22,20 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
 
 // tag::input[]
 pub mod input {
-    use std::convert::Infallible;
-
     #[derive(Debug)]
     pub struct PuzzleData {
         pub trees: &'static [u8],
-        pub width: usize,
-        pub height: usize,
+        pub w: usize,
+        pub h: usize,
     }
 
-    impl TryFrom<&'static str> for PuzzleData {
-        type Error = Infallible;
-
+    impl From<&'static str> for PuzzleData {
         /// parse the puzzle input
-        fn try_from(s: &'static str) -> Result<Self, Self::Error> {
+        fn from(s: &'static str) -> Self {
             let trees = s.as_bytes();
-            let width = s.find('\n').unwrap();
-            // len + 1 is required if puzzle data has no trailing newline
-            let height = (trees.len() + 1) / (width + 1);
-            Ok(Self {
-                trees,
-                width,
-                height,
-            })
+            let w = s.find('\n').unwrap();
+            let h = trees.len() / (w + 1);
+            Self { trees, w, h }
         }
     }
 }
@@ -53,58 +44,42 @@ pub mod input {
 impl PuzzleData {
     // tag::is_visible[]
     pub fn is_visible(&self, x: usize, y: usize) -> bool {
-        let h = self.trees[x + (self.width + 1) * y];
-        (0..x).all(|x| self.trees[x + (self.width + 1) * y] < h)
-            || (x + 1..self.width).all(|x| self.trees[x + (self.width + 1) * y] < h)
-            || (0..y).all(|y| self.trees[x + (self.width + 1) * y] < h)
-            || (y + 1..self.height).all(|y| self.trees[x + (self.width + 1) * y] < h)
+        let h = self.trees[x + (self.w + 1) * y];
+
+        let fx = |x_: usize| self.trees[x_ + (self.w + 1) * y] < h;
+        let fy = |y_: usize| self.trees[x + (self.w + 1) * y_] < h;
+
+        (0..x).all(fx) || (x + 1..self.w).all(fx) || (0..y).all(fy) || (y + 1..self.h).all(fy)
     }
     // end::is_visible[]
 
     // tag::scenic_score[]
     pub fn scenic_score(&self, x: usize, y: usize) -> usize {
-        let h = self.trees[x + (self.width + 1) * y];
-        let left = x
-            - (0..x)
-                .rev()
-                .find(|x| self.trees[x + (self.width + 1) * y] >= h)
-                .unwrap_or(0);
-        let right = (x + 1..self.width)
-            .find(|x| self.trees[x + (self.width + 1) * y] >= h)
-            .unwrap_or(self.width - 1)
-            - x;
-        let top = y
-            - (0..y)
-                .rev()
-                .find(|y| self.trees[x + (self.width + 1) * y] >= h)
-                .unwrap_or(0);
-        let bottom = (y + 1..self.height)
-            .find(|y| self.trees[x + (self.width + 1) * y] >= h)
-            .unwrap_or(self.height - 1)
-            - y;
+        let h = self.trees[x + (self.w + 1) * y];
 
-        left * right * top * bottom
+        let fx = |&x_: &usize| self.trees[x_ + (self.w + 1) * y] >= h;
+        let fy = |&y_: &usize| self.trees[x + (self.w + 1) * y_] >= h;
+
+        (x - (0..x).rev().find(fx).unwrap_or(0))
+            * ((x + 1..self.w).find(fx).unwrap_or(self.w - 1) - x)
+            * (y - (0..y).rev().find(fy).unwrap_or(0))
+            * ((y + 1..self.h).find(fy).unwrap_or(self.h - 1) - y)
     }
     // end::scenic_score[]
 }
 
 // tag::star_1[]
 pub fn star_1(data: &PuzzleData) -> usize {
-    (0..data.width)
-        .map(|x| (0..data.height).filter(|&y| data.is_visible(x, y)).count())
+    (0..data.w)
+        .map(|x| (0..data.h).filter(|&y| data.is_visible(x, y)).count())
         .sum::<usize>()
 }
 // end::star_1[]
 
 // tag::star_2[]
 pub fn star_2(data: &PuzzleData) -> usize {
-    (0..data.width)
-        .map(|x| {
-            (0..data.height)
-                .map(|y| data.scenic_score(x, y))
-                .max()
-                .unwrap()
-        })
+    (0..data.w)
+        .map(|x| (0..data.h).map(|y| data.scenic_score(x, y)).max().unwrap())
         .max()
         .unwrap()
 }
@@ -119,23 +94,24 @@ mod tests {
 25512
 65332
 33549
-35390"#;
+35390
+"#;
 
     #[test]
     pub fn test_star_1() {
-        let data = PuzzleData::try_from(CONTENT).unwrap();
+        let data = PuzzleData::from(CONTENT);
         assert_eq!(21, star_1(&data));
     }
 
     #[test]
     pub fn test_scenic_score() {
-        let data = PuzzleData::try_from(CONTENT).unwrap();
+        let data = PuzzleData::from(CONTENT);
         assert_eq!(4, data.scenic_score(2, 1));
     }
 
     #[test]
     pub fn test_star_2() {
-        let data = PuzzleData::try_from(CONTENT).unwrap();
+        let data = PuzzleData::from(CONTENT);
         assert_eq!(8, star_2(&data));
     }
 }

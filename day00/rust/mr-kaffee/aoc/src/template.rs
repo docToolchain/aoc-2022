@@ -1,3 +1,4 @@
+use crate::puzzle_io::PuzzleIO;
 use regex::Regex;
 use std::{
     collections::HashMap,
@@ -12,7 +13,7 @@ pub fn write_files(
     lib_path: &Path,
     input_provider: &dyn InputProvider,
     year: u16,
-    day: u8,
+    day: u16,
     force: bool,
 ) -> Result<(), Error> {
     let lib_path = lib_path
@@ -75,30 +76,12 @@ pub fn write_files(
 }
 
 pub trait InputProvider {
-    fn load_input(&self, year: u16, day: u8) -> Result<String, Error>;
+    fn load_input(&self, year: u16, day: u16) -> Result<String, Error>;
 }
 
-#[derive(Debug)]
-pub struct InputLoader<'a> {
-    pub session: &'a str,
-}
-
-impl<'a> InputProvider for InputLoader<'a> {
-    fn load_input(&self, year: u16, day: u8) -> Result<String, Error> {
-        reqwest::blocking::Client::new()
-            .get(format!("https://adventofcode.com/{}/day/{}/input", year, day).as_str())
-            .header("Cookie", format!("session={}", self.session))
-            .header("User-Agent", 
-                format!(
-                    "{}/{} (github.com/mr-kaffee/aoc-2022/day00/rust/mr-kaffee/template by peter@die-wielands.net)", 
-                    env!("CARGO_PKG_NAME"), 
-                    env!("CARGO_PKG_VERSION")
-                )
-            )
-            .send()
-            .map_err(|err| Error::new(ErrorKind::Other, err))?
-            .text()
-            .map_err(|err| Error::new(ErrorKind::Other, err))
+impl<'a> InputProvider for PuzzleIO<'a> {
+    fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
+        PuzzleIO::load_input(self, year, day)
     }
 }
 
@@ -121,24 +104,22 @@ fn write_file(
     Ok(())
 }
 
-pub fn update_files(runner_path: &Path, year: u16, day: u8) -> Result<(), Error> {
+pub fn update_files(runner_path: &Path, year: u16, day: u16) -> Result<(), Error> {
     update_file(
         "INCLUDE_PUZZLES",
-        format!("&mr_kaffee_{year}_{day}::puzzle(),").as_str(),
+        format!("Box::new(mr_kaffee_{year}_{day}::puzzle()),").as_str(),
         runner_path.join("src/main.rs").as_path(),
     )?;
     update_file(
         "INCLUDE_PUZZLES",
-        format!(
-            "mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}"
-        )
-        .as_str(),
+        format!("mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}")
+            .as_str(),
         runner_path.join("Cargo.toml").as_path(),
     )?;
     Ok(())
 }
 
-pub fn update_file(separator: &str, line: &str, path: &Path) -> Result<bool, Error> {
+fn update_file(separator: &str, line: &str, path: &Path) -> Result<bool, Error> {
     println!("Updating file {} ...", path.to_string_lossy());
     let re = Regex::new(
         format!(r"(?ms:(?P<prefix>^.*{separator}:START.*?[\r\n]+)(?P<indent>\s*)(?P<data>.*?{separator}:END)(?P<suffix>.*$))")
@@ -305,7 +286,11 @@ edition = "2021"
 
 [dependencies]
 
-mr-kaffee-aoc = { path = "{AOC_PATH}" }
+mr-kaffee-aoc = { path = "{AOC_PATH}", default-features = false }
+
+[features]
+
+submit = ["mr-kaffee-aoc/io"]
 "###;
 
 const GITIGNORE: &str = r###"**/target
@@ -321,7 +306,7 @@ mod tests {
     struct TestInputProvider {}
 
     impl InputProvider for TestInputProvider {
-        fn load_input(&self, year: u16, day: u8) -> Result<String, Error> {
+        fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
             Ok(format!("Test input for {}/{}\n", year, day))
         }
     }
