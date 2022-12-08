@@ -201,19 +201,21 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
 
 // tag::input[]
 pub mod input {
-    use std::convert::Infallible;
-
     #[derive(Debug)]
     pub struct PuzzleData {
-        pub input: &'static str,
+        input: &'static [u8],
     }
 
-    impl TryFrom<&'static str> for PuzzleData {
-        type Error = Infallible;
+    impl From<&'static str> for PuzzleData {
+        /// parse the puzzle input 
+        fn from(s: &'static str) -> Self {
+            PuzzleData { input: s.as_bytes() }
+        }
+    }
 
-        /// parse the puzzle input
-        fn try_from(s: &'static str) -> Result<Self, Self::Error> {
-            Ok(PuzzleData { input: s })
+    impl PuzzleData {
+        pub fn input(&self) -> &[u8] {
+            self.input
         }
     }
 }
@@ -221,15 +223,13 @@ pub mod input {
 
 // tag::star_1[]
 pub fn star_1(data: &PuzzleData) -> usize {
-    println!("{}", data.input);
-    0
+    data.input().len()
 }
 // end::star_1[]
 
 // tag::star_2[]
 pub fn star_2(data: &PuzzleData) -> usize {
-    println!("{:?}", data);
-    0
+    data.input().len()
 }
 // end::star_2[]
 
@@ -237,16 +237,27 @@ pub fn star_2(data: &PuzzleData) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mr_kaffee_aoc::err::PuzzleError;
 
     const CONTENT: &str = r#"Hello World!
-Advent of Code 2022"#;
+Advent of Code 2022
+"#;
 
     #[test]
-    pub fn test_puzzle_data_from_str() -> Result<(), PuzzleError> {
-        let data = PuzzleData::try_from(CONTENT)?;
-        assert_eq!(data.input, CONTENT.to_string());
-        Ok(())
+    pub fn test_try_from() {
+        let data = PuzzleData::from(CONTENT);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(CONTENT.len(), star_1(&data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(CONTENT.len(), star_2(&data));
     }
 }
 // end::tests[]
