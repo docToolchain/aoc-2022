@@ -1,0 +1,44 @@
+==  Day 8: Treetop Tree House  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/8
+
+Today I was a little bit puzzled by the specification, because it named the third tree in the forth row as the ideal spot with a senic score of 8, but there are other trees in the example with a higher one, so while testing with the given example the highest score was 16 and I did not find out how to differenciate with the "ideal" spot. 
+
+At the end looking simply at the highest score the puzzle answer was accepted, no matter if this would be the ideal spot.
+
+The solution starts with calling a function _TreeTreeHouse_. Here the puzzle input will be read into one string and width and height of the tree area will be determined. After that dependent on the input results of the two parts of the puzzle will be solved using additional functions.
+[source, kotlin, numbered]
+....
+include::day2208_1_2.kt[tags=TreeTreeHouse]
+....
+
+=== First Star
+
+How does it work: +
+
+The function _treeIsVisible_ just runs trough the grid starting from the given tree and checks if it is visible from any direction.
+All visible trees were added to the result.
+[source, kotlin, numbered]
+....
+include::day2208_1_2.kt[tags=treeIsVisible]
+....
+
+
+=== Second Star
+
+How does it work: +
+
+The function _senicScore just runs trough the grid starting from the given tree and checks how far is the visibility in any direction.
+All directions are multiplied and the highest score will be the result.
+[source, kotlin, numbered]
+....
+include::day2208_1_2.kt[tags=senicScore]
+....
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2208_1_2.kt[tags=output]
+....
