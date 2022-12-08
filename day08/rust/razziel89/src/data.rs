@@ -1,5 +1,4 @@
 // tag::data[]
-use crate::io;
 use anyhow::{Error, Result};
 use std::str::FromStr;
 
@@ -25,7 +24,7 @@ impl Tree {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Vec {
     x: i64,
     y: i64,
