@@ -36,7 +36,7 @@ fun senicScore(x: Int, y: Int, treeList: String, width: Int, height: Int): Int {
 	var currentTree = treeList[x + y * width]
 
 	var equalTreeReached = false
-	
+
 	for (i in x - 1 downTo 0) {
 		if (!equalTreeReached) {
 			if (treeList[i + y * width] < currentTree) {
@@ -48,7 +48,7 @@ fun senicScore(x: Int, y: Int, treeList: String, width: Int, height: Int): Int {
 		}
 	}
 	equalTreeReached = false
-	
+
 	for (i in x + 1..width - 1) {
 		if (!equalTreeReached) {
 			if (treeList[i + y * width] < currentTree) {
@@ -60,7 +60,7 @@ fun senicScore(x: Int, y: Int, treeList: String, width: Int, height: Int): Int {
 		}
 	}
 	equalTreeReached = false
-	
+
 	for (i in y - 1 downTo 0) {
 		if (!equalTreeReached) {
 			if (treeList[x + i * width] < currentTree) {
@@ -72,7 +72,7 @@ fun senicScore(x: Int, y: Int, treeList: String, width: Int, height: Int): Int {
 		}
 	}
 	equalTreeReached = false
-	
+
 	for (i in y + 1..height - 1) {
 		if (!equalTreeReached) {
 			if (treeList[x + i * width] < currentTree) {
@@ -83,7 +83,7 @@ fun senicScore(x: Int, y: Int, treeList: String, width: Int, height: Int): Int {
 			}
 		}
 	}
-	
+
 	return senScoLeft * senScoRight * senScoUp * senScoDown
 }
 // end::senicScore[]
@@ -102,22 +102,28 @@ fun TreeTreeHouse(in1: Int): Int {
 	}
 
 	// initialize result with outer lines
-	var result: Int = (height + width) * 2 - 4
+	var resultPart1: Int = (height + width) * 2 - 4
+	var resultPart2: Int = 0
 
 	// start for each puzzle part the calculation for each tree
 	for (y in 1..height - 2) {
 		for (x in 1..width - 2) {
 			if (in1 == 1) {
 				if (treeIsVisible(x, y, treeList, width, height)) {
-					result += 1
+					resultPart1 += 1
 				}
 			} else {
 				var senSco = senicScore(x, y, treeList, width, height)
-				if (senSco > result) result = senSco
+				if (senSco > resultPart2) resultPart2 = senSco
 			}
 		}
 	}
-	return result
+
+	if (in1 == 1) {
+		return resultPart1
+	} else {
+		return resultPart2
+	}
 }
 // end::TreeTreeHouse[]
 
