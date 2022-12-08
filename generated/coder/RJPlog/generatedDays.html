@@ -1007,6 +1007,9 @@ fun RuReOneAlt2() = File("day2203_puzzle_input.txt").readLines()
 <p>At the end looking simply at the highest score the puzzle answer was accepted, no matter if this would be the ideal spot.</p>
 </div>
 <div class="paragraph">
+<p>UPDATE: There was a fault in my code, since solution for part 2 uses parts of code of part 1 the result variable was already pre initialized for part 1 (outline trees visible = 16). For part 2 this did not matter, because the final senic score was higher than the init value, so I did not recogise the bug &#8594; thanks to Peter!</p>
+</div>
+<div class="paragraph">
 <p>The solution starts with calling a function <em>TreeTreeHouse</em>. Here the puzzle input will be read into one string and width and height of the tree area will be determined. After that dependent on the input results of the two parts of the puzzle will be solved using additional functions.</p>
 </div>
 <div class="listingblock">
@@ -1024,22 +1027,28 @@ fun RuReOneAlt2() = File("day2203_puzzle_input.txt").readLines()
 	}
 
 	// initialize result with outer lines
-	var result: Int = (height + width) * 2 - 4
+	var resultPart1: Int = (height + width) * 2 - 4
+	var resultPart2: Int = 0
 
 	// start for each puzzle part the calculation for each tree
 	for (y in 1..height - 2) {
 		for (x in 1..width - 2) {
 			if (in1 == 1) {
 				if (treeIsVisible(x, y, treeList, width, height)) {
-					result += 1
+					resultPart1 += 1
 				}
 			} else {
 				var senSco = senicScore(x, y, treeList, width, height)
-				if (senSco &gt; result) result = senSco
+				if (senSco &gt; resultPart2) resultPart2 = senSco
 			}
 		}
 	}
-	return result
+
+	if (in1 == 1) {
+		return resultPart1
+	} else {
+		return resultPart2
+	}
 }</code></pre>
 </div>
 </div>
