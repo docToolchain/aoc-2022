@@ -49,24 +49,24 @@ def process_commands(commands) -> Node:
     current_node = root
 
     for c in commands[2:]:
-        parts = c.split()
-        if parts[0] == "dir":
-            cast(Node, current_node).children.append(
-                Node(parts[1], NodeType.DIR, parent=current_node)
-            )
-        if parts[0].isdigit():
-            cast(Node, current_node).children.append(
-                Node(
-                    parts[1],
-                    NodeType.FILE,
-                    file_size=int(parts[0]),
-                    parent=current_node,
+        match c.split():
+            case ["dir", name]:
+                cast(Node, current_node).children.append(
+                    Node(name, NodeType.DIR, parent=current_node)
                 )
-            )
-        if parts[0] == "$" and parts[1] == "cd" and parts[2] != "..":
-            current_node = find_node(parts[2], cast(Node, current_node).children)
-        if parts[0] == "$" and parts[1] == "cd" and parts[2] == "..":
-            current_node = cast(Node, current_node).parent
+            case ["$", "cd", ".."]:
+                current_node = cast(Node, current_node).parent
+            case ["$", "cd", name]:
+                current_node = find_node(name, cast(Node, current_node).children)
+            case [size, name] if size.isdigit():
+                cast(Node, current_node).children.append(
+                    Node(
+                        name,
+                        NodeType.FILE,
+                        file_size=int(size),
+                        parent=current_node,
+                    )
+                )
 
     return root
 
