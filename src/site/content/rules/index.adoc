@@ -36,7 +36,7 @@ It is the place to hang around, talk about different solutions and language and 
 
 ## The Goal of this repository
 
-... is to
+\... is to
 
 - have a shared code base. It will be interesting to see how the same problem is solved in different languages with different approaches
 - have a development environment in which all examples run out of the box
