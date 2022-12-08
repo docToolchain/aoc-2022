@@ -221,6 +221,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_08_rust">Day 08: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_08_treetop_tree_house">Day 08: Treetop Tree House</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_6">Oveview</a></li>
+<li><a href="#_solution_7">Solution</a></li>
+<li><a href="#_how_to_run_8">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1629,46 +1640,11 @@ const MAX_SIZE: usize = 100000;
 const TOTAL_SIZE: usize = 70000000;
 const REQUIRED_SIZE: usize = 30000000;
 
-// This could probably be improved but it works.
-fn join(first: &amp;String, second: String, trail_slash: bool) -&gt; String {
-    match (first.as_str(), trail_slash) {
-        ("/", true) =&gt; format!("/{}/", second),
-        ("/", false) =&gt; format!("/{}", second),
-        (_, true) =&gt; format!("{}/{}/", first, second),
-        (_, false) =&gt; format!("{}/{}", first, second),
-    }
-}
-
-// This finds the parent directory. There is a lot of special handling here for the root directory.
-fn parent(dir: String) -&gt; String {
-    if dir == "/" {
-        "/".to_string()
-    } else {
-        let parent = dir
-            .as_str()
-            // This reverses the direction of iteration.
-            .rsplit("/")
-            .skip(1)
-            // We need to collect here because we need to reverse the direction of iteration later
-            // but the return type of `skip` doesn't allow that.
-            .collect::&lt;Vec&lt;_&gt;&gt;()
-            .into_iter()
-            .rev()
-            .collect::&lt;Vec&lt;_&gt;&gt;()
-            .join("/");
-        if parent.starts_with("/") {
-            parent
-        } else {
-            format!("/{}", parent)
-        }
-    }
-}
-
 // We don'tuse a tree to represent the file system because trees are hard. Instead, we use a map
 // mapping slash-separated strings to size values. An entry ending in a slash is a directory. That
 // way, we can build everything up at once.
 fn build_fs(entries: Vec&lt;data::Entry&gt;) -&gt; Result&lt;HashMap&lt;String, usize&gt;&gt; {
-    let mut cwd = "/".to_string();
+    let mut cwd = data::Stack::new();
     let mut fs = HashMap::&lt;String, usize&gt;::new();
     // This boolean serves as a way to check that we retrieve listed values only after the ls
     // command has been issued. It's just a sanity check for the input.
@@ -1676,20 +1652,20 @@ fn build_fs(entries: Vec&lt;data::Entry&gt;) -&gt; Result&lt;HashMap&lt;String, 
 
     fs.insert("/".to_string(), 0);
 
-    // Build up the file system. We fill in directory sizes later down below, which simplifies that
-    // but is less efficient.
+    // Build up the file system.
     for entry in entries {
         match entry {
             data::Entry::CD(dir) =&gt; {
                 listing = false;
-                cwd = match dir.as_str() {
-                    ".." =&gt; parent(cwd),
-                    "/" =&gt; dir,
-                    _ =&gt; join(&amp;cwd, dir, false),
-                };
-                if cwd != "/" &amp;&amp; !fs.contains_key(&amp;cwd) {
-                    // Entries with a trailing slash are directories.
-                    fs.insert(format!("{}/", cwd), 0);
+                match dir.as_str() {
+                    ".." =&gt; cwd.popd(),
+                    "/" =&gt; cwd.clear(),
+                    _ =&gt; cwd.pushd(dir),
+                }
+                // Entries with a trailing slash are directories.
+                let dir = cwd.pwd();
+                if !fs.contains_key(&amp;dir) {
+                    fs.insert(dir, 0);
                 }
             }
             data::Entry::LS =&gt; {
@@ -1699,48 +1675,26 @@ fn build_fs(entries: Vec&lt;data::Entry&gt;) -&gt; Result&lt;HashMap&lt;String, 
                 if !listing {
                     return Err(Error::msg("found dir entry but not not in list mode"));
                 }
-                fs.insert(join(&amp;cwd, dir, true), 0);
+                // Entries with a trailing slash are directories.
+                fs.insert(format!("{}{}/", cwd.pwd(), dir), 0);
             }
             data::Entry::FILE { name, size } =&gt; {
                 if !listing {
                     return Err(Error::msg("found file entry but not not in list mode"));
                 }
-                if cwd != "/" &amp;&amp; !fs.contains_key(format!("{}/", cwd).as_str()) {
-                    return Err(Error::msg(format!("missing parent node {}", cwd)));
+                let dir = cwd.pwd();
+                if !fs.contains_key(&amp;dir) {
+                    return Err(Error::msg(format!("missing parent node {}", dir)));
                 }
-                fs.insert(join(&amp;cwd, name, false), size);
+                // Entries without a trailing slash are files.
+                fs.insert(format!("{}{}", dir, name), size);
+                // Add directory sizes.
+                for dir in &amp;mut cwd {
+                    *fs.get_mut(&amp;dir)
+                        .ok_or(Error::msg(format!("cannot read directory {}", dir)))? += size;
+                }
             }
         }
-    }
-
-    // I did not bother trying to find a solution tha works without copying.
-    let dirs = fs
-        .iter()
-        .filter_map(|(name, _)| {
-            if name.ends_with("/") {
-                Some(name.clone())
-            } else {
-                None
-            }
-        })
-        .collect::&lt;Vec&lt;_&gt;&gt;();
-
-    // Accumulate sizes for all dirs. We iterate over all dirs and then add up the sizes of all
-    // files underneath them. That's inefficient but OK enough here.
-    for dir in dirs {
-        let dir_size = fs
-            .iter()
-            .filter_map(|(name, size)| {
-                // Is a file underneath `dir`, emit its size. Otherwise, skip it.
-                if !name.ends_with("/") &amp;&amp; name.starts_with(&amp;dir) {
-                    Some(size)
-                } else {
-                    None
-                }
-            })
-            .sum::&lt;usize&gt;();
-
-        fs.insert(dir.to_string(), dir_size);
     }
 
     Ok(fs)
@@ -1844,6 +1798,58 @@ impl FromStr for Entry {
             _ =&gt; Err(Error::msg(format!("canot parse {}", s))),
         }
     }
+}
+
+pub struct Stack {
+    it_idx: usize,
+    entries: Vec&lt;String&gt;,
+}
+
+impl Stack {
+    pub fn new() -&gt; Self {
+        Self {
+            it_idx: 0,
+            entries: vec![],
+        }
+    }
+
+    pub fn pwd(&amp;self) -&gt; String {
+        if self.entries.len() == 0 {
+            "/".to_string()
+        } else {
+            format!("/{}/", self.entries.join("/"))
+        }
+    }
+
+    pub fn pushd(&amp;mut self, dir: String) {
+        self.entries.push(dir);
+    }
+
+    pub fn popd(&amp;mut self) {
+        // Ignore this here.
+        _ = self.entries.pop();
+    }
+
+    pub fn clear(&amp;mut self) {
+        self.entries.clear();
+    }
+}
+
+impl Iterator for Stack {
+    type Item = String;
+
+    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+        if self.it_idx &gt; self.entries.len() {
+            self.it_idx = 0;
+            None
+        } else if self.it_idx == 0 {
+            self.it_idx += 1;
+            Some("/".to_string())
+        } else {
+            self.it_idx += 1;
+            Some(format!("/{}/", self.entries[0..self.it_idx - 1].join("/")))
+        }
+    }
 }</code></pre>
 </div>
 </div>
@@ -1856,6 +1862,321 @@ Adding tests to a file in rust was pretty easy and a nice experience.</p>
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_7"><a class="anchor" href="#_how_to_run_7"></a><a class="link" href="#_how_to_run_7">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day08" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_08_rust"><a class="anchor" href="#_day_08_rust"></a><a class="link" href="#_day_08_rust">Day 08: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_08_treetop_tree_house"><a class="anchor" href="#_day_08_treetop_tree_house"></a><a class="link" href="#_day_08_treetop_tree_house">Day 08: Treetop Tree House</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of this day&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_6"><a class="anchor" href="#_oveview_6"></a><a class="link" href="#_oveview_6">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_7"><a class="anchor" href="#_solution_7"></a><a class="link" href="#_solution_7">Solution</a></h5>
+<div class="paragraph">
+<p>I decided not to go the obvious route and use a <code>HashMap</code> mapping tree positions
+to tree sizes instead.
+I also increased all tree sizes by one so that I could use unsigned numbers for
+tree sizes but still include the smallest trees.</p>
+</div>
+<div class="paragraph">
+<p>The main part of this solution is a function that checks which trees are visible
+and returns a <code>HashSet</code> of the positions of all visible trees.
+I can then take the union of those sets to solve part 1.
+The aforementioned function can scan several parallel lines one after the other.
+The nice thing about using a <code>HashSet</code> is that I don&#8217;t have to cocern myself
+with edges.
+I can simply retrieve values until I can find none after displacing the checked
+position and then stop iterating.</p>
+</div>
+<div class="paragraph">
+<p>For part 2, I use the same function but modify the visibility condition.
+That is, the maximum allowed height is that of the tree I look at.
+Furthermore, we accept all trees smaller than our current tree.
+I find that unrealistic, which caused some delay.
+Imagine this (the tree height is at the top and the index at the bottom):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>4 3 3 1 4
+
+|       |
+| | |   |
+| | |   |
+| | | | |
+0 1 2 3 4</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Tree 0 is the one we&#8217;re looking at.
+For part 2, this would mean there are 4 trees visible from 0, namely 1, 2, 3,
+and 4.
+But, in my view, tree 3 is covered by trees 1 and 2 and should not be visible.
+Anyway.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::{HashMap, HashSet};
+// Constants.
+// None yet.
+
+// Count trees visible in a direction count_disp from all positions that can be reached from
+// start_pos + n * outer_disp for all n that still yield a tree. If outer_disp is None, use only
+// n==0. The search stops at the latest if no more trees can be found in that direction, assuming a
+// dense forest.
+//
+// Whether a tree still counts as visible is defined by size_cmp. For part 1, it compares the
+// current tree's size with the size of the largest tree found so far. For part 2, it always
+// returns true because max_height has been set to that of the tree in consideration.
+//
+// A search in one direction stops early after a tree of max_height has been found because no trees
+// behind it can be visible. The value for max_height differs between parts 1 and 2. For part 1,
+// it's the global maximum and for part 2 it's the size of the tree in consideration.
+fn count_visible(
+    forest: &amp;HashMap&lt;(i64, i64), data::Tree&gt;,
+    start_pos: &amp;data::Vec,
+    count_disp: &amp;data::Vec,
+    outer_disp: Option&lt;&amp;data::Vec&gt;,
+    max_height: &amp;u8,
+    size_cmp: fn(&amp;u8, &amp;u8) -&gt; bool,
+) -&gt; HashSet&lt;(i64, i64)&gt; {
+    let mut visible_forest = HashSet::&lt;(i64, i64)&gt;::new();
+
+    let mut outer_start = start_pos.clone();
+
+    // This will automatically stop if we cannot retrieve any more trees. Assuming a dense forest,
+    // that means once we reached the edge.
+    while let Some(_) = forest.get(&amp;outer_start.pos()) {
+        let mut largest: u8 = 0;
+        let mut pos = outer_start.clone();
+
+        while &amp;largest &lt; max_height &amp;&amp; let Some(tree) = forest.get(&amp;pos.pos()) {
+            let size = tree.size();
+            // Remember the positions of trees that pass the size condition.
+            if size_cmp(&amp;size, &amp;largest) {
+                visible_forest.insert(pos.pos());
+                largest = size;
+            }
+            pos = pos.add(&amp;count_disp);
+        }
+
+        // If we want to search in the same direction from different starting positions, update the
+        // starting position and go on searching. If not, end the outer loop early.
+        if let Some(disp) = outer_disp {
+            outer_start = outer_start.add(disp);
+        } else {
+            break;
+        }
+    }
+
+    visible_forest
+}
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    eprintln!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let forest = io::parse_chars_to_data::&lt;data::Tree&gt;(file, "tree")?;
+
+    // Part 1.
+    // Get dimensions of forest in all three directions. That could have been avoided by using some
+    // matrix structure but I wanted to use a HashMap here, so this is necessary.
+    let max_x = forest
+        .keys()
+        .map(|el| el.0)
+        .max()
+        .ok_or(Error::msg("cannot find max x index"))?;
+    let max_y = forest
+        .keys()
+        .map(|el| el.1)
+        .max()
+        .ok_or(Error::msg("cannot find max y index"))?;
+    let max_height = forest
+        .values()
+        .map(|val| val.size())
+        .max()
+        .ok_or(Error::msg("cannot find max height"))?;
+
+    // Compute union of all visible forests (or rather, tree positions).
+    let mut count = HashSet::&lt;(i64, i64)&gt;::new();
+    // Top border rightwards.
+    count = &amp;count
+        | &amp;count_visible(
+            &amp;forest,
+            &amp;data::Vec::new(0, 0),
+            &amp;data::Vec::new(0, 1),
+            Some(&amp;data::Vec::new(1, 0)),
+            &amp;max_height,
+            |size, largest| size &gt; largest,
+        );
+    // Left border downwards.
+    count = &amp;count
+        | &amp;count_visible(
+            &amp;forest,
+            &amp;data::Vec::new(0, 0),
+            &amp;data::Vec::new(1, 0),
+            Some(&amp;data::Vec::new(0, 1)),
+            &amp;max_height,
+            |size, largest| size &gt; largest,
+        );
+    // Bottom border rightwards.
+    count = &amp;count
+        | &amp;count_visible(
+            &amp;forest,
+            &amp;data::Vec::new(0, max_y),
+            &amp;data::Vec::new(0, -1),
+            Some(&amp;data::Vec::new(1, 0)),
+            &amp;max_height,
+            |size, largest| size &gt; largest,
+        );
+    // Right border downwards.
+    count = &amp;count
+        | &amp;count_visible(
+            &amp;forest,
+            &amp;data::Vec::new(max_x, 0),
+            &amp;data::Vec::new(-1, 0),
+            Some(&amp;data::Vec::new(0, 1)),
+            &amp;max_height,
+            |size, largest| size &gt; largest,
+        );
+
+    println!("visible are {} trees", count.len());
+
+    // Part 2.
+    let disps = vec![
+        data::Vec::new(0, -1),
+        data::Vec::new(-1, 0),
+        data::Vec::new(0, 1),
+        data::Vec::new(1, 0),
+    ];
+
+    let best_view = forest
+        .iter()
+        .map(|(pos, height)| {
+            disps
+                .iter()
+                .map(|disp| {
+                    let tree_pos = data::Vec::new(pos.0, pos.1);
+                    count_visible(
+                        &amp;forest,
+                        // Start searching at the first tree in the search direction from the
+                        // starting position.
+                        &amp;tree_pos.add(&amp;disp),
+                        disp,
+                        // Don't search along multiple parallel lines.
+                        None,
+                        &amp;height.size(),
+                        |_size, _largest| true,
+                    )
+                    .len()
+                })
+                // The scenic score for a tree is the product of the number of trees it can see in
+                // every direction.
+                .product::&lt;usize&gt;()
+        })
+        .max()
+        .ok_or(Error::msg("cannot find best view"))?;
+
+    println!("best view is {}", best_view);
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE)?;
+    solve(REAL)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub struct Tree(u8);
+
+impl FromStr for Tree {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        // We increase the size by one to be able to perform simple unsigned size comparisons.
+        Ok(Self(
+            s.parse::&lt;u8&gt;()?
+                .checked_add(1)
+                .ok_or(Error::msg("cannot increase tree size"))?,
+        ))
+    }
+}
+
+impl Tree {
+    pub fn size(&amp;self) -&gt; u8 {
+        self.0
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Vec {
+    x: i64,
+    y: i64,
+}
+
+impl Vec {
+    pub fn add(&amp;self, other: &amp;Vec) -&gt; Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+
+    pub fn pos(&amp;self) -&gt; (i64, i64) {
+        (self.x, self.y)
+    }
+
+    pub fn new(x: i64, y: i64) -&gt; Self {
+        Self { x, y }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_8"><a class="anchor" href="#_how_to_run_8"></a><a class="link" href="#_how_to_run_8">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
