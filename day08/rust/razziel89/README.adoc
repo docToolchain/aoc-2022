@@ -1,0 +1,75 @@
+== Day 08: Treetop Tree House ==
+
+This is my implementation for both rounds of this day's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+I decided not to go the obvious route and use a `HashMap` mapping tree positions
+to tree sizes instead.
+I also increased all tree sizes by one so that I could use unsigned numbers for
+tree sizes but still include the smallest trees.
+
+The main part of this solution is a function that checks which trees are visible
+and returns a `HashSet` of the positions of all visible trees.
+I can then take the union of those sets to solve part 1.
+The aforementioned function can scan several parallel lines one after the other.
+The nice thing about using a `HashSet` is that I don't have to cocern myself
+with edges.
+I can simply retrieve values until I can find none after displacing the checked
+position and then stop iterating.
+
+For part 2, I use the same function but modify the visibility condition.
+That is, the maximum allowed height is that of the tree I look at.
+Furthermore, we accept all trees smaller than our current tree.
+I find that unrealistic, which caused some delay.
+Imagine this (the tree height is at the top and the index at the bottom):
+
+----
+4 3 3 1 4
+        
+|       |
+| | |   |
+| | |   |
+| | | | |
+0 1 2 3 4
+----
+
+Tree 0 is the one we're looking at.
+For part 2, this would mean there are 4 trees visible from 0, namely 1, 2, 3,
+and 4.
+But, in my view, tree 3 is covered by trees 1 and 2 and should not be visible.
+Anyway.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
