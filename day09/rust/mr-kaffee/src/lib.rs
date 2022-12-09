@@ -95,41 +95,30 @@ pub fn print(
 // end::print[]
 
 // tag::solution[]
-fn update(knots: &mut [(isize, isize)], seen: &mut HashSet<(isize, isize)>) {
-    for k in 1..knots.len() {
-        let dx = knots[k].0 - knots[k - 1].0;
-        let dy = knots[k].1 - knots[k - 1].1;
-
-        if dx < -1 || (dx < 0 && (dy < -1 || dy > 1)) {
-            knots[k].0 += 1;
-        } else if dx > 1 || (dx > 0 && (dy < -1 || dy > 1)) {
-            knots[k].0 -= 1;
-        }
-
-        if dy < -1 || (dy < 0 && (dx < -1 || dx > 1)) {
-            knots[k].1 += 1;
-        } else if dy > 1 || (dy > 0 && (dx < -1 || dx > 1)) {
-            knots[k].1 -= 1;
-        }
-    }
-
-    let i = knots.len() - 1;
-    seen.insert(knots[i].clone());
-}
-
 pub fn solve<F>(data: &PuzzleData, n: usize, debug: F) -> usize
 where
     F: Fn(&[(isize, isize)], ((isize, isize), usize), &HashSet<(isize, isize)>) -> (),
 {
-    let mut seen: HashSet<(isize, isize)> = HashSet::new();
+    let mut seen: HashSet<(isize, isize)> = HashSet::from([(0, 0)]);
     let mut knots: Vec<(isize, isize)> = vec![(0, 0); n];
-    seen.insert((0, 0));
 
     for ((dx, dy), s) in data.moves() {
         for _ in 0..*s {
             knots[0].0 += *dx;
             knots[0].1 += *dy;
-            update(&mut knots, &mut seen);
+
+            for k in 1..n {
+                let dx = knots[k].0 - knots[k - 1].0;
+                let dy = knots[k].1 - knots[k - 1].1;
+
+                knots[k].0 += (dx < -1 || (dx == -1 && dy.abs() > 1)) as isize
+                    - (dx > 1 || (dx == 1 && dy.abs() > 1)) as isize;
+
+                knots[k].1 += (dy < -1 || (dy == -1 && dx.abs() > 1)) as isize
+                    - (dy > 1 || (dy == 1 && dx.abs() > 1)) as isize;
+            }
+
+            seen.insert(knots[n - 1]);
         }
 
         debug(&knots, ((*dx, *dy), *s), &seen);
