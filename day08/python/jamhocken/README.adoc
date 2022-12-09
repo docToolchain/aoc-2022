@@ -1,0 +1,25 @@
+
+Day 8 of year 2022
+https://adventofcode.com/2022/day/8
+
+== What I learned
+
+. That a nested list is not a matrix. I always somehow forget this.
+
+== Approach
+
+. I read in the tree heights and put them into a 2d numpy array (a 2d matrix). 
+
+**Star 1** +
+I skip the trees on the edges (they are all visible so you just add them to the sum). And then for each of the trees, I look for the max of the other trees in the 4 cardinal directions and see if the tree is higher than the max. If it is true in any direction, that tree is visible.
+
+**Star 2** +
+It's similar. In each of the four directions, you go through each tree until one is higher or equal and then add up the number of trees you had to look at in that direction. Multiple those 4 numbers and check if it bigger than the max score up until now.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
