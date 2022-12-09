@@ -200,6 +200,20 @@
 <li><a href="#_run_script_8">Run script</a></li>
 </ul>
 </li>
+<li><a href="#_day_08_python">Day 08: python</a>
+<ul class="sectlevel3">
+<li><a href="#_what_i_learned_8">What I learned</a></li>
+<li><a href="#_approach_8">Approach</a></li>
+<li><a href="#_run_script_9">Run script</a></li>
+</ul>
+</li>
+<li><a href="#_day_09_python">Day 09: python</a>
+<ul class="sectlevel3">
+<li><a href="#_what_i_learned_9">What I learned</a></li>
+<li><a href="#_approach_9">Approach</a></li>
+<li><a href="#_run_script_10">Run script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -889,6 +903,225 @@ def main():
             smallest = value[1]
 
     print(smallest)
+
+main()</code></pre>
+</div>
+</div>
+<a id="day08" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_08_python"><a class="anchor" href="#_day_08_python"></a><a class="link" href="#_day_08_python">Day 08: python</a></h3>
+<div class="paragraph">
+<p>Day 8 of year 2022
+<a href="https://adventofcode.com/2022/day/8" class="bare">https://adventofcode.com/2022/day/8</a></p>
+</div>
+<div class="sect3">
+<h4 id="_what_i_learned_8"><a class="anchor" href="#_what_i_learned_8"></a><a class="link" href="#_what_i_learned_8">What I learned</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>That a nested list is not a matrix. I always somehow forget this.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_approach_8"><a class="anchor" href="#_approach_8"></a><a class="link" href="#_approach_8">Approach</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I read in the tree heights and put them into a 2d numpy array (a 2d matrix).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Star 1</strong><br>
+I skip the trees on the edges (they are all visible so you just add them to the sum). And then for each of the trees, I look for the max of the other trees in the 4 cardinal directions and see if the tree is higher than the max. If it is true in any direction, that tree is visible.</p>
+</div>
+<div class="paragraph">
+<p><strong>Star 2</strong><br>
+It&#8217;s similar. In each of the four directions, you go through each tree until one is higher or equal and then add up the number of trees you had to look at in that direction. Multiple those 4 numbers and check if it bigger than the max score up until now.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_run_script_9"><a class="anchor" href="#_run_script_9"></a><a class="link" href="#_run_script_9">Run script</a></h4>
+<div class="paragraph">
+<p>Run the solution with <code>python solution.py</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-python" data-lang="python">import numpy as np
+
+def process_input(file_contents):
+    lines_stripped = [line.strip() for line in file_contents]
+    trees = np.array([[int(entry) for entry in line] for line in lines_stripped])
+
+    return trees
+
+def main():
+    with open("input.txt",'r') as input_file:
+        input_lines = input_file.readlines()
+
+    trees = process_input(input_lines)
+
+    # star 1
+    visible = (len(trees)-1)*4
+    for row_no,row in enumerate(trees):
+        if row_no != 0 and row_no != len(trees)-1:
+            for col_no,tree in enumerate(row):
+                if col_no != 0 and col_no != len(row)-1:
+                    if tree &gt; max(trees[row_no,:col_no]) or tree &gt; max(trees[:row_no,col_no]) \
+                        or tree &gt; max(trees[row_no,col_no+1:]) or tree &gt; max(trees[row_no+1:,col_no]):
+                            visible += 1
+
+    print(visible)
+
+    # star 2
+    max_scenic_score = 0
+    for row_no,row in enumerate(trees):
+        if row_no != 0 and row_no != len(trees)-1:
+            for col_no,tree in enumerate(row):
+                if col_no != 0 and col_no != len(row)-1:
+                    for index1,next_tree in enumerate(np.flip(trees[row_no,:col_no])):
+                        if next_tree &gt;= tree:
+                            scenic1 = index1+1
+                            break
+                        else:
+                            scenic1 = col_no
+                    for index1,next_tree in enumerate(trees[row_no,col_no+1:]):
+                        if next_tree &gt;= tree:
+                            scenic2 = index1+1
+                            break
+                        else:
+                            scenic2 = len(trees)-col_no-1
+                    for index1,next_tree in enumerate(np.flip(trees[:row_no,col_no])):
+                        if next_tree &gt;= tree:
+                            scenic3 = index1+1
+                            break
+                        else:
+                            scenic3 = row_no
+                    for index1,next_tree in enumerate(trees[row_no+1:,col_no]):
+                        if next_tree &gt;= tree:
+                            scenic4 = index1+1
+                            break
+                        else:
+                            scenic4 = len(trees)-row_no-1
+
+                    scenic_score = scenic1*scenic2*scenic3*scenic4
+                    if scenic_score &gt; max_scenic_score:
+                        max_scenic_score = scenic_score
+
+    print(max_scenic_score)
+
+main()</code></pre>
+</div>
+</div>
+<a id="day09" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_09_python"><a class="anchor" href="#_day_09_python"></a><a class="link" href="#_day_09_python">Day 09: python</a></h3>
+<div class="paragraph">
+<p>Day 9 of year 2022
+<a href="https://adventofcode.com/2022/day/9" class="bare">https://adventofcode.com/2022/day/9</a></p>
+</div>
+<div class="sect3">
+<h4 id="_what_i_learned_9"><a class="anchor" href="#_what_i_learned_9"></a><a class="link" href="#_what_i_learned_9">What I learned</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>For once, I solved star 1 in a way that didn&#8217;t require much refactoring for star 2. :-)</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_approach_9"><a class="anchor" href="#_approach_9"></a><a class="link" href="#_approach_9">Approach</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I read in the commands and turn the directions into tuples representing the direction.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Star 1</strong><br>
+You just go through and check if the new position of the head is within the 9 adjacent positions or is the same position. If so, do nothing with the tail. Otherwise, move as required.</p>
+</div>
+<div class="paragraph">
+<p><strong>Star 2</strong><br>
+Here you have the same basic situation but you have to keep track of multiple ropes.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_run_script_10"><a class="anchor" href="#_run_script_10"></a><a class="link" href="#_run_script_10">Run script</a></h4>
+<div class="paragraph">
+<p>Run the solution with <code>python solution.py</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-python" data-lang="python">def process_input(file_contents):
+    lines_stripped = [line.strip() for line in file_contents]
+    moves = [((1,0),int(line[2:])) if line[0] == "R" \
+             else ((-1,0),int(line[2:])) if line[0] == "L" \
+                   else ((0,1),int(line[2:])) if line[0] == "U" \
+                       else ((0,-1),int(line[2:])) \
+                           for line in lines_stripped]
+
+    return moves
+
+def move_ropes(move,current_h,current_t):
+
+    current_h[0] += move[0][0]
+    current_h[1] += move[0][1]
+    difference = [current_h[0] - current_t[0],current_h[1] - current_t[1]]
+    if difference in [[0,0],[0,1],[0,-1],[1,0],[1,1],[1,-1],[-1,0],[-1,1],[-1,-1]]:
+        pass
+    else:
+        if difference[1] &gt;= 1:
+            current_t[1] += 1
+        elif difference[1] &lt;= -1:
+            current_t[1] -= 1
+        if difference[0] &gt;= 1:
+            current_t[0] += 1
+        elif difference[0] &lt;= -1:
+            current_t[0] -= 1
+
+    return current_h, current_t, tuple(current_t)
+
+def main():
+    with open("input.txt",'r') as input_file:
+        input_lines = input_file.readlines()
+
+    moves = process_input(input_lines)
+
+    # star 1
+    positions = set([(0,0)])
+    current_h = [0,0]
+    current_t = [0,0]
+
+    for move in moves:
+        for index in range(move[1]):
+            current_h, current_t,positions_temp = move_ropes(move, current_h, current_t)
+            positions.add(positions_temp)
+    print(len(positions))
+
+    # star 2
+    positions = set([(0,0)])
+    current_rope = [[0,0] for index in range(10)]
+    for move in moves:
+        for index1 in range(move[1]):
+            move_temp = move
+            for index in range(9):
+                current_h = current_rope[index]
+                current_t = current_rope[index+1]
+                current_h, current_t,positions_temp = move_ropes(move_temp, current_h, current_t)
+                move_temp = ((current_t[0]-current_rope[index+1][0],current_t[1]-current_rope[index+1][1]),move[1])
+                current_rope[index] = current_h
+            positions.add(positions_temp)
+
+    print(len(positions))
 
 main()</code></pre>
 </div>
