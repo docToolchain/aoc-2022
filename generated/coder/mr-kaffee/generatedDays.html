@@ -1964,48 +1964,37 @@ pub fn print(
 <p>After a little bit of refactoring, one solution works for both parts today. The solve function is called with the total number of knots (including head) as a parameter.</p>
 </div>
 <div class="paragraph">
-<p>In each step, it updates the head and than calls the update function which updates all subsequent knots ony by one.</p>
+<p>In each step, it updates the head and then all subsequent knots ony by one.</p>
 </div>
 <div class="paragraph">
 <p>The debug function parameter is a clojure that is called after each move for debugging purposes. In the actual solution, an empty function is used. In the test cases, the <code>print</code> function is called.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">fn update(knots: &amp;mut [(isize, isize)], seen: &amp;mut HashSet&lt;(isize, isize)&gt;) {
-    for k in 1..knots.len() {
-        let dx = knots[k].0 - knots[k - 1].0;
-        let dy = knots[k].1 - knots[k - 1].1;
-
-        if dx &lt; -1 || (dx &lt; 0 &amp;&amp; (dy &lt; -1 || dy &gt; 1)) {
-            knots[k].0 += 1;
-        } else if dx &gt; 1 || (dx &gt; 0 &amp;&amp; (dy &lt; -1 || dy &gt; 1)) {
-            knots[k].0 -= 1;
-        }
-
-        if dy &lt; -1 || (dy &lt; 0 &amp;&amp; (dx &lt; -1 || dx &gt; 1)) {
-            knots[k].1 += 1;
-        } else if dy &gt; 1 || (dy &gt; 0 &amp;&amp; (dx &lt; -1 || dx &gt; 1)) {
-            knots[k].1 -= 1;
-        }
-    }
-
-    let i = knots.len() - 1;
-    seen.insert(knots[i].clone());
-}
-
-pub fn solve&lt;F&gt;(data: &amp;PuzzleData, n: usize, debug: F) -&gt; usize
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn solve&lt;F&gt;(data: &amp;PuzzleData, n: usize, debug: F) -&gt; usize
 where
     F: Fn(&amp;[(isize, isize)], ((isize, isize), usize), &amp;HashSet&lt;(isize, isize)&gt;) -&gt; (),
 {
-    let mut seen: HashSet&lt;(isize, isize)&gt; = HashSet::new();
+    let mut seen: HashSet&lt;(isize, isize)&gt; = HashSet::from([(0, 0)]);
     let mut knots: Vec&lt;(isize, isize)&gt; = vec![(0, 0); n];
-    seen.insert((0, 0));
 
     for ((dx, dy), s) in data.moves() {
         for _ in 0..*s {
             knots[0].0 += *dx;
             knots[0].1 += *dy;
-            update(&amp;mut knots, &amp;mut seen);
+
+            for k in 1..n {
+                let dx = knots[k].0 - knots[k - 1].0;
+                let dy = knots[k].1 - knots[k - 1].1;
+
+                knots[k].0 += (dx &lt; -1 || (dx == -1 &amp;&amp; dy.abs() &gt; 1)) as isize
+                    - (dx &gt; 1 || (dx == 1 &amp;&amp; dy.abs() &gt; 1)) as isize;
+
+                knots[k].1 += (dy &lt; -1 || (dy == -1 &amp;&amp; dx.abs() &gt; 1)) as isize
+                    - (dy &gt; 1 || (dy == 1 &amp;&amp; dx.abs() &gt; 1)) as isize;
+            }
+
+            seen.insert(knots[n - 1]);
         }
 
         debug(&amp;knots, ((*dx, *dy), *s), &amp;seen);
