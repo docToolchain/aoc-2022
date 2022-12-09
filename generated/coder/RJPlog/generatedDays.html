@@ -232,6 +232,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_09_kotlin">Day 09: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_9_rope_bridge">Day 9: Rope Bridge</a>
+<ul class="sectlevel4">
+<li><a href="#_first_star_9">First Star</a></li>
+<li><a href="#_second_star_9">Second Star</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1176,6 +1186,146 @@ All directions are multiplied and the highest score will be the result.</p>
 	println("*******************************")
 	println("Solution for part2")
 	println("   $solution2 is the highest scenic score possible for any tree")
+	println()</code></pre>
+</div>
+</div>
+<a id="day09" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_09_kotlin"><a class="anchor" href="#_day_09_kotlin"></a><a class="link" href="#_day_09_kotlin">Day 09: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_9_rope_bridge"><a class="anchor" href="#_day_9_rope_bridge"></a><a class="link" href="#_day_9_rope_bridge">Day 9: Rope Bridge</a></h4>
+<div class="paragraph">
+<p>This solution is written in Kotlin.</p>
+</div>
+<div class="paragraph">
+<p>The original puzzle can be found at <a href="https://adventofcode.com/2022/day/9" class="bare">https://adventofcode.com/2022/day/9</a></p>
+</div>
+<div class="paragraph">
+<p>The solution uses for both parts of the puzzle function <em>RopeBridge</em>. Here the puzzle input is parsed and the path of the rope&#8217;s head is calculated and stored in first list of lists. For all following segments it&#8217;s path is calculated by calling function <em>follow</em> using the coordinates of the segment one before. The path for all segments is stored in a list of lists.</p>
+</div>
+<div class="paragraph">
+<p>function <em>RopeBrigde</em></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun RopeBridge(in1: Int): Int {
+
+	var (xH, yH) = Pair(0, 0)
+	var (xT, yT) = Pair(0, 0)
+	var allPath = MutableList(10) { mutableListOf&lt;Pair&lt;Int, Int&gt;&gt;(Pair(0, 0)) }
+
+	File("day2209_puzzle_input.txt").forEachLine {
+		var (dir, steps) = it.split(" ")
+
+		for (i in 1..steps.toInt()) {
+			xH = allPath[0].takeLast(1)[0].first
+			yH = allPath[0].takeLast(1)[0].second
+			if (dir == "U") {
+				yH += 1
+			} else if (dir == "D") {
+				yH -= 1
+			} else if (dir == "R") {
+				xH += 1
+			} else if (dir == "L") {
+				xH -= 1
+			}
+			allPath[0].add(Pair(xH, yH))
+
+			// add loop for all 9 sections of rope
+			for (j in 1..9) {
+				xT = allPath[j].takeLast(1)[0].first
+				yT = allPath[j].takeLast(1)[0].second
+				xH = allPath[j - 1].takeLast(1)[0].first
+				yH = allPath[j - 1].takeLast(1)[0].second
+
+				val newPos = follow(xH, yH, xT, yT)
+
+				xT = newPos.first
+				yT = newPos.second
+				allPath[j].add(Pair(xT, yT))
+			}
+		}
+	}
+	if (in1 == 1) {
+		return allPath[1].distinct().size
+	} else {
+		return allPath[9].distinct().size
+	}
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>function <em>follow</em></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun follow(xH: Int, yH: Int, xT: Int, yT: Int): Pair&lt;Int, Int&gt; {
+	var xTNew: Int = xT
+	var yTNew: Int = yT
+
+	if ((xT != xH) &amp;&amp; (yT != yH) &amp;&amp; (abs(xT - xH) &gt; 1 || abs(yT - yH) &gt; 1)) {
+		if ((xH - xT) &gt; 0) {
+			xTNew = xT + 1
+		} else if ((xH - xT) &lt; 0) {
+			xTNew = xT - 1
+		}
+		if ((yH - yT) &gt; 0) {
+			yTNew = yT + 1
+		} else if ((yH - yT) &lt; 0) {
+			yTNew = yT - 1
+		}
+	} else if ((xT != xH) || (yT != yH)) {
+		if ((xH - xT) &gt; 1) {
+			xTNew = xT + 1
+		} else if ((xH - xT) &lt; -1) {
+			xTNew = xT - 1
+		}
+		if ((yH - yT) &gt; 1) {
+			yTNew = yT + 1
+		} else if ((yH - yT) &lt; -1) {
+			yTNew = yT - 1
+		}
+	}
+	return Pair(xTNew, yTNew)
+}</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_first_star_9"><a class="anchor" href="#_first_star_9"></a><a class="link" href="#_first_star_9">First Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>After calculating the path of all segments the path of the first segment will be stripped of all positions visited more than once and than the remaining positions counted.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_second_star_9"><a class="anchor" href="#_second_star_9"></a><a class="link" href="#_second_star_9">Second Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>After calculating the path of all segments the path of the last segment (#9) will be stripped of all positions visited more than once and than the remaining positions counted.</p>
+</div>
+<div class="paragraph">
+<p>At the end, both solutions are printed out.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">// print solution for part 1
+	println("***************************")
+	println("--- Day 9: Rope Bridge ---")
+	println("**************************")
+	println("Solution for part1")
+	println("   $solution1 positions does the tail of the rope visit at least once")
+	println()
+// print solution for part 2
+	println("**************************")
+	println("Solution for part2")
+	println("   $solution2 positions does the tail of the rope visit at least once")
 	println()</code></pre>
 </div>
 </div>
