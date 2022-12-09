@@ -1,7 +1,6 @@
-use std::{collections::HashSet, ops::RangeInclusive};
-
 use input::*;
 use mr_kaffee_aoc::{Puzzle, Star};
+use std::{collections::HashSet, ops::RangeInclusive};
 
 /// the puzzle
 pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
@@ -11,12 +10,12 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
         input: include_str!("../input.txt"),
         star1: Some(Star {
             name: "Star 1",
-            f: &(|data| solve(data, 2)),
+            f: &(|data| solve(data, 2, |_, _, _| ())),
             exp: Some(6_354),
         }),
         star2: Some(Star {
             name: "Star 2",
-            f: &(|data| solve(data, 10)),
+            f: &(|data| solve(data, 10, |_, _, _| ())),
             exp: Some(2_651),
         }),
     }
@@ -35,16 +34,12 @@ pub mod input {
             Self {
                 moves: s
                     .lines()
-                    .map(|l| {
-                        let (d, s) = l.split_once(' ').unwrap();
-                        let s = s.parse().unwrap();
-                        match d {
-                            "U" => ((0, -1), s),
-                            "D" => ((0, 1), s),
-                            "L" => ((-1, 0), s),
-                            "R" => ((1, 0), s),
-                            _ => panic!("No valid move: {l}"),
-                        }
+                    .map(|l| match (l.as_bytes()[0], l[2..].parse().unwrap()) {
+                        (b'U', s) => ((0, -1), s),
+                        (b'D', s) => ((0, 1), s),
+                        (b'L', s) => ((-1, 0), s),
+                        (b'R', s) => ((1, 0), s),
+                        _ => panic!("No valid move: {l}"),
                     })
                     .collect(),
             }
@@ -53,26 +48,45 @@ pub mod input {
 
     impl PuzzleData {
         pub fn moves(&self) -> &[((isize, isize), usize)] {
-            self.moves.as_slice()
+            &self.moves
         }
     }
 }
 // end::input[]
 
 // tag::print[]
-/// print knots for debugging purposes
-pub fn print(rx: RangeInclusive<isize>, ry: RangeInclusive<isize>, knots: &[(isize, isize)]) {
+/// Print knots for debugging purposes
+///
+/// Knots are printed by consecutive letters `a`, `b`, ... starting with the head at `a`
+///
+/// If a knot sits on a spot which is already seen, it is represented by a capital letter `A`, `B`, ...
+///
+/// The start is indicated by `$` if no knot is located at the start
+///
+/// Spots that have been seen and where currently no knot is located are shown as `#`
+///
+/// If several knots sit on top of each other, the first one in the chain is shown.
+pub fn print(
+    rx: RangeInclusive<isize>,
+    ry: RangeInclusive<isize>,
+    knots: &[(isize, isize)],
+    ((dx, dy), s): ((isize, isize), usize),
+    seen: &HashSet<(isize, isize)>,
+) {
+    println!("\nAfter moving {s} times by ({dx}, {dy}):");
     for y in ry {
         for x in rx.clone() {
+            let seen = seen.contains(&(x, y));
             match knots
                 .iter()
                 .enumerate()
                 .find(|(_, (xn, yn))| *xn == x && *yn == y)
             {
-                Some((0, _)) => print!("H"),
-                Some((v, _)) => print!("{v}"),
-                None if x == 0 && y == 0 => print!("s"),
-                _ => print!("."),
+                Some((v, _)) if seen => print!("{}", (b'A' + v as u8) as char),
+                Some((v, _)) => print!("{}", (b'a' + v as u8) as char),
+                None if x == 0 && y == 0 => print!("$"),
+                _ if seen => print!("#"),
+                _ => print!("\u{00b7}"),
             }
         }
         println!();
@@ -103,7 +117,10 @@ fn update(knots: &mut [(isize, isize)], seen: &mut HashSet<(isize, isize)>) {
     seen.insert(knots[i].clone());
 }
 
-pub fn solve(data: &PuzzleData, n: usize) -> usize {
+pub fn solve<F>(data: &PuzzleData, n: usize, debug: F) -> usize
+where
+    F: Fn(&[(isize, isize)], ((isize, isize), usize), &HashSet<(isize, isize)>) -> (),
+{
     let mut seen: HashSet<(isize, isize)> = HashSet::new();
     let mut knots: Vec<(isize, isize)> = vec![(0, 0); n];
     seen.insert((0, 0));
@@ -114,6 +131,8 @@ pub fn solve(data: &PuzzleData, n: usize) -> usize {
             knots[0].1 += *dy;
             update(&mut knots, &mut seen);
         }
+
+        debug(&knots, ((*dx, *dy), *s), &seen);
     }
 
     seen.len()
@@ -154,16 +173,34 @@ U 20
     #[test]
     pub fn test_star_1() {
         let data = PuzzleData::from(CONTENT);
-        assert_eq!(13, solve(&data, 2));
+        assert_eq!(
+            13,
+            solve(&data, 2, |knots, mv, seen| print(
+                0..=5,
+                -5..=0,
+                knots,
+                mv,
+                seen
+            ))
+        );
     }
 
     #[test]
     pub fn test_star_2() {
         let data = PuzzleData::from(CONTENT);
-        assert_eq!(1, solve(&data, 10));
+        assert_eq!(1, solve(&data, 10, |_, _, _| ()));
 
         let data = PuzzleData::from(CONTENT_2);
-        assert_eq!(36, solve(&data, 10));
+        assert_eq!(
+            36,
+            solve(&data, 10, |knots, mv, seen| print(
+                -11..=14,
+                -15..=5,
+                knots,
+                mv,
+                seen
+            ))
+        );
     }
 }
 // end::tests[]
