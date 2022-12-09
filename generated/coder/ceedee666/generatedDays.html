@@ -232,6 +232,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_09_python">Day 09: python</a>
+<ul class="sectlevel3">
+<li><a href="#_day_09">Day 09</a>
+<ul class="sectlevel4">
+<li><a href="#_main_idea_9">Main idea</a></li>
+<li><a href="#_what_did_i_learn_9">What did I learn</a></li>
+<li><a href="#_how_to_run_8">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -616,6 +627,52 @@ to use <code>range(start, -1, -1)</code>. Otherwise some of the elements might b
 <div class="paragraph">
 <p>Run using:
 <code>$ python day_08.py --help</code></p>
+</div>
+<a id="day09" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_09_python"><a class="anchor" href="#_day_09_python"></a><a class="link" href="#_day_09_python">Day 09: python</a></h3>
+<div class="sect3">
+<h4 id="_day_09"><a class="anchor" href="#_day_09"></a><a class="link" href="#_day_09">Day 09</a></h4>
+<div class="paragraph">
+<p>This solution is written in python.</p>
+</div>
+<div class="paragraph">
+<p>The following libraries are used to implement the solution:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Typer (<a href="https://typer.tiangolo.com/" class="bare">https://typer.tiangolo.com/</a>) to generate a nice command line interface</p>
+</li>
+<li>
+<p>pathlib (<a href="https://docs.python.org/3/library/pathlib.html" class="bare">https://docs.python.org/3/library/pathlib.html</a>)</p>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="_main_idea_9"><a class="anchor" href="#_main_idea_9"></a><a class="link" href="#_main_idea_9">Main idea</a></h5>
+<div class="paragraph">
+<p>The main idea is to use a <code>list</code> of <code>lists</code> to collect the positions of the knots. First the
+position of the head is updated with each move. Next the positions of all
+following knots is updated. Positions are simply added to the <code>list</code>. After all moves where
+executed the <code>list</code> ist converted to a <code>set</code> to get the number visited positions.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_what_did_i_learn_9"><a class="anchor" href="#_what_did_i_learn_9"></a><a class="link" href="#_what_did_i_learn_9">What did I learn</a></h5>
+<div class="paragraph">
+<p>One shouldn&#8217;t try to be to clever. Instead of trying to use pattern matching to solve this I
+should have gone for the easier <code>if &#8230;&#8203; else&#8230;&#8203;</code> approach.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_8"><a class="anchor" href="#_how_to_run_8"></a><a class="link" href="#_how_to_run_8">How to run</a></h5>
+<div class="paragraph">
+<p>Run using:
+<code>$ python day_09.py --help</code></p>
 </div>
 </div>
 </div>
