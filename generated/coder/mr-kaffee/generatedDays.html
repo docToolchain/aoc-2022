@@ -1872,23 +1872,42 @@ mod tests {
 <p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/9">AoC|2022|9</a>.</p>
 </div>
 <div class="paragraph">
-<p>Knots are moving around, following each other. The difficulty is to figure out where you have your off by one errors or similar. In the end, I had a print function showing current configurations to debug my code:</p>
+<p>Knots are moving around, following each other. The difficulty is to figure out where you have your off by one errors or similar. In the end, I had a print function showing current configurations to debug my code (because it actually looks nice, you may want to have a look at the output with <code>cargo test test_star_2 -- --nocapture</code>):</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">/// print knots for debugging purposes
-pub fn print(rx: RangeInclusive&lt;isize&gt;, ry: RangeInclusive&lt;isize&gt;, knots: &amp;[(isize, isize)]) {
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">/// Print knots for debugging purposes
+///
+/// Knots are printed by consecutive letters `a`, `b`, ... starting with the head at `a`
+///
+/// If a knot sits on a spot which is already seen, it is represented by a capital letter `A`, `B`, ...
+///
+/// The start is indicated by `$` if no knot is located at the start
+///
+/// Spots that have been seen and where currently no knot is located are shown as `#`
+///
+/// If several knots sit on top of each other, the first one in the chain is shown.
+pub fn print(
+    rx: RangeInclusive&lt;isize&gt;,
+    ry: RangeInclusive&lt;isize&gt;,
+    knots: &amp;[(isize, isize)],
+    ((dx, dy), s): ((isize, isize), usize),
+    seen: &amp;HashSet&lt;(isize, isize)&gt;,
+) {
+    println!("\nAfter moving {s} times by ({dx}, {dy}):");
     for y in ry {
         for x in rx.clone() {
+            let seen = seen.contains(&amp;(x, y));
             match knots
                 .iter()
                 .enumerate()
                 .find(|(_, (xn, yn))| *xn == x &amp;&amp; *yn == y)
             {
-                Some((0, _)) =&gt; print!("H"),
-                Some((v, _)) =&gt; print!("{v}"),
-                None if x == 0 &amp;&amp; y == 0 =&gt; print!("s"),
-                _ =&gt; print!("."),
+                Some((v, _)) if seen =&gt; print!("{}", (b'A' + v as u8) as char),
+                Some((v, _)) =&gt; print!("{}", (b'a' + v as u8) as char),
+                None if x == 0 &amp;&amp; y == 0 =&gt; print!("$"),
+                _ if seen =&gt; print!("#"),
+                _ =&gt; print!("\u{00b7}"),
             }
         }
         println!();
@@ -1899,7 +1918,7 @@ pub fn print(rx: RangeInclusive&lt;isize&gt;, ry: RangeInclusive&lt;isize&gt;, k
 <div class="sect4">
 <h5 id="_input_9"><a class="anchor" href="#_input_9"></a><a class="link" href="#_input_9">Input</a></h5>
 <div class="paragraph">
-<p>I parse the input in a vec of tuples '((dx, dy), s)' where <code>dx</code> and <code>dy</code> are the horizontal / vertical unit step changes and <code>s</code> is the number of steps.</p>
+<p>I parse the input in a vec of tuples <code>((dx, dy), s)</code> where <code>dx</code> and <code>dy</code> are the horizontal / vertical unit step changes and <code>s</code> is the number of steps.</p>
 </div>
 <div class="paragraph">
 <p>Not allocating extra memory for today&#8217;s input parsing is not for me ;)</p>
@@ -1918,16 +1937,12 @@ pub fn print(rx: RangeInclusive&lt;isize&gt;, ry: RangeInclusive&lt;isize&gt;, k
             Self {
                 moves: s
                     .lines()
-                    .map(|l| {
-                        let (d, s) = l.split_once(' ').unwrap();
-                        let s = s.parse().unwrap();
-                        match d {
-                            "U" =&gt; ((0, -1), s),
-                            "D" =&gt; ((0, 1), s),
-                            "L" =&gt; ((-1, 0), s),
-                            "R" =&gt; ((1, 0), s),
-                            _ =&gt; panic!("No valid move: {l}"),
-                        }
+                    .map(|l| match (l.as_bytes()[0], l[2..].parse().unwrap()) {
+                        (b'U', s) =&gt; ((0, -1), s),
+                        (b'D', s) =&gt; ((0, 1), s),
+                        (b'L', s) =&gt; ((-1, 0), s),
+                        (b'R', s) =&gt; ((1, 0), s),
+                        _ =&gt; panic!("No valid move: {l}"),
                     })
                     .collect(),
             }
@@ -1936,7 +1951,7 @@ pub fn print(rx: RangeInclusive&lt;isize&gt;, ry: RangeInclusive&lt;isize&gt;, k
 
     impl PuzzleData {
         pub fn moves(&amp;self) -&gt; &amp;[((isize, isize), usize)] {
-            self.moves.as_slice()
+            &amp;self.moves
         }
     }
 }</code></pre>
@@ -1950,6 +1965,9 @@ pub fn print(rx: RangeInclusive&lt;isize&gt;, ry: RangeInclusive&lt;isize&gt;, k
 </div>
 <div class="paragraph">
 <p>In each step, it updates the head and than calls the update function which updates all subsequent knots ony by one.</p>
+</div>
+<div class="paragraph">
+<p>The debug function parameter is a clojure that is called after each move for debugging purposes. In the actual solution, an empty function is used. In the test cases, the <code>print</code> function is called.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1975,7 +1993,10 @@ pub fn print(rx: RangeInclusive&lt;isize&gt;, ry: RangeInclusive&lt;isize&gt;, k
     seen.insert(knots[i].clone());
 }
 
-pub fn solve(data: &amp;PuzzleData, n: usize) -&gt; usize {
+pub fn solve&lt;F&gt;(data: &amp;PuzzleData, n: usize, debug: F) -&gt; usize
+where
+    F: Fn(&amp;[(isize, isize)], ((isize, isize), usize), &amp;HashSet&lt;(isize, isize)&gt;) -&gt; (),
+{
     let mut seen: HashSet&lt;(isize, isize)&gt; = HashSet::new();
     let mut knots: Vec&lt;(isize, isize)&gt; = vec![(0, 0); n];
     seen.insert((0, 0));
@@ -1986,6 +2007,8 @@ pub fn solve(data: &amp;PuzzleData, n: usize) -&gt; usize {
             knots[0].1 += *dy;
             update(&amp;mut knots, &amp;mut seen);
         }
+
+        debug(&amp;knots, ((*dx, *dy), *s), &amp;seen);
     }
 
     seen.len()
@@ -2033,16 +2056,34 @@ U 20
     #[test]
     pub fn test_star_1() {
         let data = PuzzleData::from(CONTENT);
-        assert_eq!(13, solve(&amp;data, 2));
+        assert_eq!(
+            13,
+            solve(&amp;data, 2, |knots, mv, seen| print(
+                0..=5,
+                -5..=0,
+                knots,
+                mv,
+                seen
+            ))
+        );
     }
 
     #[test]
     pub fn test_star_2() {
         let data = PuzzleData::from(CONTENT);
-        assert_eq!(1, solve(&amp;data, 10));
+        assert_eq!(1, solve(&amp;data, 10, |_, _, _| ()));
 
         let data = PuzzleData::from(CONTENT_2);
-        assert_eq!(36, solve(&amp;data, 10));
+        assert_eq!(
+            36,
+            solve(&amp;data, 10, |knots, mv, seen| print(
+                -11..=14,
+                -15..=5,
+                knots,
+                mv,
+                seen
+            ))
+        );
     }
 }</code></pre>
 </div>
