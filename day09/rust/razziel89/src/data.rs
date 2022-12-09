@@ -2,7 +2,7 @@
 use anyhow::{Error, Result};
 use std::str::FromStr;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
 pub struct Vec {
     x: i64,
     y: i64,
@@ -48,34 +48,27 @@ impl Vec {
         }
     }
 
-    pub fn neg(&self) -> Self {
-        Self {
-            x: -self.x,
-            y: -self.y,
-        }
-    }
-
-    fn len(&self) -> usize {
+    // Length in infinity metric.
+    fn infinity_len(&self) -> usize {
         self.x.abs() as usize + self.y.abs() as usize
     }
 
-    fn is_eukledian_unit(&self) -> bool {
-        self.len() == 1
+    fn is_infinity_unit(&self) -> bool {
+        self.infinity_len() == 1
     }
 
-    fn as_manhattan_unit_clamp(&self) -> Self {
+    // Map to the 2d unit sphere in manhattan metric. The null vector cannot be mapped and, thus,
+    // remains unchanged.
+    fn as_manhattan_unit(&self) -> Self {
         Self {
             x: self.x.clamp(-1, 1),
             y: self.y.clamp(-1, 1),
         }
     }
 
-    pub fn new(x: i64, y: i64) -> Self {
-        Self { x, y }
-    }
-
+    // Move the vector exactly one space along one direction.
     pub fn mv(&mut self, other: &Vec) -> Result<()> {
-        if other.is_eukledian_unit() {
+        if other.is_infinity_unit() {
             *self = self.add(other);
             Ok(())
         } else {
@@ -83,17 +76,19 @@ impl Vec {
         }
     }
 
+    // Provide an iterator over unit-sized steps (unit in manhattan metric not infinity metric)
+    // that, if followed, describes the same distance traveled as `self`.
     pub fn iter(&self) -> std::vec::IntoIter<Self> {
-        let unit = self.as_manhattan_unit_clamp();
-        let mut pos = self.as_manhattan_unit_clamp();
+        let unit = self.as_manhattan_unit();
+        let mut pos = self.as_manhattan_unit();
+        // As this is my second time working with a custom iterator, I was not sure how to avoid
+        // cloning here.
         let mut disps = vec![];
-
         while &pos != self {
             let new_pos = pos.add(&unit);
-            disps.push(unit.clone());
+            disps.push(unit);
             pos = new_pos;
         }
-
         disps.push(unit);
 
         disps.into_iter()
@@ -105,10 +100,12 @@ impl Vec {
             y: self.y - other.y,
         };
 
-        if &other.add(&diff.as_manhattan_unit_clamp()) == self {
-            NULL_VEC.clone()
+        // We want to update with a unit vector in manhattan metric, but only if that would not
+        // mean that `other` is on the same space as `self`.
+        if &other.add(&diff.as_manhattan_unit()) == self {
+            NULL_VEC
         } else {
-            diff.as_manhattan_unit_clamp()
+            diff.as_manhattan_unit()
         }
     }
 }
