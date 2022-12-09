@@ -1,0 +1,50 @@
+== Day 9: Rope Bridge ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/9[AoC|2022|9].
+
+Knots are moving around, following each other. The difficulty is to figure out where you have your off by one errors or similar. In the end, I had a print function showing current configurations to debug my code (because it actually looks nice, you may want to have a look at the output with `cargo test test_star_2 \-- --nocapture`):
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=print]
+----
+
+
+=== Input ===
+
+I parse the input in a vec of tuples `((dx, dy), s)` where `dx` and `dy` are the horizontal / vertical unit step changes and `s` is the number of steps.
+
+Not allocating extra memory for today's input parsing is not for me ;)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Solution ===
+
+After a little bit of refactoring, one solution works for both parts today. The solve function is called with the total number of knots (including head) as a parameter. 
+
+In each step, it updates the head and then all subsequent knots ony by one.
+
+The debug function parameter is a clojure that is called after each move for debugging purposes. In the actual solution, an empty function is used. In the test cases, the `print` function is called.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=solution]
+----
+
+=== Tests ===
+
+The usual tests:
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Today I learned ===
+
+That sometimes it is helpful to write `as _` to give the rust compiler a hint to perform type coercion. Although in the end, I did not use it in my solution.
+
+And, today for the first time, I used my scripted solution to submit results. Not because it is faster (who cares about a few seconds) but because it is fun.

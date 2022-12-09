@@ -1,3 +1,4 @@
+use crate::puzzle_io::PuzzleIO;
 use regex::Regex;
 use std::{
     collections::HashMap,
@@ -12,7 +13,7 @@ pub fn write_files(
     lib_path: &Path,
     input_provider: &dyn InputProvider,
     year: u16,
-    day: u8,
+    day: u16,
     force: bool,
 ) -> Result<(), Error> {
     let lib_path = lib_path
@@ -75,30 +76,12 @@ pub fn write_files(
 }
 
 pub trait InputProvider {
-    fn load_input(&self, year: u16, day: u8) -> Result<String, Error>;
+    fn load_input(&self, year: u16, day: u16) -> Result<String, Error>;
 }
 
-#[derive(Debug)]
-pub struct InputLoader<'a> {
-    pub session: &'a str,
-}
-
-impl<'a> InputProvider for InputLoader<'a> {
-    fn load_input(&self, year: u16, day: u8) -> Result<String, Error> {
-        reqwest::blocking::Client::new()
-            .get(format!("https://adventofcode.com/{}/day/{}/input", year, day).as_str())
-            .header("Cookie", format!("session={}", self.session))
-            .header("User-Agent", 
-                format!(
-                    "{}/{} (github.com/mr-kaffee/aoc-2022/day00/rust/mr-kaffee/template by peter@die-wielands.net)", 
-                    env!("CARGO_PKG_NAME"), 
-                    env!("CARGO_PKG_VERSION")
-                )
-            )
-            .send()
-            .map_err(|err| Error::new(ErrorKind::Other, err))?
-            .text()
-            .map_err(|err| Error::new(ErrorKind::Other, err))
+impl<'a> InputProvider for PuzzleIO<'a> {
+    fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
+        PuzzleIO::load_input(self, year, day)
     }
 }
 
@@ -121,24 +104,22 @@ fn write_file(
     Ok(())
 }
 
-pub fn update_files(runner_path: &Path, year: u16, day: u8) -> Result<(), Error> {
+pub fn update_files(runner_path: &Path, year: u16, day: u16) -> Result<(), Error> {
     update_file(
         "INCLUDE_PUZZLES",
-        format!("&mr_kaffee_{year}_{day}::puzzle(),").as_str(),
+        format!("Box::new(mr_kaffee_{year}_{day}::puzzle()),").as_str(),
         runner_path.join("src/main.rs").as_path(),
     )?;
     update_file(
         "INCLUDE_PUZZLES",
-        format!(
-            "mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}"
-        )
-        .as_str(),
+        format!("mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}")
+            .as_str(),
         runner_path.join("Cargo.toml").as_path(),
     )?;
     Ok(())
 }
 
-pub fn update_file(separator: &str, line: &str, path: &Path) -> Result<bool, Error> {
+fn update_file(separator: &str, line: &str, path: &Path) -> Result<bool, Error> {
     println!("Updating file {} ...", path.to_string_lossy());
     let re = Regex::new(
         format!(r"(?ms:(?P<prefix>^.*{separator}:START.*?[\r\n]+)(?P<indent>\s*)(?P<data>.*?{separator}:END)(?P<suffix>.*$))")
@@ -201,19 +182,21 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
 
 // tag::input[]
 pub mod input {
-    use std::convert::Infallible;
-
     #[derive(Debug)]
     pub struct PuzzleData {
-        pub input: &'static str,
+        input: &'static [u8],
     }
 
-    impl TryFrom<&'static str> for PuzzleData {
-        type Error = Infallible;
+    impl From<&'static str> for PuzzleData {
+        /// parse the puzzle input 
+        fn from(s: &'static str) -> Self {
+            Self { input: s.as_bytes() }
+        }
+    }
 
-        /// parse the puzzle input
-        fn try_from(s: &'static str) -> Result<Self, Self::Error> {
-            Ok(PuzzleData { input: s })
+    impl PuzzleData {
+        pub fn input(&self) -> &[u8] {
+            self.input
         }
     }
 }
@@ -221,15 +204,13 @@ pub mod input {
 
 // tag::star_1[]
 pub fn star_1(data: &PuzzleData) -> usize {
-    println!("{}", data.input);
-    0
+    data.input().len()
 }
 // end::star_1[]
 
 // tag::star_2[]
 pub fn star_2(data: &PuzzleData) -> usize {
-    println!("{:?}", data);
-    0
+    data.input().len()
 }
 // end::star_2[]
 
@@ -237,16 +218,27 @@ pub fn star_2(data: &PuzzleData) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mr_kaffee_aoc::err::PuzzleError;
 
     const CONTENT: &str = r#"Hello World!
-Advent of Code 2022"#;
+Advent of Code 2022
+"#;
 
     #[test]
-    pub fn test_puzzle_data_from_str() -> Result<(), PuzzleError> {
-        let data = PuzzleData::try_from(CONTENT)?;
-        assert_eq!(data.input, CONTENT.to_string());
-        Ok(())
+    pub fn test_try_from() {
+        let data = PuzzleData::from(CONTENT);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(CONTENT.len(), star_1(&data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(CONTENT.len(), star_2(&data));
     }
 }
 // end::tests[]
@@ -294,7 +286,11 @@ edition = "2021"
 
 [dependencies]
 
-mr-kaffee-aoc = { path = "{AOC_PATH}" }
+mr-kaffee-aoc = { path = "{AOC_PATH}", default-features = false }
+
+[features]
+
+submit = ["mr-kaffee-aoc/io"]
 "###;
 
 const GITIGNORE: &str = r###"**/target
@@ -310,7 +306,7 @@ mod tests {
     struct TestInputProvider {}
 
     impl InputProvider for TestInputProvider {
-        fn load_input(&self, year: u16, day: u8) -> Result<String, Error> {
+        fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
             Ok(format!("Test input for {}/{}\n", year, day))
         }
     }

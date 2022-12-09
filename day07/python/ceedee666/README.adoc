@@ -1,0 +1,24 @@
+== Day 07
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea of this solution is to build a tree from the commands. The tree is implemented using
+dataclasses. The dataclass contains recursive methods to collect all children and to calculate
+the total size.
+
+
+=== What did I learn
+
+I learned a lot about dataclasses, typing and type hints, and enums.
+
+=== How to run
+
+Run using:
+`$ python day_07.py --help`
