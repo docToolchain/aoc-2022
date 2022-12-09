@@ -52,10 +52,7 @@ include::src/main.rs[tags=main]
 include::src/data.rs[tags=data]
 ----
 
-This time, I've even added some tests for some helper functions.
-Those tests lets me ensure that any special handling of the root direcotry works
-as intended.
-Adding tests to a file in rust was pretty easy and a nice experience.
+There are no tests this time.
 
 === How to run ===
 
