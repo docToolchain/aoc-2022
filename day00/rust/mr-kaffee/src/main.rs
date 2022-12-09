@@ -7,7 +7,6 @@ use mr_kaffee_aoc::{
 };
 use std::{error::Error, fs, time::Instant};
 
-// tag::run[]
 fn main() -> Result<(), Box<dyn Error>> {
     // parse command line
     let cli = cli::Cli::parse();
@@ -28,6 +27,7 @@ fn puzzles() -> Vec<Box<dyn GenericPuzzle>> {
     let puzzles: Vec<Box<dyn GenericPuzzle>> = vec![
         Box::new(mr_kaffee_2022_0::puzzle()),
         // INCLUDE_PUZZLES:START
+        Box::new(mr_kaffee_2022_9::puzzle()),
         Box::new(mr_kaffee_2022_8::puzzle()),
         Box::new(mr_kaffee_2022_7::puzzle()),
         Box::new(mr_kaffee_2022_6::puzzle()),
@@ -114,9 +114,7 @@ fn exec_submit(submit: cli::Submit) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-// end::run[]
 
-// tag::cli[]
 mod cli {
     use clap::{Args, Parser, Subcommand};
     use lazy_static::lazy_static;
@@ -297,4 +295,3 @@ mod cli {
         assert_eq!(s.parse::<Filter>().unwrap(), filter);
     }
 }
-// end::cli[]
