@@ -232,6 +232,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_09_rust">Day 09: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_09_rope_bridge">Day 09: Rope Bridge</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_7">Oveview</a></li>
+<li><a href="#_solution_8">Solution</a></li>
+<li><a href="#_how_to_run_9">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2177,6 +2188,281 @@ impl Vec {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_8"><a class="anchor" href="#_how_to_run_8"></a><a class="link" href="#_how_to_run_8">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day09" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_09_rust"><a class="anchor" href="#_day_09_rust"></a><a class="link" href="#_day_09_rust">Day 09: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_09_rope_bridge"><a class="anchor" href="#_day_09_rope_bridge"></a><a class="link" href="#_day_09_rope_bridge">Day 09: Rope Bridge</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of this day&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_7"><a class="anchor" href="#_oveview_7"></a><a class="link" href="#_oveview_7">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_8"><a class="anchor" href="#_solution_8"></a><a class="link" href="#_solution_8">Solution</a></h5>
+<div class="paragraph">
+<p>Solving this was quite a bit of fun!</p>
+</div>
+<div class="paragraph">
+<p>I created a <code>Vec</code> class to represent 2d vectors and was quite happy to have
+outsourced a lot of the logic into that class.
+For example, the class offers a <code>mv</code> method, which only ever lets it move by one
+space, which is a safeguard against trying to move too far at once.
+I haven&#8217;t tried moving by more than one space at a time because it seemed overly
+complicated.</p>
+</div>
+<div class="paragraph">
+<p>Furthermore, the custom <code>Vec</code> class has an <code>iter</code> method that provides an
+iterator over unit-size steps (unit vectors in the sense of the manhattan
+metric) that, if followed, ensure the same distance has been traveled as
+described by the original vector.
+That way, a simple iteration over iterators gave us all the steps we needed.</p>
+</div>
+<div class="paragraph">
+<p>For solving part 2, one problem was borrowing two elements of the rope
+simultaneously while one was even borrowed mutably.
+That won&#8217;t work in rust.
+Instead, I use a temporary variable to keep track of the updated position of the
+previous knot in the rope.</p>
+</div>
+<div class="paragraph">
+<p>I&#8217;ve also played around with lifetimes a bit.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::HashSet;
+// Constants.
+// None yet.
+
+// Define some helper functions that allow easy conversions from an Option&lt;data::Vec&gt; to a
+// Result&lt;data::Vec&gt; because the latter lets us use the question mark operator for unobstrusive
+// error forwarding.
+fn tail(rope: &amp;Vec&lt;data::Vec&gt;) -&gt; Result&lt;data::Vec&gt; {
+    rope.last()
+        .map(|el| el.clone())
+        .ok_or(Error::msg("cannot get tail"))
+}
+
+// Yeah, playing with lifetimes.
+fn get_mut&lt;'a&gt;(rope: &amp;'a mut Vec&lt;data::Vec&gt;, idx: usize) -&gt; Result&lt;&amp;'a mut data::Vec&gt; {
+    rope.get_mut(idx)
+        .ok_or(Error::msg("cannot get element mutably"))
+}
+
+fn get&lt;'a&gt;(rope: &amp;'a Vec&lt;data::Vec&gt;, idx: usize) -&gt; Result&lt;&amp;'a data::Vec&gt; {
+    rope.get(idx).ok_or(Error::msg("cannot get element"))
+}
+
+fn solve(file: &amp;str, length: usize) -&gt; Result&lt;()&gt; {
+    eprintln!("PROCESSING {} WITH LENGTH {}", file, length);
+
+    // Read file and convert into data.
+    let updates = io::parse_lines_to_data::&lt;data::Vec&gt;(file, "vec", None, None)?;
+
+    // All knots start at the very same position.
+    let mut rope = vec![data::NULL_VEC; length + 2];
+    let mut visited_by_tail = HashSet::&lt;data::Vec&gt;::new();
+
+    visited_by_tail.insert(tail(&amp;rope)?);
+
+    // Part 1.
+    // The `iter` method for a vector provides an iterator over a set of unit-size steps that, if
+    // followed, will ensure that we have traveled the entire distance described by the vector.
+    for update in updates.iter().map(|el| el.iter()).flatten() {
+        // The mv method will make sure we never move the head farther than one space. This is just
+        // a safeguard for errors in the code.
+        get_mut(&amp;mut rope, 0)?.mv(&amp;update)?;
+        // Remember only the position of the reference vector, which is the head so far. That
+        // involves a clone.
+        let mut ref_vec = *get(&amp;rope, 0)?;
+
+        // Update all others with reference to their previous entry.
+        for knot in rope.iter_mut() {
+            // Move the knot with respect to the reference knot, which is always the previous one.
+            *knot = knot.add(&amp;ref_vec.get_tail_update(&amp;knot));
+            // Update the reference knot's position. Because we can only ever borrow one element as
+            // mutable in rust and once we did so, we cannot borrow anything else, we clone it
+            // here. That's inefficient but I couldn't find an easy way around it without resorting
+            // to `unsafe`, which I want to avoid. Sadly, it seems as if `split_at_mut` involves
+            // `unsafe`.
+            ref_vec = *knot;
+        }
+        visited_by_tail.insert(tail(&amp;rope)?);
+    }
+
+    println!(
+        "the tail visited {} unique spots for a rope of length {}",
+        visited_by_tail.len(),
+        rope.len(),
+    );
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    // Part 1.
+    solve(SAMPLE1, 0)?;
+    solve(SAMPLE2, 0)?;
+    solve(REAL, 0)?;
+
+    // Part 2.
+    solve(SAMPLE1, 8)?;
+    solve(SAMPLE2, 8)?;
+    solve(REAL, 8)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
+pub struct Vec {
+    x: i64,
+    y: i64,
+}
+
+pub const NULL_VEC: Vec = Vec { x: 0, y: 0 };
+
+impl FromStr for Vec {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s
+            .split_whitespace()
+            .collect::&lt;std::vec::Vec&lt;_&gt;&gt;()
+            .as_slice()
+        {
+            ["R", dist] =&gt; Ok(Self {
+                x: dist.parse()?,
+                y: 0,
+            }),
+            ["L", dist] =&gt; Ok(Self {
+                x: -dist.parse()?,
+                y: 0,
+            }),
+            ["U", dist] =&gt; Ok(Self {
+                x: 0,
+                y: dist.parse()?,
+            }),
+            ["D", dist] =&gt; Ok(Self {
+                x: 0,
+                y: -dist.parse()?,
+            }),
+            _ =&gt; Err(Error::msg(format!("cannot parse {} as vector", s))),
+        }
+    }
+}
+
+impl Vec {
+    pub fn add(&amp;self, other: &amp;Vec) -&gt; Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+
+    // Length in infinity metric.
+    fn infinity_len(&amp;self) -&gt; usize {
+        self.x.abs() as usize + self.y.abs() as usize
+    }
+
+    fn is_infinity_unit(&amp;self) -&gt; bool {
+        self.infinity_len() == 1
+    }
+
+    // Map to the 2d unit sphere in manhattan metric. The null vector cannot be mapped and, thus,
+    // remains unchanged.
+    fn as_manhattan_unit(&amp;self) -&gt; Self {
+        Self {
+            x: self.x.clamp(-1, 1),
+            y: self.y.clamp(-1, 1),
+        }
+    }
+
+    // Move the vector exactly one space along one direction.
+    pub fn mv(&amp;mut self, other: &amp;Vec) -&gt; Result&lt;()&gt; {
+        if other.is_infinity_unit() {
+            *self = self.add(other);
+            Ok(())
+        } else {
+            Err(Error::msg(format!("cannot move by {:?}", other)))
+        }
+    }
+
+    // Provide an iterator over unit-sized steps (unit in manhattan metric not infinity metric)
+    // that, if followed, describes the same distance traveled as `self`.
+    pub fn iter(&amp;self) -&gt; std::vec::IntoIter&lt;Self&gt; {
+        let unit = self.as_manhattan_unit();
+        let mut pos = self.as_manhattan_unit();
+        // As this is my second time working with a custom iterator, I was not sure how to avoid
+        // cloning here.
+        let mut disps = vec![];
+        while &amp;pos != self {
+            let new_pos = pos.add(&amp;unit);
+            disps.push(unit);
+            pos = new_pos;
+        }
+        disps.push(unit);
+
+        disps.into_iter()
+    }
+
+    pub fn get_tail_update(&amp;self, other: &amp;Self) -&gt; Self {
+        let diff = Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        };
+
+        // We want to update with a unit vector in manhattan metric, but only if that would not
+        // mean that `other` is on the same space as `self`.
+        if &amp;other.add(&amp;diff.as_manhattan_unit()) == self {
+            NULL_VEC
+        } else {
+            diff.as_manhattan_unit()
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_9"><a class="anchor" href="#_how_to_run_9"></a><a class="link" href="#_how_to_run_9">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
