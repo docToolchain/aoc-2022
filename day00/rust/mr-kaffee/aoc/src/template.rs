@@ -190,7 +190,7 @@ pub mod input {
     impl From<&'static str> for PuzzleData {
         /// parse the puzzle input 
         fn from(s: &'static str) -> Self {
-            PuzzleData { input: s.as_bytes() }
+            Self { input: s.as_bytes() }
         }
     }
 
