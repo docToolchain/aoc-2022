@@ -1,0 +1,26 @@
+== Day 09
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea is to use a `list` of `lists` to collect the positions of the knots. First the
+position of the head is updated with each move. Next the positions of all
+following knots is updated. Positions are simply added to the `list`. After all moves where
+executed the `list` ist converted to a `set` to get the number visited positions.
+
+
+=== What did I learn
+
+One shouldn't try to be to clever. Instead of trying to use pattern matching to solve this I
+should have gone for the easier `if ... else...` approach.
+
+=== How to run
+
+Run using:
+`$ python day_09.py --help`
