@@ -7,7 +7,6 @@ use mr_kaffee_aoc::{
 };
 use std::{error::Error, fs, time::Instant};
 
-// tag::run[]
 fn main() -> Result<(), Box<dyn Error>> {
     // parse command line
     let cli = cli::Cli::parse();
@@ -114,9 +113,7 @@ fn exec_submit(submit: cli::Submit) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-// end::run[]
 
-// tag::cli[]
 mod cli {
     use clap::{Args, Parser, Subcommand};
     use lazy_static::lazy_static;
@@ -297,4 +294,3 @@ mod cli {
         assert_eq!(s.parse::<Filter>().unwrap(), filter);
     }
 }
-// end::cli[]
