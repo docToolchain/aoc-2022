@@ -21,9 +21,10 @@ Solving this was quite a bit of fun!
 
 I created a `Vec` class to represent 2d vectors and was quite happy to have
 outsourced a lot of the logic into that class.
-For example, the class offers a `mv` method with only ever lets it move by one
+For example, the class offers a `mv` method, which only ever lets it move by one
 space, which is a safeguard against trying to move too far at once.
-I haven't tried moving by more than once space at a time because.
+I haven't tried moving by more than one space at a time because it seemed overly
+complicated.
 
 Furthermore, the custom `Vec` class has an `iter` method that provides an
 iterator over unit-size steps (unit vectors in the sense of the manhattan
