@@ -214,6 +214,13 @@
 <li><a href="#_run_script_10">Run script</a></li>
 </ul>
 </li>
+<li><a href="#_day_10_python">Day 10: python</a>
+<ul class="sectlevel3">
+<li><a href="#_what_i_learned_10">What I learned</a></li>
+<li><a href="#_approach_10">Approach</a></li>
+<li><a href="#_run_script_11">Run script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1122,6 +1129,95 @@ def main():
             positions.add(positions_temp)
 
     print(len(positions))
+
+main()</code></pre>
+</div>
+</div>
+<a id="day10" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_10_python"><a class="anchor" href="#_day_10_python"></a><a class="link" href="#_day_10_python">Day 10: python</a></h3>
+<div class="paragraph">
+<p>Day 10 of year 2022
+<a href="https://adventofcode.com/2022/day/10" class="bare">https://adventofcode.com/2022/day/10</a></p>
+</div>
+<div class="sect3">
+<h4 id="_what_i_learned_10"><a class="anchor" href="#_what_i_learned_10"></a><a class="link" href="#_what_i_learned_10">What I learned</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I was happy to solve a puzzle involving drawing with no major issues.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_approach_10"><a class="anchor" href="#_approach_10"></a><a class="link" href="#_approach_10">Approach</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I take the input and turn it into a list of tuples with the number of CPU cycles used and the value to be added (0 for noop).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Star 1</strong><br>
+. I create a list of the CPU cycles and the value. If the CPU cycle is greater than the next relevant multiple of 40, then you add the last value before that to the list. Afterwards, you do the math.</p>
+</div>
+<div class="paragraph">
+<p><strong>Star 2</strong><br>
+. I created a dictionary with all of the sprite positions. You do the drawing with 2 nested for loops.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_run_script_11"><a class="anchor" href="#_run_script_11"></a><a class="link" href="#_run_script_11">Run script</a></h4>
+<div class="paragraph">
+<p>Run the solution with <code>python solution.py</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-python" data-lang="python">def process_input(file_contents):
+    lines_stripped = [line.strip() for line in file_contents]
+
+    instructions = [(1,0) if inst[0]=="n" else (2,int(inst[5:])) for inst in lines_stripped]
+
+    return instructions
+
+def main():
+    with open("input.txt",'r') as input_file:
+        input_lines = input_file.readlines()
+
+    instructions = process_input(input_lines)
+
+    # star 1
+    cpu = list()
+    cpu.append([0,1])
+    values = list()
+
+    for index,inst in enumerate(instructions):
+        cpu.append([cpu[index][0]+inst[0],cpu[index][1]+inst[1]])
+        if cpu[index+1][0] &gt;= 20 + len(values)*40:
+            values.append(cpu[index][1])
+
+    print(sum([value*(20+40*index) for index,value in enumerate(values)]))
+
+    # star 2
+    sprite = {c[0]:[c[1]-1,c[1],c[1]+1] for c in cpu}
+    keys = sprite.keys()
+    for i in range(240):
+        if i in keys:
+            current_sprite = sprite[i]
+        else:
+            sprite[i] = current_sprite
+
+    for y in range(6):
+        for x in range(40):
+            if x in sprite[x+y*40]:
+                print("#",end='')
+            else:
+                print(".",end='')
+        print("")
 
 main()</code></pre>
 </div>
