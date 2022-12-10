@@ -1,0 +1,31 @@
+==  Day 10: Cathode-Ray Tube  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/10
+
+The solution uses for both parts of the puzzle function _CathodRay_. Here the puzzle input is parsed, cycle incremented and register calculated. For a addx instruction the cycle is updated twice.
+
+function _CathodRay_
+[source, kotlin, numbered]
+....
+include::day2210_1_2.kt[tags=CathodRay]
+....
+
+=== First Star
+
+How does it work: +
+
+During stepping through the cycles and calculation of the X register at times 20, 60, 100,... the register value is multiplied with the cycle and stored into a list. At the end the sum of the list is returned as result.
+
+=== Second Star
+
+How does it work: +
+
+For all cycles the register value is stored into a list. At the end of the program, this list is printed out by taking into consideration current position on screen and current position of sprite 
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2210_1_2.kt[tags=output]
+....
