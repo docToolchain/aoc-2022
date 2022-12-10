@@ -38,32 +38,32 @@ fn solve(file: &str) -> Result<()> {
 
     println!("{:?}", extended_ops);
 
-    let mut step = 0;
     let mut reg = 1;
-    let reg_vals = extended_ops.into_iter().map(move |el| {
-        reg = match el {
-            data::Op::None => reg,
-            data::Op::Some(val) => {
-                reg += val;
-                reg
-            }
-        };
-        step += 1;
-        // eprintln!("all {} {}", reg, step);
-        reg
-    });
+    let reg_vals = extended_ops
+        .into_iter()
+        .enumerate()
+        .map(move |(_step, el)| {
+            reg = match el {
+                data::Op::None => reg,
+                data::Op::Some(val) => {
+                    reg += val;
+                    reg
+                }
+            };
+            // eprintln!("all {} {}", reg, step + 1);
+            reg
+        });
 
-    let skip: isize = 18;
-    let mut step: isize = 0;
+    let skip = 18;
     let mut skipper: isize = -1;
     let interesting = reg_vals
-        .skip(skip as usize)
-        .filter_map(move |el| {
+        .skip(skip)
+        .enumerate()
+        .filter_map(move |(step, el)| {
             skipper += 1;
-            step += 1;
             if skipper % 40 == 0 {
-                eprintln!("int {} {}", el, step + skip);
-                Some(el * (step + skip + 1))
+                eprintln!("int {} {}", el, step + 1 + skip);
+                Some(el * (step + 1 + skip + 1) as isize)
             } else {
                 None
             }
