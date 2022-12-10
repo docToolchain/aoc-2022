@@ -1,109 +1,44 @@
+use crate::err::PuzzleError;
 use regex::Regex;
 use reqwest::{blocking::RequestBuilder, StatusCode};
-use std::{
-    env, fs,
-    io::{Error, ErrorKind},
-};
-
-/// Load the input using a [`PuzzleIO`] constructed from a session cookie loaded from the given `path` or
-/// from `session.cookie` if `path` is `None`.
-pub fn load_input(path: Option<&str>, year: u16, day: u16) -> Result<String, Error> {
-    let session = fs::read_to_string(path.unwrap_or("session.cookie"))?;
-    PuzzleIO::from(session.trim()).load_input(year, day)
-}
-
-pub fn submit_results<S: std::fmt::Display>(
-    path: &str,
-    year: u16,
-    day: u16,
-    result1: Option<S>,
-    result2: Option<S>,
-) -> Result<(), Error> {
-    for (result, star, env, msg) in [
-        (result1, Star::One, "submit-1", "star 1"),
-        (result2, Star::Two, "submit-2", "star 2"),
-    ] {
-        if let Some(result) = result {
-            if env::args().any(|e| e == env) {
-                match submit_result(Some(path), year, day, star, &result)? {
-                    SubmitResultResponse::Right => return Ok(()),
-                    v => {
-                        return Err(Error::new(
-                            ErrorKind::Other,
-                            format!("Could not submit result for {msg}: {v:?}"),
-                        ))
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(())
-}
-
-/// Submit a result using a [`PuzzleIO`] constructed from a session cookie loaded from the given `path` or
-/// from `session.cookie` if `path` is `None`.
-pub fn submit_result<S: std::fmt::Display + ?Sized>(
-    path: Option<&str>,
-    year: u16,
-    day: u16,
-    star: Star,
-    result: &S,
-) -> Result<SubmitResultResponse, Error> {
-    let session = fs::read_to_string(path.unwrap_or("session.cookie"))?;
-    PuzzleIO::from(session.trim()).submit_result(year, day, star, result)
-}
-
-/// Enum to submit solution for part one or part two (see [`PuzzleIO::submit_result`])
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Star {
-    One,
-    Two,
-}
-
-impl Star {
-    const ONE: &str = "1";
-    const TWO: &str = "2";
-
-    fn as_level(&self) -> &'static str {
-        match self {
-            Star::One => Self::ONE,
-            Star::Two => Self::TWO,
-        }
-    }
-}
-
-/// Possible responses when submitting result (see [`PuzzleIO::submit_result``])
-#[derive(Debug, PartialEq, Eq)]
-pub enum SubmitResultResponse {
-    /// Response indicating that your result is correct, you earned a star!
-    Right,
-    /// Response indicating that you already solved this star
-    AlreadySolved,
-    /// Response indicating that your result is wrong
-    Wrong,
-    /// Response indicating that you have to wait for some time before you are allowed to
-    /// re-submitting a result. The value of this variant, if present, indicates how many
-    /// seconds you have to wait
-    Wait(Option<usize>),
-}
+use std::{env, fs, path::Path};
 
 /// Puzzle IO
 ///
 /// Create instances using [`PuzzleResult::from`]
-#[derive(Debug)]
-pub struct PuzzleIO<'a> {
-    pub session: &'a str,
+pub struct PuzzleIO {
+    pub session: String,
 }
 
-impl<'a> From<&'a str> for PuzzleIO<'a> {
-    /// Create a [`PuzzleIO`] struct from a `&str` representing a session ID.
-    fn from(session: &'a str) -> Self {
-        Self { session }
+impl std::fmt::Debug for PuzzleIO {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // do not print session
+        f.debug_struct("PuzzleIO")
+            .field("session", &format!("{}...", &self.session[0..5]))
+            .finish()
     }
 }
 
-impl<'a> PuzzleIO<'a> {
+impl From<&str> for PuzzleIO {
+    /// Create a [`PuzzleIO`] struct from a `&str` representing a session ID.
+    fn from(session: &str) -> Self {
+        Self {
+            session: session.to_string(),
+        }
+    }
+}
+
+impl TryFrom<&Path> for PuzzleIO {
+    type Error = std::io::Error;
+
+    fn try_from(path: &Path) -> Result<Self, Self::Error> {
+        Ok(Self {
+            session: fs::read_to_string(path)?.trim().to_string(),
+        })
+    }
+}
+
+impl PuzzleIO {
     fn request_builder(&self, post: bool, year: u16, day: u16, path: &str) -> RequestBuilder {
         let url = format!("https://adventofcode.com/{year}/day/{day}/{path}");
         let client = reqwest::blocking::Client::new();
@@ -126,12 +61,12 @@ impl<'a> PuzzleIO<'a> {
     }
 
     /// Load input for given `year` and `day` into a `String`
-    pub fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
+    pub fn load_input(&self, year: u16, day: u16) -> Result<String, PuzzleError> {
         self.request_builder(false, year, day, "input")
             .send()
-            .map_err(|err| Error::new(ErrorKind::Other, err))?
+            .map_err(|err| PuzzleError::from(err.to_string()))?
             .text()
-            .map_err(|err| Error::new(ErrorKind::Other, err))
+            .map_err(|err| PuzzleError::from(err.to_string()))
     }
 
     /// Submit the `result` for a given `year`, `day`, and `star`.
@@ -143,56 +78,53 @@ impl<'a> PuzzleIO<'a> {
         &self,
         year: u16,
         day: u16,
-        star: Star,
+        level: u8,
         result: &S,
-    ) -> Result<SubmitResultResponse, Error> {
+    ) -> Result<SubmitResponse, PuzzleError> {
         let response = self
             .request_builder(true, year, day, "answer")
-            .form(&[
-                ("level", star.as_level()),
-                ("answer", format!("{result}").as_str()),
-            ])
+            .form(&[("level", level.to_string()), ("answer", result.to_string())])
             .send()
-            .map_err(|err| Error::new(ErrorKind::Other, err))?;
+            .map_err(|err| PuzzleError::from(err.to_string()))?;
 
         if response.status() != StatusCode::OK {
-            return Err(Error::new(
-                ErrorKind::Other,
-                format!("Response with status code {}", response.status()),
-            ));
+            return Err(PuzzleError::from(format!(
+                "Response with status code {}",
+                response.status()
+            )));
         }
 
+        // get response body as text
         let text = response
             .text()
-            .map_err(|err| Error::new(ErrorKind::Other, err))?;
+            .map_err(|err| PuzzleError::from(err.to_string()))?;
 
-        let main = text
+        // extract relevant part of response
+        let text = match text
             .find("<main>")
-            .and_then(|start| text.find("</main>").map(|end| (start, end)));
-        if let Some((start, end)) = main {
-            let (end, suffix) = if end > 400 + start + 6 {
-                (400 + start + 3, "...")
-            } else {
-                (end, "")
-            };
-            println!("{}{suffix}", &text[start + 6..end]);
+            .and_then(|start| text.find("</main>").map(|end| (start + 6, end)))
+        {
+            Some((start, end)) => &text[start..end],
+            None => &text,
+        };
+
+        // print response (truncated to 400 characters)
+        if text.len() > 400 {
+            println!("{}...", &text[0..397]);
         } else {
-            if text.len() > 400 {
-                println!("{}...", &text[0..397]);
-            } else {
-                println!("{text}");
-            }
+            println!("{text}");
         }
 
+        // determine answer
         if text.contains("That's the right answer") {
-            Ok(SubmitResultResponse::Right)
+            Ok(SubmitResponse::Right)
         } else if text.contains("Did you already complete it") {
-            Ok(SubmitResultResponse::AlreadySolved)
+            Ok(SubmitResponse::AlreadySolved)
         } else if text.contains("That's not the right answer") {
-            Ok(SubmitResultResponse::Wrong)
+            Ok(SubmitResponse::Wrong)
         } else if text.contains("You gave an answer too recently") {
             let re = Regex::new(r"You have (?:(?P<m>\d+)m )?(?P<s>\d+)s left to wait").unwrap();
-            let s = re.captures(text.as_str()).map(|c| {
+            let s = re.captures(text).map(|c| {
                 c.name("m")
                     .map(|m| m.as_str().parse::<usize>().unwrap())
                     .unwrap_or(0)
@@ -201,11 +133,26 @@ impl<'a> PuzzleIO<'a> {
                         .map(|s| s.as_str().parse::<usize>().unwrap())
                         .unwrap()
             });
-            Ok(SubmitResultResponse::Wait(s))
+            Ok(SubmitResponse::Wait(s))
         } else {
-            Err(Error::new(ErrorKind::Other, "Can't interpret answer."))
+            Err(PuzzleError::from("Can't interpret answer."))
         }
     }
+}
+
+/// Possible responses when submitting result (see [`PuzzleIO::submit_result``])
+#[derive(Debug, PartialEq, Eq)]
+pub enum SubmitResponse {
+    /// Response indicating that your result is correct, you earned a star!
+    Right,
+    /// Response indicating that you already solved this star
+    AlreadySolved,
+    /// Response indicating that your result is wrong
+    Wrong,
+    /// Response indicating that you have to wait for some time before you are allowed to
+    /// re-submitting a result. The value of this variant, if present, indicates how many
+    /// seconds you have to wait
+    Wait(Option<usize>),
 }
 
 #[cfg(test)]
@@ -216,7 +163,7 @@ mod tests {
     pub fn test_submit() {
         let puzzle_io = PuzzleIO::from("53616c7465645f5f26a828ab5a2977e2f4893e0ab7aeab2f520b1c62f6db37c4b6425bb1626c7b38342a19cc02acbd686204588c82e03b0bcb202faf54e96241");
 
-        let result = puzzle_io.submit_result(2022, 2, Star::One, "11841");
+        let result = puzzle_io.submit_result(2022, 2, 1, "11841");
         assert!(
             matches!(result, Ok(_)),
             "Expected an ok value, found: {result:?}"

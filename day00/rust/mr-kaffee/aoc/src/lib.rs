@@ -8,10 +8,10 @@ use std::time::Instant;
 ///
 /// # Examples
 /// ```
-/// # use mr_kaffee_aoc::{PuzzleResult,err::{PuzzleError,PuzzleErrorKind}};
+/// # use mr_kaffee_aoc::{PuzzleResult,err::{PuzzleError,Kind}};
 /// let value: Result<usize, &str> = Err("I am an error");
 /// let result: Result<usize, _> = value.result();
-/// assert!(matches!(result.err().unwrap().kind(), PuzzleErrorKind::Other));
+/// assert!(matches!(result.err().unwrap().kind(), Kind::Other));
 ///
 /// let value = 7;
 /// let result = value.result();
@@ -149,9 +149,17 @@ pub trait GenericPuzzle {
     /// solve a puzzle and forward errors to caller
     fn solve_report_err(&self) -> Result<(), PuzzleError>;
 
-    fn solve_star_1(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError>;
+    /// get the result for star 1 formatted into a `String`
+    ///
+    /// This functions returns Ok(None) if no solution is implemented.
+    /// It returns an `Err<PuzzleError>` if an error occurs while solving the puzzle
+    fn solve_star_1(&self) -> Result<Option<String>, PuzzleError>;
 
-    fn solve_star_2(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError>;
+    /// get the result for star 2 formatted into a `String`
+    ///
+    /// This functions returns Ok(None) if no solution is implemented.
+    /// It returns an `Err<PuzzleError>` if an error occurs while solving the puzzle
+    fn solve_star_2(&self) -> Result<Option<String>, PuzzleError>;
 
     /// get the year of the puzzle
     fn year(&self) -> u16;
@@ -173,11 +181,11 @@ where
         T::solve_report_err(&self)
     }
 
-    fn solve_star_1(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError> {
+    fn solve_star_1(&self) -> Result<Option<String>, PuzzleError> {
         T::solve_star_1(&self)
     }
 
-    fn solve_star_2(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError> {
+    fn solve_star_2(&self) -> Result<Option<String>, PuzzleError> {
         T::solve_star_2(&self)
     }
 
@@ -218,21 +226,21 @@ where
         self.solve().map(|_| ())
     }
 
-    fn solve_star_1(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError> {
+    fn solve_star_1(&self) -> Result<Option<String>, PuzzleError> {
         let data = self.input.try_into()?;
 
         self.star1
             .as_ref()
-            .map(|star| star.solve(&data).map(|r| Box::new(r) as _))
+            .map(|star| star.solve(&data).map(|r| r.to_string()))
             .transpose()
     }
 
-    fn solve_star_2(&self) -> Result<Option<Box<dyn std::fmt::Display>>, PuzzleError> {
+    fn solve_star_2(&self) -> Result<Option<String>, PuzzleError> {
         let data = self.input.try_into()?;
 
         self.star2
             .as_ref()
-            .map(|star| star.solve(&data).map(|r| Box::new(r) as _))
+            .map(|star| star.solve(&data).map(|r| r.to_string()))
             .transpose()
     }
 
@@ -326,11 +334,13 @@ pub mod err {
 
     /// puzzle errors
     #[derive(Debug)]
-    pub enum PuzzleErrorKind {
+    pub enum Kind {
         /// error caused by [`ParseIntError`]
         ParseIntError(ParseIntError),
         /// error caused by [`ParseFloatError`]
         ParseFloatError(ParseFloatError),
+        /// error caused by [`std::io::Error`]
+        IoError(std::io::Error),
         /// error caused by other [`Error`]s
         GenericError(Box<dyn Error>),
         /// error caused by a bad result
@@ -339,21 +349,22 @@ pub mod err {
         Other,
     }
 
-    impl Default for PuzzleErrorKind {
-        /// the default kind is [`PuzzleErrorKind::Other`]
+    impl Default for Kind {
+        /// the default kind is [`Kind::Other`]
         fn default() -> Self {
             Self::Other
         }
     }
 
-    impl PuzzleErrorKind {
-        /// return the source error for variants that have one, i.e., [`PuzzleErrorKind::ParseIntError`],
-        /// [`PuzzleErrorKind::ParseFloatError`], or [`PuzzleErrorKind::GenericError`], return [`Option::None`]
+    impl Kind {
+        /// return the source error for variants that have one, i.e., [`Kind::ParseIntError`],
+        /// [`Kind::ParseFloatError`], or [`Kind::GenericError`], return [`Option::None`]
         ///  for other variants.
         pub fn source(&self) -> Option<&(dyn Error + 'static)> {
             match self {
                 Self::ParseIntError(error) => Some(error),
                 Self::ParseFloatError(error) => Some(error),
+                Self::IoError(error) => Some(error),
                 Self::GenericError(error) => Some(error.as_ref()),
                 _ => None,
             }
@@ -364,38 +375,38 @@ pub mod err {
     ///
     /// # Examples
     /// ```
-    /// # use mr_kaffee_aoc::err::{PuzzleError,PuzzleErrorKind};
+    /// # use mr_kaffee_aoc::err::{PuzzleError,Kind};
     /// # use std::error::Error;
     /// // parse errors
     /// let err: PuzzleError = "not a float".parse::<f64>().err().unwrap().into();
-    /// assert!(matches!(err.kind(), PuzzleErrorKind::ParseFloatError(_)));
+    /// assert!(matches!(err.kind(), Kind::ParseFloatError(_)));
     ///
     /// let err: PuzzleError = "not an int".parse::<u64>().err().unwrap().into();
-    /// assert!(matches!(err.kind(), PuzzleErrorKind::ParseIntError(_)));
+    /// assert!(matches!(err.kind(), Kind::ParseIntError(_)));
     ///
     /// // generic errors
     /// let source: Box<dyn Error> = std::io::Error::from_raw_os_error(7).into();
     /// let err: PuzzleError = source.into();
-    /// assert!(matches!(err.kind(), PuzzleErrorKind::GenericError(_)));
+    /// assert!(matches!(err.kind(), Kind::GenericError(_)));
     ///
     /// // bad result
     /// let err = PuzzleError::bad_result("star 1", 10, 20);
-    /// assert!(matches!(err.kind(), PuzzleErrorKind::BadResult(_,_)));
+    /// assert!(matches!(err.kind(), Kind::BadResult(_,_)));
     ///
     /// // generic error
     /// let msg = "a `&str` message";
     /// let err: PuzzleError = msg.into();
-    /// assert!(matches!(err.kind(), PuzzleErrorKind::Other));
+    /// assert!(matches!(err.kind(), Kind::Other));
     /// assert_eq!(format!("{}", err), msg.to_string());
     ///
     /// let msg = "a String message";
     /// let err: PuzzleError = msg.to_string().into();
-    /// assert!(matches!(err.kind(), PuzzleErrorKind::Other));
+    /// assert!(matches!(err.kind(), Kind::Other));
     /// assert_eq!(format!("{}", err), msg.to_string());
     /// ```
     #[derive(Debug, Default)]
     pub struct PuzzleError {
-        kind: PuzzleErrorKind,
+        kind: Kind,
         message: Option<String>,
     }
 
@@ -406,7 +417,7 @@ pub mod err {
                     Some(message) => write!(f, "{}. Caused by: {}", message, source),
                     _ => std::fmt::Display::fmt(source, f),
                 }
-            } else if let PuzzleErrorKind::BadResult(star_name, message) = &self.kind {
+            } else if let Kind::BadResult(star_name, message) = &self.kind {
                 write!(f, "Bad result for {}: {}", star_name, message)
             } else if let Some(message) = self.message.as_ref() {
                 message.fmt(f)
@@ -418,7 +429,7 @@ pub mod err {
 
     impl PuzzleError {
         /// get kind of the error
-        pub fn kind(&self) -> &PuzzleErrorKind {
+        pub fn kind(&self) -> &Kind {
             &self.kind
         }
 
@@ -428,17 +439,14 @@ pub mod err {
             T: std::fmt::Display,
         {
             Self {
-                kind: PuzzleErrorKind::BadResult(
-                    star_name,
-                    format!("expected {}, got {}", exp, act),
-                ),
+                kind: Kind::BadResult(star_name, format!("expected {}, got {}", exp, act)),
                 message: Some("Unexpected result".into()),
             }
         }
     }
 
     impl Error for PuzzleError {
-        /// get the source of the error using [`PuzzleErrorKind::source`]
+        /// get the source of the error using [`Kind::source`]
         fn source(&self) -> Option<&(dyn Error + 'static)> {
             self.kind.source()
         }
@@ -447,7 +455,7 @@ pub mod err {
     impl From<Box<dyn Error>> for PuzzleError {
         fn from(source: Box<dyn Error>) -> Self {
             Self {
-                kind: PuzzleErrorKind::GenericError(source),
+                kind: Kind::GenericError(source),
                 message: Some("Generic error".into()),
             }
         }
@@ -456,7 +464,7 @@ pub mod err {
     impl From<ParseIntError> for PuzzleError {
         fn from(source: ParseIntError) -> Self {
             Self {
-                kind: PuzzleErrorKind::ParseIntError(source),
+                kind: Kind::ParseIntError(source),
                 message: Some("Parse error".into()),
             }
         }
@@ -465,8 +473,17 @@ pub mod err {
     impl From<ParseFloatError> for PuzzleError {
         fn from(source: ParseFloatError) -> Self {
             Self {
-                kind: PuzzleErrorKind::ParseFloatError(source),
+                kind: Kind::ParseFloatError(source),
                 message: Some("Parse error".into()),
+            }
+        }
+    }
+
+    impl From<std::io::Error> for PuzzleError {
+        fn from(source: std::io::Error) -> Self {
+            Self {
+                kind: Kind::IoError(source),
+                message: Some("IO error".into()),
             }
         }
     }
@@ -528,7 +545,7 @@ mod test {
         println!("Error: {}", error);
 
         match error.kind() {
-            err::PuzzleErrorKind::ParseIntError(_) => (),
+            err::Kind::ParseIntError(_) => (),
             kind => assert!(false, "Unexpected kind: {:?}", kind),
         }
     }

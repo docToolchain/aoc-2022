@@ -1,5 +1,4 @@
 use mr_kaffee_aoc::{Puzzle, Star};
-use std::convert::Infallible;
 
 // tag::definition[]
 pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
@@ -22,11 +21,9 @@ pub struct PuzzleData {
     input: &'static str,
 }
 
-impl TryFrom<&'static str> for PuzzleData {
-    type Error = Infallible;
-
-    fn try_from(input: &'static str) -> Result<Self, Self::Error> {
-        Ok(Self { input })
+impl From<&'static str> for PuzzleData {
+    fn from(input: &'static str) -> Self {
+        Self { input }
     }
 }
 //end::data-structures[]
@@ -41,9 +38,8 @@ pub fn star_1(data: &PuzzleData) -> usize {
 // tag::tests[]
 #[cfg(test)]
 mod tests {
-    use mr_kaffee_aoc::GenericPuzzle;
-
     use super::*;
+    use mr_kaffee_aoc::GenericPuzzle;
 
     #[test]
     pub fn test_something() {
