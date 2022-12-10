@@ -240,6 +240,32 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_09_kotlin">Day 09: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_rope_bridge">Rope Bridge</a>
+<ul class="sectlevel4">
+<li><a href="#_model_2">Model</a></li>
+<li><a href="#_parsing_5">Parsing</a></li>
+<li><a href="#_simulating_the_rope">Simulating the rope</a></li>
+<li><a href="#_full_source_7">Full source</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_day_10_kotlin">Day 10: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_cathode_ray_tube">Cathode-Ray Tube</a>
+<ul class="sectlevel4">
+<li><a href="#_input_model">Input Model</a></li>
+<li><a href="#_parsing_6">Parsing</a></li>
+<li><a href="#_processor_model">Processor Model</a></li>
+<li><a href="#_part_1_6">Part 1</a></li>
+<li><a href="#_part_2_7">Part 2</a></li>
+<li><a href="#_full_source_8">Full source</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1681,6 +1707,646 @@ fun main() {
     check(result == 574080)
   }
   println("Day - 08")
+  separator()
+  part1()
+  separator()
+  part2()
+}</code></pre>
+</div>
+</div>
+<a id="day09" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_09_kotlin"><a class="anchor" href="#_day_09_kotlin"></a><a class="link" href="#_day_09_kotlin">Day 09: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_rope_bridge"><a class="anchor" href="#_rope_bridge"></a><a class="link" href="#_rope_bridge">Rope Bridge</a></h4>
+<div class="paragraph">
+<p>Today&#8217;s puzzle was about simulating the movement of a rope or chain. The knots / links follow each other when the head is pulled in a direction. The simulation had to implement rules for the movement and record the movement of the tail and reporting the number of unique positions visited by the tail.</p>
+</div>
+<div class="paragraph">
+<p>In part 1 the rope has 2 knots and in part 2 the rope had 10 knots.</p>
+</div>
+<div class="sect4">
+<h5 id="_model_2"><a class="anchor" href="#_model_2"></a><a class="link" href="#_model_2">Model</a></h5>
+<div class="paragraph">
+<p>I decided to model the <code>Rope</code> as an array of <code>Position</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">data class Position(val row: Int, val col: Int) {
+  fun left() = Position(row, col - 1)
+  fun right() = Position(row, col + 1)
+  fun above() = Position(row - 1, col)
+  fun below() = Position(row + 1, col)
+  fun distance(pos: Position): Int = max(abs(pos.row - row), abs(pos.col - col))
+  operator fun minus(pos: Position) = Position(row - pos.row, col - pos.col)
+  operator fun plus(pos: Position) = Position(row + pos.row, col + pos.col)
+  fun sign(): Position = Position(row.sign,col.sign)
+  fun move(direction: Char): Position {
+    return when (direction) {
+      'U' -&gt; above()
+      'D' -&gt; below()
+      'L' -&gt; left()
+      'R' -&gt; right()
+      else -&gt; error("Expected one of U,D,L,R not ${direction}")
+    }
+  }
+  override fun toString(): String {
+    return "(col=$col, row=$row)"
+  }
+}
+
+class Rope(val knots: Array&lt;Position&gt;) {
+  val head: Position
+    get() = knots[0]
+  val tail: Position
+    get() = knots[knots.lastIndex]
+
+  operator fun set(index: Int, pos: Position) { knots[index] = pos }
+
+  operator fun get(index: Int) = knots[index]
+  fun indexOf(pos: Position) = knots.indexOf(pos)
+  override fun toString() = knots.contentToString()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_parsing_5"><a class="anchor" href="#_parsing_5"></a><a class="link" href="#_parsing_5">Parsing</a></h5>
+<div class="paragraph">
+<p>The input was a list of steps with the direction as one of <code>U</code>,<code>D</code>,<code>L</code>,<code>R</code> and a number for the distance moved.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">data class Step(val direction: Char, val distance: Int)
+
+fun parseSteps(input: List&lt;String&gt;): List&lt;Step&gt; {
+  return input.map {
+    val words = it.split(" ")
+    Step(words[0][0], words[1].toInt())
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_simulating_the_rope"><a class="anchor" href="#_simulating_the_rope"></a><a class="link" href="#_simulating_the_rope">Simulating the rope</a></h5>
+<div class="paragraph">
+<p>After when I got to part 2 I had a situation where my answer to the provided data was correct but AOC report my answer with the input as low. I tried to find a case where I wasn&#8217;t handling the tail correctly. All this back and forth lead me to simplifying the calculation to the point where I calculated the difference between the knots and the movement was then a step in the direction of the first knot and it could be diagonally if the difference had values in both axis.</p>
+</div>
+<div class="paragraph">
+<p>This worked and was a lot simpler. When I looked at some other submissions in the Kotlin community I discovered <code>Int.sign()</code> which returns <code>0</code>,<code>1</code> or <code>-1</code> depending in the value. I added operators to <code>Position</code> for <code>-</code> and <code>+</code> and a <code>sign</code> method. This reduced the final expression to a very simple one.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">for (index in 1 until knots) {
+  val prev = rope[index - 1]                      <i class="conum" data-value="1"></i><b>(1)</b>
+  val next = rope[index]                          <i class="conum" data-value="2"></i><b>(2)</b>
+  if (prev != next &amp;&amp; prev.distance(next) &gt; 1) {  <i class="conum" data-value="3"></i><b>(3)</b>
+    val diff = prev - next                        <i class="conum" data-value="4"></i><b>(4)</b>
+    rope[index] = next + diff.sign()              <i class="conum" data-value="5"></i><b>(5)</b>
+  }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The previous knot</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The knot we want to move</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>If they aren&#8217;t in same location and the <a href="https://en.wikipedia.org/wiki/Chebyshev_distance">Chebyshev</a> distance is more than 1.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Determine the difference between the positions</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Add the sign of the difference to the knot we want to move</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcVisits(steps: List&lt;Step&gt;, knots: Int, printStep: Boolean): Int {
+  val rope = Rope(Array(knots) { Position(0, 0) })
+  val start = rope.head
+  val visited = mutableSetOf&lt;Position&gt;()
+  visited.add(rope.tail)
+  steps.forEach { step -&gt;
+    for (i in 0 until step.distance) {
+      rope[0] = rope.head.move(step.direction)
+      for (index in 1 until knots) {
+        val prev = rope[index - 1]
+        val next = rope[index]
+        if (prev != next &amp;&amp; prev.distance(next) &gt; 1) {
+          val diff = prev - next
+          rope[index] = next + diff.sign()
+        }
+      }
+      visited.add(rope.tail)
+      if (printStep) {
+        println()
+        print(steps, visited, start, rope, knots, false)
+      }
+    }
+  }
+  println()
+  print(steps, visited, start, rope, knots, true)
+  return visited.size
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_full_source_7"><a class="anchor" href="#_full_source_7"></a><a class="link" href="#_full_source_7">Full source</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sign
+
+fun main() {
+
+  val test = """R 4
+U 4
+L 3
+D 1
+R 4
+D 1
+L 5
+R 2"""
+  val test2 = """R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20"""
+  val input = readFile("day09")
+
+  data class Step(val direction: Char, val distance: Int)
+  data class Position(val row: Int, val col: Int) {
+    fun left() = Position(row, col - 1)
+    fun right() = Position(row, col + 1)
+    fun above() = Position(row - 1, col)
+    fun below() = Position(row + 1, col)
+    fun distance(pos: Position): Int = max(abs(pos.row - row), abs(pos.col - col))
+    operator fun minus(pos: Position) = Position(row - pos.row, col - pos.col)
+    operator fun plus(pos: Position) = Position(row + pos.row, col + pos.col)
+    fun sign(): Position = Position(row.sign,col.sign)
+    fun move(direction: Char): Position {
+      return when (direction) {
+        'U' -&gt; above()
+        'D' -&gt; below()
+        'L' -&gt; left()
+        'R' -&gt; right()
+        else -&gt; error("Expected one of U,D,L,R not ${direction}")
+      }
+    }
+
+    override fun toString(): String {
+      return "(col=$col, row=$row)"
+    }
+  }
+
+  fun parseSteps(input: List&lt;String&gt;): List&lt;Step&gt; {
+    return input.map {
+      val words = it.split(" ")
+      Step(words[0][0], words[1].toInt())
+    }
+  }
+
+  class Rope(val knots: Array&lt;Position&gt;) {
+    val head: Position
+      get() = knots[0]
+    val tail: Position
+      get() = knots[knots.lastIndex]
+    operator fun set(index: Int, pos: Position) { knots[index] = pos }
+    operator fun get(index: Int) = knots[index]
+    fun indexOf(pos: Position) = knots.indexOf(pos)
+    override fun toString() = knots.contentToString()
+  }
+
+  fun print(
+    steps: List&lt;Step&gt;,
+    visited: Set&lt;Position&gt;,
+    start: Position,
+    rope: Rope,
+    knots: Int,
+    visitsOnly: Boolean = false
+  ) {
+    var maxRow = 0
+    var minRow = 0
+    var maxCol = 0
+    var minCol = 0
+    var dummy = Position(0, 0)
+    steps.forEach { step -&gt;
+      repeat(step.distance) {
+        dummy = dummy.move(step.direction)
+        maxRow = max(maxRow, dummy.row)
+        maxCol = max(maxCol, dummy.col)
+        minRow = min(minRow, dummy.row)
+        minCol = min(minCol, dummy.col)
+      }
+    }
+
+    for (row in minRow..maxRow) {
+      val covered = mutableSetOf&lt;Int&gt;()
+      for (col in minCol..maxCol) {
+        val pos = Position(row, col)
+        if (visitsOnly) {
+          if (pos == start) {
+            print('s')
+          } else {
+            print(if (visited.contains(pos)) '#' else '.')
+          }
+        } else {
+          val index = rope.indexOf(pos)
+          when {
+            index == 0 -&gt; print('H')
+            index &gt; 0 -&gt; print(if (knots == 2) 'T' else index.toString())
+            pos == start -&gt; print('s')
+            else -&gt; print(if (visited.contains(pos)) '#' else '.')
+          }
+          if(index &gt;= 0 &amp;&amp; covered.isEmpty()) {
+            if(pos == start) {
+              covered.add(rope.knots.size) // indicate 's'
+            }
+            covered.add(index)
+            for (i in index..rope.knots.lastIndex) {
+              if (pos == rope[i]) {
+                covered.add(i)
+              }
+            }
+            if(covered.size == 1) {
+              covered.clear()
+            }
+          }
+        }
+      }
+      if(covered.size &gt; 1) {
+        print("  (")
+        val coveredKnots = covered.sorted()
+        coveredKnots.forEachIndexed { index, knot -&gt;
+          if(index == 1) {
+            print(" covers ")
+          } else if(index &gt; 1) {
+            print(" ,")
+          }
+          when(knot) {
+            0 -&gt; print('H')
+            rope.knots.lastIndex -&gt; print('T')
+            rope.knots.size -&gt; print('s')
+            else -&gt; print("$knot")
+          }
+        }
+        println(')')
+      }
+      println()
+    }
+  }
+
+  fun calcVisits(steps: List&lt;Step&gt;, knots: Int, printStep: Boolean): Int {
+    val rope = Rope(Array(knots) { Position(0, 0) })
+    val start = rope.head
+    val visited = mutableSetOf&lt;Position&gt;()
+    visited.add(rope.tail)
+    steps.forEach { step -&gt;
+      for (i in 0 until step.distance) {
+        rope[0] = rope.head.move(step.direction)
+        for (index in 1 until knots) {
+          val prev = rope[index - 1]
+          val next = rope[index]
+
+          if (prev != next &amp;&amp; prev.distance(next) &gt; 1) {
+            val diff = prev - next
+            rope[index] = next + diff.sign()
+          }
+        }
+        visited.add(rope.tail)
+        if (printStep) {
+          println()
+          print(steps, visited, start, rope, knots, false)
+        }
+      }
+    }
+    println()
+    print(steps, visited, start, rope, knots, true)
+    return visited.size
+  }
+
+  fun part1() {
+    val testResult = calcVisits(parseSteps(readLines(test)), 2, true)
+    println("Part 1 Answer = $testResult")
+    check(testResult == 13)
+    val result = calcVisits(parseSteps(input), 2, false)
+    println("Part 1 Answer = $result")
+    check(result == 6503)
+  }
+
+  fun part2() {
+    check(calcVisits(parseSteps(readLines(test)), 10, true) == 1)
+    val testResult = calcVisits(parseSteps(readLines(test2)), 10, true)
+    println("Part 2 Answer = $testResult")
+    check(testResult == 36)
+    val result = calcVisits(parseSteps(input), 10, false)
+    println("Part 2 Answer = $result")
+    check(result == 2724)
+  }
+
+  println("Day - 09")
+  separator()
+  part1()
+  separator()
+  part2()
+}</code></pre>
+</div>
+</div>
+<a id="day10" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_10_kotlin"><a class="anchor" href="#_day_10_kotlin"></a><a class="link" href="#_day_10_kotlin">Day 10: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_cathode_ray_tube"><a class="anchor" href="#_cathode_ray_tube"></a><a class="link" href="#_cathode_ray_tube">Cathode-Ray Tube</a></h4>
+<div class="paragraph">
+<p>Today&#8217;s puzzle was about simulating a computer and the cathode ray tube.
+So far we have only 2 instructions to simulate: <code>noop</code> and <code>addx</code>. It very important to carefully read the instructions describing the clock cycles. In this case <code>noop</code> has one cycle and <code>addx</code> has two cycle.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_model"><a class="anchor" href="#_input_model"></a><a class="link" href="#_input_model">Input Model</a></h5>
+<div class="paragraph">
+<p>I decided to model a instructions as a sealed class and the processor as a class to maintain the clock and register value with a lambda to be called on each tick.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">sealed class OpCode(val prefix: String) {
+  object NOOP: OpCode("noop")
+  data class ADDX(val value: Int): OpCode("addx")
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_parsing_6"><a class="anchor" href="#_parsing_6"></a><a class="link" href="#_parsing_6">Parsing</a></h5>
+<div class="paragraph">
+<p>Parsing will create the instances of the various inner classes of the sealed class.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun parseInstructions(lines: List&lt;String&gt;): List&lt;OpCode&gt; {
+  return lines.map { ins -&gt;
+    val words = ins.split(" ")
+    when (words[0]) {
+      "noop" -&gt; OpCode.NOOP
+      "addx" -&gt; OpCode.ADDX(words[1].toInt())
+      else -&gt; error("Unknown instruction: $ins")
+    }
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_processor_model"><a class="anchor" href="#_processor_model"></a><a class="link" href="#_processor_model">Processor Model</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">class Processor(val processing: Processor.() -&gt; Unit) {
+  var clock = 0
+    private set
+  var regX: Int = 1
+    private set
+
+  fun tick() {
+    clock += 1
+    processing(this) <i class="conum" data-value="1"></i><b>(1)</b>
+  }
+  fun execute(instructions: List&lt;OpCode&gt;) {
+    instructions.forEach { ins -&gt;
+      when (ins) {
+        is OpCode.NOOP -&gt; tick()
+        is OpCode.ADDX -&gt; addX(ins)
+      }
+    }
+  }
+
+  private fun addX(ins: OpCode.ADDX) {
+    tick()
+    val value = ins.value
+    tick()
+    regX += value
+  }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>processing lambda is called after each clock tick.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_1_6"><a class="anchor" href="#_part_1_6"></a><a class="link" href="#_part_1_6">Part 1</a></h5>
+<div class="paragraph">
+<p>The first part had to calculate signal string based on the value of <code>regX</code> and on the 20th tick and each 40th tick thereafter.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcSignalStrength(instructions: List&lt;OpCode&gt;): Int {
+  var signalValue = 0
+  val cpu = Processor {               <i class="conum" data-value="1"></i><b>(1)</b>
+    if (clock % 40 == 20) {
+      signalValue += regX * clock     <i class="conum" data-value="2"></i><b>(2)</b>
+    }
+  }
+  cpu.execute(instructions)
+  return signalValue
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The lambda declaration after the Processor will be invoked on each tick</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The lambda cannot modify <code>clock</code> or <code>regX</code></td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_2_7"><a class="anchor" href="#_part_2_7"></a><a class="link" href="#_part_2_7">Part 2</a></h5>
+<div class="paragraph">
+<p>The second part had to render the CRT of 40 characters wide. The CRT prints from left to right on each clock tick and will print a <code>#</code> if the 3 character sprite overlaps with the <code>cursor</code> position, otherwise it prints <code>.</code>.
+I had to print spaces instead of dots before I could read the character spelled out by part 2.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun renderCrt(instructions: List&lt;OpCode&gt;): List&lt;String&gt; {
+  val pixels = mutableListOf&lt;Char&gt;()
+  val crt = mutableListOf&lt;String&gt;()
+  val cpu = Processor {
+    val sprite = regX - 1
+    val cursor = (clock - 1) % 40
+    if (cursor &gt;= sprite &amp;&amp; cursor &lt;= sprite + 2) {
+      pixels.add('#')
+    } else {
+      pixels.add('.')
+    }
+    if (cursor == 39) {
+      crt.add(pixels.joinToString(""))
+      pixels.clear()
+    }
+  }
+  cpu.execute(instructions)
+  return crt.toList()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_full_source_8"><a class="anchor" href="#_full_source_8"></a><a class="link" href="#_full_source_8">Full source</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">import utils.*
+
+sealed class OpCode(val prefix: String) {
+  object NOOP: OpCode("noop")
+  data class ADDX(val value: Int): OpCode("addx")
+}
+
+fun main() {
+  val test = readFile("day10_test")
+  val input = readFile("day10")
+
+  fun parseInstructions(lines: List&lt;String&gt;): List&lt;OpCode&gt; {
+    return lines.map { ins -&gt;
+      val words = ins.split(" ")
+      when (words[0]) {
+        "noop" -&gt; OpCode.NOOP
+        "addx" -&gt; OpCode.ADDX(words[1].toInt())
+        else -&gt; error("Unknown instruction: $ins")
+      }
+    }
+  }
+
+  class Processor(val processing: Processor.() -&gt; Unit) {
+    var clock = 0
+      private set
+
+    fun tick() {
+      clock += 1
+      processing(this)
+    }
+
+    var regX: Int = 1
+      private set
+
+    fun execute(instructions: List&lt;OpCode&gt;) {
+      instructions.forEach { ins -&gt;
+        when (ins) {
+          is OpCode.NOOP -&gt; tick()
+          is OpCode.ADDX -&gt; addX(ins)
+        }
+      }
+    }
+
+    private fun addX(ins: OpCode.ADDX) {
+      tick()
+      val value = ins.value
+      tick()
+      regX += value
+    }
+  }
+
+
+  fun calcSignalStrength(instructions: List&lt;OpCode&gt;): Int {
+    var signalValue = 0
+    val cpu = Processor {
+      if (clock % 40 == 20) {
+        signalValue += regX * clock
+      }
+    }
+    cpu.execute(instructions)
+    return signalValue
+  }
+
+  fun renderCrt(instructions: List&lt;OpCode&gt;): List&lt;String&gt; {
+    val pixels = mutableListOf&lt;Char&gt;()
+    val crt = mutableListOf&lt;String&gt;()
+    val cpu = Processor {
+      val sprite = regX - 1
+      val cursor = (clock - 1) % 40
+      if (cursor &gt;= sprite &amp;&amp; cursor &lt;= sprite + 2) {
+        pixels.add('#')
+      } else {
+        pixels.add('.')
+      }
+      if (cursor == 39) {
+        crt.add(pixels.joinToString(""))
+        pixels.clear()
+      }
+    }
+    cpu.execute(instructions)
+
+    return crt.toList()
+  }
+
+  fun part1() {
+    val testResult = calcSignalStrength(parseInstructions(test))
+    println("Part 1 Answer = $testResult")
+    check(testResult == 13140)
+    val result = calcSignalStrength(parseInstructions(input))
+    println("Part 1 Answer = $result")
+  }
+
+  val expectedTestCrt = readLines(
+    """##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######....."""
+  )
+  val expectedCrt = readLines(
+    """####..##....##..##..###....##.###..####.
+#....#..#....#.#..#.#..#....#.#..#.#....
+###..#.......#.#..#.#..#....#.#..#.###..
+#....#.......#.####.###.....#.###..#....
+#....#..#.#..#.#..#.#....#..#.#.#..#....
+#.....##...##..#..#.#.....##..#..#.####."""
+  )
+
+  fun part2() {
+    val testCrt = renderCrt(parseInstructions(test))
+    println("Part 2 Test")
+    testCrt.forEach { println(it) }
+    check(testCrt == expectedTestCrt)
+    val crt = renderCrt(parseInstructions(input))
+    println("Part 2")
+    crt.forEach { println(it.replace('.',' ')) }
+    check(crt == expectedCrt)
+  }
+  println("Day - 10")
   separator()
   part1()
   separator()
