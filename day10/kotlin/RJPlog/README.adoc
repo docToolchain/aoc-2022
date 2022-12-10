@@ -6,7 +6,7 @@ The original puzzle can be found at https://adventofcode.com/2022/day/10
 
 The solution uses for both parts of the puzzle function _CathodRay_. Here the puzzle input is parsed, cycle incremented and register calculated. For a addx instruction the cycle is updated twice.
 
-function _RopeBrigde_
+function _CathodRay_
 [source, kotlin, numbered]
 ....
 include::day2210_1_2.kt[tags=CathodRay]
