@@ -1,0 +1,73 @@
+== Day 10: Cathode-Ray Tube ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+It's getting really interesting now.
+I quite liked how part 2 didn't require you to compute a number or a sequence of
+letters but instead required you to render something on screen.
+My solution is less nice, but there is not much time on the weekend.
+
+Quite early on, I decided to ignore all the weirdness due to a noop taking one
+cycle an an addition taking two cycles.
+Instead, I moved to a parallel world where each instruction took exactly one
+cycle, which meant replacing each 2-cycle addition by a noop followed by a
+1-cycle addition.
+So far so straightforward.
+
+Furthermore, I ignored all the weirdness due to what is at the beginning,
+during, or at the end of a cycle, but instead only looked at the register during
+each cycle.
+I also had my 1-cycle addition act during its cycle instead of at the cycle's
+end.
+I also started cycle counting at 0 instead of 1.
+
+To map the register value during a cycle from my ficticious world back to the
+world of the puzzle, I only had to add 2 to the cycle count.
+That also means my world had no real cycle one, which meant I had to treat that
+one separately for part 2.
+For part one, in order to look at the value during cycle 20, I had to skip only
+the first 18 entries.
+
+Today, I learnt that rust really will panic if you try to subtract 1 from an
+unsigned value that is 0.
+And off-by-one errors really are the two worst types of bugs that plague
+software development.
+I also played around with closures that move values into them for the first
+time.
+They are quite useful!
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.

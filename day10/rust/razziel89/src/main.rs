@@ -10,7 +10,7 @@ mod data;
 mod io;
 
 // tag::main[]
-use anyhow::{Error, Result};
+use anyhow::Result;
 // Constants.
 const WIDTH: usize = 40;
 
@@ -71,12 +71,9 @@ fn solve(file: &str, part1: bool, fill: char) -> Result<()> {
 
     let mut reg = 1;
     let reg_vals = extended_ops.into_iter().map(move |el| {
-        reg = match el {
-            data::Op::None => reg,
-            data::Op::Some(val) => {
-                reg += val;
-                reg
-            }
+        reg += match el {
+            data::Op::None => 0,
+            data::Op::Some(val) => val,
         };
         reg
     });
@@ -93,7 +90,7 @@ fn solve(file: &str, part1: bool, fill: char) -> Result<()> {
             .skip(skip)
             .enumerate()
             .filter_map(move |(step, reg)| {
-                // Now convert from our weird way of counting to that of the puszzle.
+                // Now convert from our weird way of counting to that of the puzzle.
                 // We wanted to skip the first 19 cycles (add skip + 1) and cycle counting starts
                 // at one (add 1).
                 let current_cycle = step + 1 + skip + 1;
