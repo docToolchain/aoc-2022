@@ -1,0 +1,56 @@
+== Day 10: Cathode-Ray Tube ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/10[AoC|2022|10].
+
+Today is about a simple CPU which is used to control a simple display (a cathode-ray tube)
+
+=== Input ===
+
+Parsing the input is straight forward. Each line represents either an `addx` operation or a `noop` operation
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+I created a small model of the CPU:
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=cpu]
+----
+
+The most difficult part was to read the puzzle description carefully. Specifically the part were it says to calculate the signal strength *during* and not *after* the 20th, 60th, ... cycle.
+
+The rest was just applying the instructions giving in the puzzle.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Again, reading carefully is important. I did not get the meaning of 
+
+----
+In this system, there is no such thing as "vertical position"
+----
+
+After having that fixed, it was again straight forward.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+A bit of tests, as usual ...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----

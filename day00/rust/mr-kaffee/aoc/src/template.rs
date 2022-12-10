@@ -286,11 +286,7 @@ edition = "2021"
 
 [dependencies]
 
-mr-kaffee-aoc = { path = "{AOC_PATH}", default-features = false }
-
-[features]
-
-submit = ["mr-kaffee-aoc/io"]
+mr-kaffee-aoc = { path = "{AOC_PATH}" }
 "###;
 
 const GITIGNORE: &str = r###"**/target
