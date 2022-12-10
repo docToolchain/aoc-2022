@@ -1,0 +1,25 @@
+
+Day 10 of year 2022
+https://adventofcode.com/2022/day/10
+
+== What I learned
+
+. I was happy to solve a puzzle involving drawing with no major issues.
+
+== Approach
+
+. I take the input and turn it into a list of tuples with the number of CPU cycles used and the value to be added (0 for noop).
+
+**Star 1** +
+. I create a list of the CPU cycles and the value. If the CPU cycle is greater than the next relevant multiple of 40, then you add the last value before that to the list. Afterwards, you do the math.
+
+**Star 2** +
+. I created a dictionary with all of the sprite positions. You do the drawing with 2 nested for loops.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
