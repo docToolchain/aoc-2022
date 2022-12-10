@@ -393,11 +393,9 @@ Strava: <a href="https://www.strava.com/athletes/89256720">Peter Wieland</a></p>
     input: &amp;'static str,
 }
 
-impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
-    type Error = Infallible;
-
-    fn try_from(input: &amp;'static str) -&gt; Result&lt;Self, Self::Error&gt; {
-        Ok(Self { input })
+impl From&lt;&amp;'static str&gt; for PuzzleData {
+    fn from(input: &amp;'static str) -&gt; Self {
+        Self { input }
     }
 }</code></pre>
 </div>
@@ -426,9 +424,8 @@ impl TryFrom&lt;&amp;'static str&gt; for PuzzleData {
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
 mod tests {
-    use mr_kaffee_aoc::GenericPuzzle;
-
     use super::*;
+    use mr_kaffee_aoc::GenericPuzzle;
 
     #[test]
     pub fn test_something() {
@@ -2274,15 +2271,15 @@ impl Cpu {
     for row in 0..H {
         for col in 0..W {
             lcd[col as usize + (W + 1) * row] = if (cpu.x - 1..=cpu.x + 1).contains(&amp;(col as _)) {
-                '#'
+                LIT
             } else {
-                '.'
+                DARK
             };
             cpu.step();
         }
     }
 
-    lcd.iter().collect()
+    ['\n'].iter().chain(lcd.iter()).collect()
 }</code></pre>
 </div>
 </div>
@@ -2334,12 +2331,13 @@ mod tests {
 addx 3
 addx -5"#;
 
-    const EXP_2: &amp;str = r"##..##..##..##..##..##..##..##..##..##..
-###...###...###...###...###...###...###.
-####....####....####....####....####....
-#####.....#####.....#####.....#####.....
-######......######......######......####
-#######.......#######.......#######.....
+    const EXP_2: &amp;str = r"
+██..██..██..██..██..██..██..██..██..██..
+███...███...███...███...███...███...███.
+████....████....████....████....████....
+█████.....█████.....█████.....█████.....
+██████......██████......██████......████
+███████.......███████.......███████.....
 ";
 
     const CONTENT: &amp;str = r#"addx 15
