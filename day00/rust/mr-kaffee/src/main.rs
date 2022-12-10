@@ -2,7 +2,7 @@ use clap::Parser;
 use itertools::Itertools;
 use mr_kaffee_aoc::{
     puzzle_io::{submit_result, PuzzleIO, Star},
-    template::{update_files, write_files},
+    template::{update_files, write_files, read_config},
     GenericPuzzle,
 };
 use std::{error::Error, fs, time::Instant};
@@ -27,6 +27,7 @@ fn puzzles() -> Vec<Box<dyn GenericPuzzle>> {
     let puzzles: Vec<Box<dyn GenericPuzzle>> = vec![
         Box::new(mr_kaffee_2022_0::puzzle()),
         // INCLUDE_PUZZLES:START
+        Box::new(mr_kaffee_2022_10::puzzle()),
         Box::new(mr_kaffee_2022_9::puzzle()),
         Box::new(mr_kaffee_2022_8::puzzle()),
         Box::new(mr_kaffee_2022_7::puzzle()),
@@ -76,8 +77,8 @@ fn exec_init(init: cli::Init) -> Result<(), std::io::Error> {
 
     write_files(
         &init.target_path,
-        &init.lib_path,
         &input_provider,
+        read_config,
         init.year,
         init.day,
         init.force,
@@ -153,9 +154,6 @@ mod cli {
     pub(crate) struct Init {
         #[arg(short, long)]
         pub(crate) target_path: PathBuf,
-
-        #[arg(short, long)]
-        pub(crate) lib_path: PathBuf,
 
         #[arg(short, long, value_parser = clap::value_parser!(u16).range(2015..=2022))]
         pub(crate) year: u16,

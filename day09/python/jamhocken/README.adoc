@@ -1,0 +1,25 @@
+
+Day 9 of year 2022
+https://adventofcode.com/2022/day/9
+
+== What I learned
+
+. For once, I solved star 1 in a way that didn't require much refactoring for star 2. :-)
+
+== Approach
+
+. I read in the commands and turn the directions into tuples representing the direction.
+
+**Star 1** +
+You just go through and check if the new position of the head is within the 9 adjacent positions or is the same position. If so, do nothing with the tail. Otherwise, move as required.
+
+**Star 2** +
+Here you have the same basic situation but you have to keep track of multiple ropes.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....

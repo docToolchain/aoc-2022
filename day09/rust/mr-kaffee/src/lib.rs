@@ -28,9 +28,9 @@ pub mod input {
         moves: Vec<((isize, isize), usize)>,
     }
 
-    impl From<&'static str> for PuzzleData {
+    impl From<&str> for PuzzleData {
         /// parse the puzzle input
-        fn from(s: &'static str) -> Self {
+        fn from(s: &str) -> Self {
             Self {
                 moves: s
                     .lines()

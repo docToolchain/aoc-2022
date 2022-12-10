@@ -2,28 +2,80 @@ use crate::puzzle_io::PuzzleIO;
 use regex::Regex;
 use std::{
     collections::HashMap,
-    fmt::Display,
     fs,
     io::{Error, ErrorKind},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
-pub fn write_files(
+pub fn read_config() -> String {
+    let config_path = PathBuf::from("template.json");
+    if config_path.is_file() {
+        match fs::read_to_string(config_path.as_path()) {
+            Ok(v) => v,
+            Err(err) => {
+                println!(
+                    "Could not read config from file {}: {err}",
+                    config_path.to_string_lossy()
+                );
+                "{}".to_string()
+            }
+        }
+    } else {
+        "{}".to_string()
+    }
+}
+
+pub fn build_var_map<F>(config: F, year: u16, day: u16) -> HashMap<String, String>
+where
+    F: FnOnce() -> String,
+{
+    let mut vars = HashMap::from([
+        ("YEAR".to_string(), year.to_string()),
+        ("YEAR2".to_string(), format!("{:02}", year % 100)),
+        (
+            "YEAR4".to_string(),
+            format!("{:04}", if year < 100 { year + 2000 } else { year }),
+        ),
+        ("DAY".to_string(), day.to_string()),
+        ("DAY2".to_string(), format!("{day:02}")),
+    ]);
+
+    let mut configs = match serde_json::from_str::<HashMap<String, String>>(&config()) {
+        Ok(configs) => configs,
+        Err(err) => {
+            println!("Could not parse config JSON: {err}");
+            HashMap::new()
+        }
+    };
+    for value in configs.values_mut() {
+        *value = replace_vars(value, &vars);
+    }
+
+    vars.extend(configs);
+
+    vars
+}
+
+pub fn replace_vars(template: &str, vars: &HashMap<String, String>) -> String {
+    let mut content = template.to_string();
+    for (name, value) in vars {
+        content = content.replace(format!("{{{name}}}").as_str(), value);
+    }
+    content
+}
+
+pub fn write_files<F>(
     target_path: &Path,
-    lib_path: &Path,
     input_provider: &dyn InputProvider,
+    config: F,
     year: u16,
     day: u16,
     force: bool,
-) -> Result<(), Error> {
-    let lib_path = lib_path
-        .to_str()
-        .ok_or_else(|| Error::new(ErrorKind::Other, "Can't convert lib path to str"))?;
-    let variables: HashMap<&str, &dyn Display> = HashMap::from([
-        ("AOC_PATH", &lib_path as &dyn Display),
-        ("YEAR", &year),
-        ("DAY", &day),
-    ]);
+) -> Result<(), Error>
+where
+    F: FnOnce() -> String,
+{
+    let variables = build_var_map(config, year, day);
 
     if target_path.exists() && !force {
         return Err(Error::new(
@@ -85,18 +137,8 @@ impl<'a> InputProvider for PuzzleIO<'a> {
     }
 }
 
-fn write_file(
-    template: &str,
-    variables: &HashMap<&str, &dyn Display>,
-    path: &Path,
-) -> Result<(), Error> {
-    let mut content = template.to_string();
-    for (&name, &value) in variables {
-        content = content.replace(
-            format!("{{{}}}", name).as_str(),
-            format!("{}", value).as_str(),
-        );
-    }
+fn write_file(template: &str, vars: &HashMap<String, String>, path: &Path) -> Result<(), Error> {
+    let content = replace_vars(template, vars);
 
     println!("Writing file {} ...", path.to_string_lossy());
     fs::write(path, content)?;
@@ -105,15 +147,15 @@ fn write_file(
 }
 
 pub fn update_files(runner_path: &Path, year: u16, day: u16) -> Result<(), Error> {
+    let vars = build_var_map(read_config, year, day);
     update_file(
         "INCLUDE_PUZZLES",
-        format!("Box::new(mr_kaffee_{year}_{day}::puzzle()),").as_str(),
+        &replace_vars(PUZZLE_FACTORY_SNIPPET, &vars).as_str(),
         runner_path.join("src/main.rs").as_path(),
     )?;
     update_file(
         "INCLUDE_PUZZLES",
-        format!("mr-kaffee-{year}-{day} = {{ path = \"../../../day{day:02}/rust/mr-kaffee/\"}}")
-            .as_str(),
+        &replace_vars(PUZZLE_INCLUDE_SNIPPET, &vars).as_str(),
         runner_path.join("Cargo.toml").as_path(),
     )?;
     Ok(())
@@ -150,151 +192,13 @@ fn update_file(separator: &str, line: &str, path: &Path) -> Result<bool, Error> 
     }
 }
 
-const MAIN_RS: &str = r###"use mr_kaffee_aoc::{err::PuzzleError, GenericPuzzle};
-use mr_kaffee_{YEAR}_{DAY}::*;
-
-fn main() -> Result<(), PuzzleError> {
-    puzzle().solve_report_err()
-}
-"###;
-
-const LIB_RS: &str = r###"use input::*;
-use mr_kaffee_aoc::{Puzzle, Star};
-
-/// the puzzle
-pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
-    Puzzle {
-        year: {YEAR},
-        day: {DAY},
-        input: include_str!("../input.txt"),
-        star1: Some(Star {
-            name: "Star 1",
-            f: &star_1,
-            exp: None,
-        }),
-        star2: Some(Star {
-            name: "Star 2",
-            f: &star_2,
-            exp: None,
-        }),
-    }
-}
-
-// tag::input[]
-pub mod input {
-    #[derive(Debug)]
-    pub struct PuzzleData {
-        input: &'static [u8],
-    }
-
-    impl From<&'static str> for PuzzleData {
-        /// parse the puzzle input 
-        fn from(s: &'static str) -> Self {
-            Self { input: s.as_bytes() }
-        }
-    }
-
-    impl PuzzleData {
-        pub fn input(&self) -> &[u8] {
-            self.input
-        }
-    }
-}
-// end::input[]
-
-// tag::star_1[]
-pub fn star_1(data: &PuzzleData) -> usize {
-    data.input().len()
-}
-// end::star_1[]
-
-// tag::star_2[]
-pub fn star_2(data: &PuzzleData) -> usize {
-    data.input().len()
-}
-// end::star_2[]
-
-// tag::tests[]
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    const CONTENT: &str = r#"Hello World!
-Advent of Code 2022
-"#;
-
-    #[test]
-    pub fn test_try_from() {
-        let data = PuzzleData::from(CONTENT);
-        println!("{data:?}");
-    }
-
-    #[test]
-    pub fn test_star_1() {
-        let data = PuzzleData::from(CONTENT);
-        assert_eq!(CONTENT.len(), star_1(&data));
-    }
-
-    #[test]
-    pub fn test_star_2() {
-        let data = PuzzleData::from(CONTENT);
-        assert_eq!(CONTENT.len(), star_2(&data));
-    }
-}
-// end::tests[]
-"###;
-
-const README_ADOC: &str = r###"== Day {DAY}: _TODO_ ==
-
-https://rust-lang.org[Rust] solution to https://adventofcode.com/{YEAR}/day/{DAY}[AoC|{YEAR}|{DAY}].
-
-=== Input ===
-
-[source,rust,numbered]
-----
-include::src/lib.rs[tags=input]
-----
-
-=== Star 1 ===
-
-[source,rust,numbered]
-----
-include::src/lib.rs[tags=star_1]
-----
-
-=== Star 2 ===
-
-[source,rust,numbered]
-----
-include::src/lib.rs[tags=star_2]
-----
-
-=== Tests ===
-
-[source,rust,numbered]
-----
-include::src/lib.rs[tags=tests]
-----
-"###;
-
-const CARGO_TOML: &str = r###"[package]
-name = "mr-kaffee-{YEAR}-{DAY}"
-version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-
-mr-kaffee-aoc = { path = "{AOC_PATH}", default-features = false }
-
-[features]
-
-submit = ["mr-kaffee-aoc/io"]
-"###;
-
-const GITIGNORE: &str = r###"**/target
-"###;
+const MAIN_RS: &str = include_str!("../templates/_main.rs_");
+const LIB_RS: &str = include_str!("../templates/_lib.rs_");
+const README_ADOC: &str = include_str!("../templates/_README.adoc_");
+const CARGO_TOML: &str = include_str!("../templates/_Cargo.toml_");
+const GITIGNORE: &str = include_str!("../templates/_.gitignore_");
+const PUZZLE_FACTORY_SNIPPET: &str = include_str!("../templates/_puzzle_factory_snippet_");
+const PUZZLE_INCLUDE_SNIPPET: &str = include_str!("../templates/_puzzle_include_snippet_");
 
 #[cfg(test)]
 mod tests {
@@ -315,14 +219,16 @@ mod tests {
     #[test]
     pub fn test_write_files() {
         let target_path = Path::new("target/test_write_file");
-        let lib_path = Path::new("../../../aoc");
         let input_provider = TestInputProvider {};
+        let config = || {
+            r#"{"LIB_DIR": "../../"}"#.to_string()
+        };
         let year = 2022;
         let day = 25;
         let force = true;
 
         // write files
-        let result = write_files(target_path, lib_path, &input_provider, year, day, force);
+        let result = write_files(target_path, &input_provider, config, year, day, force);
         assert!(matches!(result, Ok(_)));
 
         // run tests using `cargo test`
@@ -369,5 +275,18 @@ mod tests {
 
         // clean up, if it fails, 'cargo clean' will do the job
         let _ = remove_dir_all(target_path);
+    }
+
+    #[test]
+    pub fn test_build_var_map() {
+        let vars = build_var_map(
+            || {
+                r#"{"VAR1": "I want to solve {YEAR}/{DAY}", "VAR2": "{YEAR} {YEAR2} {YEAR4} {DAY} {DAY2}"}"#.to_string()
+            },
+            2025,
+            2,
+        );
+        assert_eq!("I want to solve 2025/2", vars.get("VAR1").unwrap());
+        assert_eq!("2025 25 2025 2 02", vars.get("VAR2").unwrap());
     }
 }

@@ -1,0 +1,124 @@
+== Cathode-Ray Tube
+
+Today's puzzle was about simulating a computer and the cathode ray tube.
+So far we have only 2 instructions to simulate: `noop` and `addx`. It very important to carefully read the instructions describing the clock cycles. In this case `noop` has one cycle and `addx` has two cycle.
+
+
+
+=== Input Model
+
+I decided to model a instructions as a sealed class and the processor as a class to maintain the clock and register value with a lambda to be called on each tick.
+
+[source,kotlin]
+....
+sealed class OpCode(val prefix: String) {
+  object NOOP: OpCode("noop")
+  data class ADDX(val value: Int): OpCode("addx")
+}
+....
+
+=== Parsing
+
+Parsing will create the instances of the various inner classes of the sealed class.
+
+[source,kotlin]
+....
+fun parseInstructions(lines: List<String>): List<OpCode> {
+  return lines.map { ins ->
+    val words = ins.split(" ")
+    when (words[0]) {
+      "noop" -> OpCode.NOOP
+      "addx" -> OpCode.ADDX(words[1].toInt())
+      else -> error("Unknown instruction: $ins")
+    }
+  }
+}
+....
+
+=== Processor Model
+
+[source,kotlin]
+....
+class Processor(val processing: Processor.() -> Unit) {
+  var clock = 0
+    private set
+  var regX: Int = 1
+    private set
+
+  fun tick() {
+    clock += 1
+    processing(this) // <1>
+  }
+  fun execute(instructions: List<OpCode>) {
+    instructions.forEach { ins ->
+      when (ins) {
+        is OpCode.NOOP -> tick()
+        is OpCode.ADDX -> addX(ins)
+      }
+    }
+  }
+
+  private fun addX(ins: OpCode.ADDX) {
+    tick()
+    val value = ins.value
+    tick()
+    regX += value
+  }
+}
+....
+<1> processing lambda is called after each clock tick.
+
+
+=== Part 1
+
+The first part had to calculate signal string based on the value of `regX` and on the 20th tick and each 40th tick thereafter.
+
+[source,kotlin]
+....
+fun calcSignalStrength(instructions: List<OpCode>): Int {
+  var signalValue = 0
+  val cpu = Processor {               // <1>
+    if (clock % 40 == 20) {
+      signalValue += regX * clock     // <2>
+    }
+  }
+  cpu.execute(instructions)
+  return signalValue
+}
+....
+<1> The lambda declaration after the Processor will be invoked on each tick
+<2> The lambda cannot modify `clock` or `regX`
+
+=== Part 2
+
+The second part had to render the CRT of 40 characters wide. The CRT prints from left to right on each clock tick and will print a `#` if the 3 character sprite overlaps with the `cursor` position, otherwise it prints `.`.
+I had to print spaces instead of dots before I could read the character spelled out by part 2.
+
+[source,kotlin]
+....
+fun renderCrt(instructions: List<OpCode>): List<String> {
+  val pixels = mutableListOf<Char>()
+  val crt = mutableListOf<String>()
+  val cpu = Processor {
+    val sprite = regX - 1
+    val cursor = (clock - 1) % 40
+    if (cursor >= sprite && cursor <= sprite + 2) {
+      pixels.add('#')
+    } else {
+      pixels.add('.')
+    }
+    if (cursor == 39) {
+      crt.add(pixels.joinToString(""))
+      pixels.clear()
+    }
+  }
+  cpu.execute(instructions)
+  return crt.toList()
+}
+....
+
+=== Full source
+[source,kotlin]
+....
+include::src/solution.kt[]
+....

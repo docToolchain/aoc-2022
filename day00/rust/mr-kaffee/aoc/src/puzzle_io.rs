@@ -5,9 +5,6 @@ use std::{
     io::{Error, ErrorKind},
 };
 
-const REPO: &str = "github.com/mr-kaffee/aoc-2022/day00/rust/mr-kaffee/aoc";
-const AUTHOR: &str = "Peter Wieland (peter@die-wielands.net)";
-
 /// Load the input using a [`PuzzleIO`] constructed from a session cookie loaded from the given `path` or
 /// from `session.cookie` if `path` is `None`.
 pub fn load_input(path: Option<&str>, year: u16, day: u16) -> Result<String, Error> {
@@ -119,9 +116,11 @@ impl<'a> PuzzleIO<'a> {
         .header(
             "User-Agent",
             format!(
-                "{}/{} ({REPO} by {AUTHOR})",
+                "{}/{} ({} by {})",
                 env!("CARGO_PKG_NAME"),
-                env!("CARGO_PKG_VERSION")
+                env!("CARGO_PKG_VERSION"),
+                env!("CARGO_PKG_REPOSITORY"),
+                env!("CARGO_PKG_AUTHORS")
             ),
         )
     }
