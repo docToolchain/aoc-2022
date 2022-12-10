@@ -1,0 +1,9 @@
+[package]
+name = "mr-kaffee-{YEAR}-{DAY}"
+description = "Solution to AoC {YEAR}/{DAY}, http://adventofcode.com/{YEAR}/day/{DAY}/"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+mr-kaffee-aoc = { path = "{AOC_PATH}" }
