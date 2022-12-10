@@ -243,6 +243,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_10_rust">Day 10: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_10_cathode_ray_tube">Day 10: Cathode-Ray Tube</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_8">Oveview</a></li>
+<li><a href="#_solution_9">Solution</a></li>
+<li><a href="#_how_to_run_10">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2463,6 +2474,253 @@ impl Vec {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_9"><a class="anchor" href="#_how_to_run_9"></a><a class="link" href="#_how_to_run_9">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day10" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_10_rust"><a class="anchor" href="#_day_10_rust"></a><a class="link" href="#_day_10_rust">Day 10: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_10_cathode_ray_tube"><a class="anchor" href="#_day_10_cathode_ray_tube"></a><a class="link" href="#_day_10_cathode_ray_tube">Day 10: Cathode-Ray Tube</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_8"><a class="anchor" href="#_oveview_8"></a><a class="link" href="#_oveview_8">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_9"><a class="anchor" href="#_solution_9"></a><a class="link" href="#_solution_9">Solution</a></h5>
+<div class="paragraph">
+<p>It&#8217;s getting really interesting now.
+I quite liked how part 2 didn&#8217;t require you to compute a number or a sequence of
+letters but instead required you to render something on screen.
+My solution is less nice, but there is not much time on the weekend.</p>
+</div>
+<div class="paragraph">
+<p>Quite early on, I decided to ignore all the weirdness due to a noop taking one
+cycle an an addition taking two cycles.
+Instead, I moved to a parallel world where each instruction took exactly one
+cycle, which meant replacing each 2-cycle addition by a noop followed by a
+1-cycle addition.
+So far so straightforward.</p>
+</div>
+<div class="paragraph">
+<p>Furthermore, I ignored all the weirdness due to what is at the beginning,
+during, or at the end of a cycle, but instead only looked at the register during
+each cycle.
+I also had my 1-cycle addition act during its cycle instead of at the cycle&#8217;s
+end.
+I also started cycle counting at 0 instead of 1.</p>
+</div>
+<div class="paragraph">
+<p>To map the register value during a cycle from my ficticious world back to the
+world of the puzzle, I only had to add 2 to the cycle count.
+That also means my world had no real cycle one, which meant I had to treat that
+one separately for part 2.
+For part one, in order to look at the value during cycle 20, I had to skip only
+the first 18 entries.</p>
+</div>
+<div class="paragraph">
+<p>Today, I learnt that rust really will panic if you try to subtract 1 from an
+unsigned value that is 0.
+And off-by-one errors really are the two worst types of bugs that plague
+software development.
+I also played around with closures that move values into them for the first
+time.
+They are quite useful!</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::Result;
+// Constants.
+const WIDTH: usize = 40;
+
+fn render(crt: &amp;Vec&lt;bool&gt;, width: usize, fill: char) -&gt; String {
+    crt.iter()
+        .enumerate()
+        .map(|(idx, el)| {
+            let ch = if *el { '#' } else { fill };
+            if (idx + 1) % width == 0 {
+                format!("{}\n", ch)
+            } else {
+                ch.to_string()
+            }
+        })
+        .collect::&lt;String&gt;()
+}
+
+fn maybe_draw(crt: &amp;mut Vec&lt;bool&gt;, reg: isize, cycle: usize, width: usize) {
+    let pixel_idx = cycle - 1;
+    let horizontal_pos = (pixel_idx % width) as isize;
+
+    // Used to avoid drawing past the edges. It turns out the register value is nice and those
+    // checks would not have been needed.
+    let sprite_at_left_edge = reg == 0;
+    let sprite_at_right_edge = reg == width as isize - 1;
+
+    if reg == horizontal_pos {
+        crt[pixel_idx] = true;
+    } else if reg + 1 == horizontal_pos &amp;&amp; !sprite_at_right_edge {
+        crt[pixel_idx] = true;
+    } else if reg - 1 == horizontal_pos &amp;&amp; !sprite_at_left_edge {
+        crt[pixel_idx] = true;
+    }
+}
+
+// This function likely performs a lot of allocations that are not needed but it makes the rest of
+// the problem so much easier to solve.
+fn extend(input: Vec&lt;data::Op&gt;) -&gt; Vec&lt;data::Op&gt; {
+    input
+        .into_iter()
+        .map(|el| match el {
+            data::Op::None =&gt; vec![data::Op::None].into_iter(),
+            data::Op::Some(_) =&gt; vec![data::Op::None, el].into_iter(),
+        })
+        .flatten()
+        .collect::&lt;Vec&lt;_&gt;&gt;()
+}
+
+fn solve(file: &amp;str, part1: bool, fill: char) -&gt; Result&lt;()&gt; {
+    eprintln!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let ops = io::parse_lines_to_data::&lt;data::Op&gt;(file, "op", None, None)?;
+
+    // We avoid that one-cycle-two-cycle weridness by replacing each addx operation by a noop and
+    // an addx operation that is assumed to take only one cycle.
+    let extended_ops = extend(ops);
+
+    let mut reg = 1;
+    let reg_vals = extended_ops.into_iter().map(move |el| {
+        reg += match el {
+            data::Op::None =&gt; 0,
+            data::Op::Some(val) =&gt; val,
+        };
+        reg
+    });
+
+    if part1 {
+        // There is a lot of potential for off-by-one errors in this one.
+        //
+        // We skip the first 18 entries here because we want to start with the value during cycle
+        // 20, which is the value after cycle 19, and this solution ignores what happens during the
+        // first cycle, because that is trivial.
+        let skip = 18;
+        let mut skipper: isize = -1;
+        let interesting = reg_vals
+            .skip(skip)
+            .enumerate()
+            .filter_map(move |(step, reg)| {
+                // Now convert from our weird way of counting to that of the puzzle.
+                // We wanted to skip the first 19 cycles (add skip + 1) and cycle counting starts
+                // at one (add 1).
+                let current_cycle = step + 1 + skip + 1;
+                skipper += 1;
+                if skipper % 40 == 0 {
+                    Some(reg * current_cycle as isize)
+                } else {
+                    None
+                }
+            })
+            .sum::&lt;isize&gt;();
+
+        println!("{:?}", interesting);
+    } else {
+        let mut crt = vec![false; WIDTH * 6];
+
+        // We need to handle the first cycle separately because the cycle number used here is
+        // always that of the cycle we are in. During the first cycle, the register has a value of
+        // 1.
+        maybe_draw(&amp;mut crt, 1, 1, WIDTH);
+
+        // Here, current_cycle is the cycle we are currently in. Thus, the number is one larger
+        // than what the example shows because the example usually taks about the value after a
+        // cycle but the value during a cycle is important. This also erroneously assumes the
+        // existence 241'th cycle, but that's not really a problem because the value after the
+        // 240'th cycle is the value during the 241th cycle, so it's consistent.
+        for (current_cycle, reg) in reg_vals.enumerate().map(|(step, el)| (step + 2, el)) {
+            maybe_draw(&amp;mut crt, reg, current_cycle, WIDTH);
+        }
+        println!("\n{}\n", render(&amp;crt, WIDTH, fill));
+    }
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    // Part 1.
+    // The last argument is not important here.
+    solve(SAMPLE1, true, '.')?;
+    solve(SAMPLE2, true, '.')?;
+    solve(REAL, true, '.')?;
+
+    // Part 2.
+    solve(SAMPLE2, false, '.')?;
+    // Use a space as filler for the real solution to make the letters easier to read.
+    solve(REAL, false, ' ')?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Copy)]
+pub enum Op {
+    None,
+    Some(isize),
+}
+
+impl FromStr for Op {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s
+            .split_whitespace()
+            .collect::&lt;std::vec::Vec&lt;_&gt;&gt;()
+            .as_slice()
+        {
+            ["noop"] =&gt; Ok(Self::None),
+            ["addx", val] =&gt; Ok(Self::Some(val.parse()?)),
+            _ =&gt; Err(Error::msg(format!("cannot parse {} as op", s))),
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_10"><a class="anchor" href="#_how_to_run_10"></a><a class="link" href="#_how_to_run_10">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
