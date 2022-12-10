@@ -10,10 +10,23 @@ mod data;
 mod io;
 
 // tag::main[]
-use anyhow::{Error, Result};
-use std::collections::HashSet;
+use anyhow::Result;
 // Constants.
 // None yet.
+
+fn render(crt: &Vec<bool>, width: usize) -> String {
+    crt.iter()
+        .enumerate()
+        .map(|(idx, el)| {
+            let ch = if *el { '#' } else { '.' };
+            if (idx + 1) % width == 0 {
+                format!("{}\n", ch)
+            } else {
+                ch.to_string()
+            }
+        })
+        .collect::<String>()
+}
 
 fn extend(input: Vec<data::Op>) -> Vec<data::Op> {
     input
@@ -29,14 +42,17 @@ fn extend(input: Vec<data::Op>) -> Vec<data::Op> {
 fn solve(file: &str) -> Result<()> {
     eprintln!("PROCESSING {}", file);
 
+    let mut crt = vec![false; 40 * 6];
+    println!("{}", render(&crt, 40));
+
     // Read file and convert into data.
     let ops = io::parse_lines_to_data::<data::Op>(file, "op", None, None)?;
 
-    println!("{:?}", ops);
+    // println!("{:?}", ops);
 
     let extended_ops = extend(ops);
 
-    println!("{:?}", extended_ops);
+    // println!("{:?}", extended_ops);
 
     let mut reg = 1;
     let reg_vals = extended_ops
@@ -60,10 +76,11 @@ fn solve(file: &str) -> Result<()> {
         .skip(skip)
         .enumerate()
         .filter_map(move |(step, el)| {
+            let current_cycle = step + 1 + skip + 1;
             skipper += 1;
             if skipper % 40 == 0 {
-                eprintln!("int {} {}", el, step + 1 + skip);
-                Some(el * (step + 1 + skip + 1) as isize)
+                eprintln!("int {} {}", el, current_cycle);
+                Some(el * current_cycle as isize)
             } else {
                 None
             }
