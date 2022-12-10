@@ -46,6 +46,8 @@ fn maybe_draw(crt: &mut Vec<bool>, reg: isize, cycle: usize, width: usize) {
     }
 }
 
+// This function likely performs a lot of allocations that are not needed but it makes the rest of
+// the problem so much easier to solve.
 fn extend(input: Vec<data::Op>) -> Vec<data::Op> {
     input
         .into_iter()
@@ -63,6 +65,8 @@ fn solve(file: &str, part1: bool, fill: char) -> Result<()> {
     // Read file and convert into data.
     let ops = io::parse_lines_to_data::<data::Op>(file, "op", None, None)?;
 
+    // We avoid that one-cycle-two-cycle weridness by replacing each addx operation by a noop and
+    // an addx operation that is assumed to take only one cycle.
     let extended_ops = extend(ops);
 
     let mut reg = 1;
