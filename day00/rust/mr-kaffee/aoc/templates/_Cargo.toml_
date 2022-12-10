@@ -6,4 +6,4 @@ edition = "2021"
 
 [dependencies]
 
-mr-kaffee-aoc = { path = "{AOC_PATH}" }
+mr-kaffee-aoc = { path = "{LIB_DIR}" }
