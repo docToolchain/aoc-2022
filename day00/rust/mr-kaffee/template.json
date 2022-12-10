@@ -1,4 +1,4 @@
 {
-    "LIB_DIR": "../../../day00/rust/mr-kaffee/aoc",
+    "LIB_DIR": "../../../day00/rust/mr-kaffee/aoc/",
     "TAR_DIR": "../../../day{DAY2}/rust/mr-kaffee/"
 }
