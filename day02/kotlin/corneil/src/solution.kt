@@ -42,11 +42,13 @@ object Rules {
 fun main() {
 
   fun toRps(hint: String): Rps {
-    return Rps.values().find { it.identifiers.contains(hint) } ?: error("Invalid RPS $hint")
+    return Rps.values().find { it.identifiers.contains(hint) } 
+              ?: error("Invalid RPS $hint")
   }
 
   fun toOutcome(outcome: String): Outcome {
-    return Outcome.values().find { it.identifier == outcome } ?: error("Invalid Outcome:$outcome")
+    return Outcome.values().find { it.identifier == outcome } 
+              ?: error("Invalid Outcome:$outcome")
   }
 
   fun readRounds(input: List<String>): List<Hand> {

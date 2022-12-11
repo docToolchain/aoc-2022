@@ -1,17 +1,25 @@
 [package]
 name = "mr-kaffee-aoc"
-version = "0.2.0"
+description = "Simple solution framework for AoC, http://adventofcode.com"
+repository = "http://github.com/mr-kaffee/aoc-2022/tree/master/day00/rust/mr-kaffee/aoc"
+authors = ["Peter Wieland <peter@die-wielands.net>"]
+license = "MIT"
+version = "0.2.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 
 [dependencies]
 
 reqwest = { version = "0.11.*", features = ["blocking"], optional = true }
 regex = { version = "1.*", optional = true }
+serde_json = { version = "1.0.*", optional = true }
+
 
 [features]
 
 # default = ["io", "template"]
 io = ["dep:regex", "dep:reqwest"]
-template = ["dep:regex", "io"]
+template = ["dep:regex", "io", "dep:serde_json"]
+

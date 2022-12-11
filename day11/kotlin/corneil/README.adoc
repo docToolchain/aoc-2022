@@ -1,0 +1,165 @@
+== Monkey in the Middle
+
+Today's puzzle require the parsing of rules describing monkeys that have some of your items.
+Each monkey will toss the item to another monkey based on the worried factor perceived by the monkey.
+
+=== Model
+
+The model represents all the rules as well as tracking the number of inspections performed by the monkey.
+
+[source,kotlin]
+....
+data class Monkey(
+  val number: Int,
+  val worriedLevel: Long,
+  val items: MutableList<Long>,
+  val boredTarget: Int,
+  val worriedTarget: Int,
+  val expression: (Long) -> Long,
+) {
+  var inspected: Int = 0
+    private set
+  fun inspect(value: Int) {
+    inspected += value
+  }
+  fun findTarget(boredLevel: Long) = 
+      if (boredLevel % worriedLevel != 0L) worriedTarget else boredTarget
+  override fun toString(): String {
+    return "Monkey(number=$number, " + 
+        "inspected=$inspected, " + 
+        "worriedLevel=$worriedLevel, " + 
+        "boredTarget=$boredTarget, " +
+        "worriedTarget=$worriedTarget, "+
+        "items=$items)"
+  }
+}
+....
+
+=== Parsing
+
+I decided to parse each monkey rules using a regular expression for each line.
+
+[source,kotlin]
+....
+
+val regexMonkey = listOf(
+    "Monkey (\\d+):$",
+    "  Starting items:\\s*((\\S+(,\\s)*)*)\$",
+    "  Operation: new =\\s(\\S+)\\s(\\+|\\*)\\s(\\S+)\$",
+    "  Test: divisible by (\\d+)$",
+    "    If true: throw to monkey (\\d+)$",
+    "    If false: throw to monkey (\\d+)$"
+).map { it.toRegex() }
+fun parseMonkey(lines: List<String>): Monkey {
+  val result = regexMonkey.mapIndexed { index, regex -> 
+          regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") 
+      }.toTypedArray()
+
+  val items = result[1].groupValues[1].split(",")
+        .map { it.trim().toLong() }
+        .toMutableList()
+
+  val words = result[2].groupValues.drop(1)
+  check(words[0] == "old")
+  val isAdd = words[1] == "+"
+  val constant = words[2].toLongOrNull()
+  val lambda: (Long) -> Long = 
+          if (isAdd) 
+            { old -> Math.addExact(old, constant ?: old) }
+          else 
+            { old -> Math.multiplyExact(old, constant ?: old) } // <1>
+
+  return Monkey(
+      result[0].groupValues[1].toInt(),
+      result[3].groupValues[1].toLong(),
+      items,
+      result[4].groupValues[1].toInt(),
+      result[5].groupValues[1].toInt(),
+      lambda
+  )
+}
+....
+<1> `Math.addExact` and `Math.multiplyExact` will result in an exception if there is an overflow
+
+=== Processing
+
+Each monkey must process their items in the sequence of the assigned number.
+
+[source,kotlin]
+....
+fun processItems(
+    monkeys: Map<Int, Monkey>, 
+    rounds: Int, 
+    divisor: Long = 3L
+): Map<Int, Monkey> {
+  val divisors = monkeys.values
+      .map { monkey -> monkey.worriedLevel }
+      .reduce { acc, l -> acc * l * divisor } // <1>
+  val sorted = monkeys.values.sortedBy { it.number }
+  repeat(rounds) {
+    sorted.forEach { monkey ->
+      monkey.items.forEach { item ->
+        val level = monkey.expression(item)
+        val bored = level / divisor
+        val targetNumber = monkey.findTarget(bored)
+        val targetMonkey = monkeys[targetNumber] 
+            ?: error("Cannot find target Monkey:$targetNumber")
+        targetMonkey.items.add(bored % divisors) // <2>
+      }
+      monkey.inspect(monkey.items.size)
+      monkey.items.clear()
+    }
+  }
+  return monkeys
+}
+....
+<1> multiplying all `worriedLevel` with each other and the required `divisor` provides a xref:lcd[least common divisor].
+<2> mod with xref:lcd[least common divisor] to ensure the smallest valid value.
+
+
+=== Part 1
+
+Initially using `Int` values caused an overflow and I changed the worriedLevel and items to Long.
+
+[source,kotlin]
+....
+fun calcShenanigans1(input: List<String>): Int {
+  val monkeys = input.chunked(7)
+          .map { parseMonkey(it) }
+          .associateBy { it.number }
+  val result = processItems(monkeys, 20)
+  return result.values
+          .map { it.inspected }
+          .sortedDescending()
+          .take(2)
+          .reduce { acc, i -> acc * i }
+}
+....
+
+=== Part 2
+
+When we had to increase the number of rounds to 10000 the worriedLevel overflowed. Using BigInteger doesn't solve the problem because the calculations for BigInteger take too long as the multiplication ofr BigInteger takes exponentially longer as the numbers increase.
+
+[[lcd]]
+NOTE: Using a smallest common divisor all the modulus and `/` operations will ensure that the overflow is prevented until the number of Monkeys become very large.
+
+[source,kotlin]
+....
+fun calcShenanigans2(input: List<String>): Long {
+  val monkeys = input.chunked(7)
+          .map { parseMonkey(it) }
+          .associateBy { it.number }
+  val result = processItems(monkeys, 10000, 1)
+  return result.values
+          .map { it.inspected.toLong() }
+          .sortedDescending()
+          .take(2)
+          .reduce { acc, i -> acc * i }
+}
+....
+
+=== Full source
+[source,kotlin]
+....
+include::src/solution.kt[]
+....
