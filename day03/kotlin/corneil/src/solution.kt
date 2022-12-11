@@ -7,14 +7,19 @@ fun main() {
   }
 
   fun calcRucksacks(input: List<String>): Int =
-    input.map { Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2)) }
+    input.map { 
+        Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2))
+      }
       .map { it.first.toSet().intersect(it.second.toSet()).first() }
       .sumOf { calcPriority(it) }
 
   fun calcBadges(input: List<String>): Int =
     input.mapIndexed { index, s -> index / 3 to s }
       .groupBy({ it.first }, { it.second })
-      .map { e -> e.value.map { it.toSet() }.reduce { a, b -> a.intersect(b) }.first() }
+      .map { e -> e.value.map { it.toSet() }
+          .reduce { a, b -> a.intersect(b) }
+          .first() 
+      }
       .sumOf { calcPriority(it) }
 
   fun part1() {
