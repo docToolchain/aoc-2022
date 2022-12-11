@@ -1,6 +1,7 @@
 import java.io.File
 import kotlin.math.*
 
+// tag::Monkey[]
 data class Monkey(var number: Int) {
 	var items = mutableListOf<Long>()
 	var operation: String = ""
@@ -10,12 +11,16 @@ data class Monkey(var number: Int) {
 	var ifFalse: Int = 0
 	var counts:Long = 0
 }
+// end::Monkey[]
 
 // tag::MonkeyMiddle[]
 fun MonkeyMiddle(in1: Int): Long {
 
+	// parse puzzle input and fill list of monkeys with their roles and contents
 	var monkeyList = mutableListOf<Monkey>()
 	var monkey: Int = 0
+	var primeFactor = 1
+	
 	File("day2211_puzzle_input.txt").forEachLine {
 		if (it.contains("Monkey")) {
 			monkey = it.substringAfter("Monkey ").dropLast(1).toInt()
@@ -32,6 +37,7 @@ fun MonkeyMiddle(in1: Int): Long {
 		} else if (it.contains("Test")) {
 			var items = it.substringAfter("Test: divisible by ")
 			monkeyList[monkey].test = items.toLong()
+			primeFactor *= items.toInt()
 		} else if (it.contains("true")) {
 			var items = it.substringAfter("If true: throw to monkey ")
 			monkeyList[monkey].ifTrue = items.toInt()
@@ -41,6 +47,7 @@ fun MonkeyMiddle(in1: Int): Long {
 		}
 	}
 	
+	// controll data flow for part one and part two
 	var n : Int
 	if (in1 == 1) {
 		n = 20
@@ -48,19 +55,15 @@ fun MonkeyMiddle(in1: Int): Long {
 		n = 10000
 	} 
     
+	// play turns of the monkey in the middle game
 	for (i in 1..n) {
-		monkeyList.forEach {
-		//println("monkey ${it.number} items ${it.items}, counts ${it.counts}")
-		}
-		//println("turn $i")
 		monkeyList.forEach {
 			var operation = it.operation
 			var secondValue = it.secondValue
 			var test = it.test
 			var ifTrue = it.ifTrue
 			var ifFalse = it.ifFalse
-			it.items.forEach {
-				// do operation				
+			it.items.forEach {			
 				var worry: Long = 0
 				var b: Long 
 				if (secondValue == "old") {
@@ -75,37 +78,28 @@ fun MonkeyMiddle(in1: Int): Long {
 				} else if (operation == "*") {
 						worry = it * b
 				}
-				if (worry < 0) {
-					print ("overflow $i, $secondValue, $worry  ")
-				}
-				//print(" worry $worry " )
-				if( in1 == 1) {
+				if( in1 == 3) {
 				worry = worry / 3
+				} else {
+					worry = worry % (primeFactor)
 				}		
-				//print(" worry/3 $worry ")
 				if (worry % test == 0L) {
 					monkeyList[ifTrue].items.add(worry)
-					//println("True trow to $ifTrue")
 				} else {
 					monkeyList[ifFalse].items.add(worry)
-					//println("False  trow to $ifFalse")
 				}
 			}
-			it.counts += it.items.size//count
-			//if (i == 20){
-			//println("Monkey${it.number} inspected items ${it.counts} times")
-			//}
+			it.counts += it.items.size
 			it.items.clear()
-			//println("monkey ${it.number} items ${it.items}")
 		}
 	}
-
+	
+	// prepare result
 	var countsList = mutableListOf<Long>()
 	monkeyList.forEach{
 		countsList.add(it.counts)
 	}
 	countsList.sortDescending()
-	println(countsList)
 
 	return countsList[0]*countsList[1]
 }
@@ -115,7 +109,7 @@ fun main() {
 	var t1 = System.currentTimeMillis()
 
 	var solution1 = MonkeyMiddle(1)
-	var solution2 = MonkeyMiddle(1)
+	var solution2 = MonkeyMiddle(2)
 
 // tag::output[]
 // print solution for part 1
@@ -135,4 +129,3 @@ fun main() {
 	t1 = System.currentTimeMillis() - t1
 	println("puzzle solved in ${t1} ms")
 }
-

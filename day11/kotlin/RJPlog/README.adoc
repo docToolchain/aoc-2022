@@ -4,12 +4,20 @@ This solution is written in Kotlin.
 
 The original puzzle can be found at https://adventofcode.com/2022/day/11
 
+To solve the puzzle, first a data class _Monkey_ is defined, it will hold all necessary informations of each monkey per turn.
+[source, kotlin, numbered]
+....
+include::day2211_1_2.kt[tags=Monkeye]
+....
+
+For the solution itself, first the puzzle input is parsed and a list of _Monkey_ is filled with all monkeys out of the puzzle input. After that, this list is used to iterate through each monkey and through each item of the monkey. For each item the worry factor is calculated and depending on the test result, the item thrown to the next monkey.
+
 
 === First Star
 
 How does it work: +
 
-Description to be updated.
+Each worry level is divided by 3, and the number of turns is 20. Since the number of evaluations is counted before, the to highest values are taken and multiplied by each other returned as a result.
 
 [source, kotlin, numbered]
 ....
@@ -21,8 +29,11 @@ include::day2211_1_2.kt[tags=MonkeyMiddle]
 
 How does it work: +
 
-Values exceed by far the limit of _long_. Some other solution is need, currently I have no glue, but I guess it has something to do with primes.
+Since the number of turns increased from 20 to 10000 and there was no recuction of the worry level any more, it was to be expected that numbers are growing very fast. Unfortunately switching from _Int_ to _Long_ did not help, so there must be an other solution for getting numbers down at each cycle. 
 
+First of all I guessed it must have to do with primes, since every test value was a prime, and I wasted lots of time to think about deconstruction into prime factors (this is why the varialbe used is called _primeFactor_). 
+
+At the end the key was that a worry level is only divisible if there is no rest, means if you simple reduce the worry factor each time it gets bigger than the test level of all monkeys multiplied by this value, the test works also for the remaining worry level.  
 
 At the end, both solutions are printed out. 
 [source, kotlin, numbered]
