@@ -5,9 +5,40 @@ use std::str::FromStr;
 #[derive(Debug)]
 pub struct Monkey {
     idx: usize,
-    items: Vec<usize>,
+    activity: usize,
+    items: Vec<isize>,
     op: QuadraticOp,
     test: DivisitilibytTest,
+}
+
+impl Monkey {
+    pub fn inspect_and_toss(&mut self) -> Vec<(usize, isize)> {
+        let result = self
+            .items
+            .iter()
+            .map(|item_val| {
+                self.activity += 1;
+                let new_item_val = self.op.apply(item_val);
+                (self.test.which_monkey(&new_item_val), new_item_val)
+            })
+            .collect::<Vec<_>>();
+
+        self.items = vec![];
+
+        result
+    }
+
+    pub fn catch(&mut self, item: isize) {
+        self.items.push(item);
+    }
+
+    pub fn whoami(&self) -> usize {
+        self.idx
+    }
+
+    pub fn how_active(&self) -> usize {
+        self.activity
+    }
 }
 
 // All operations can be realised as a*x^2 + b*x + c
@@ -19,7 +50,7 @@ struct QuadraticOp {
 }
 
 impl QuadraticOp {
-    fn apply(&self, val: isize) -> isize {
+    fn apply(&self, val: &isize) -> isize {
         // We update our worry level but always divide by 3 in the end.
         (self.a * val * val + self.b * val + self.c) / (3 as isize)
     }
@@ -33,7 +64,7 @@ struct DivisitilibytTest {
 }
 
 impl DivisitilibytTest {
-    fn which_monkey(&self, val: isize) -> usize {
+    fn which_monkey(&self, val: &isize) -> usize {
         if val % self.div_val == 0 {
             self.true_monkey
         } else {
@@ -66,7 +97,7 @@ impl FromStr for Monkey {
         {
             items_str
                 .split(", ")
-                .map(|el| el.trim().parse::<usize>())
+                .map(|el| el.trim().parse::<isize>())
                 .collect::<Vec<_>>()
         } else {
             return Err(Error::msg("canot find items line"));
@@ -97,7 +128,7 @@ impl FromStr for Monkey {
                 }),
                 ["old", "+", num] => Ok(QuadraticOp {
                     a: 0,
-                    b: 0,
+                    b: 1,
                     c: num.parse().context("adder")?,
                 }),
                 _ => Err(Error::msg("cannot build op")),
@@ -131,14 +162,21 @@ impl FromStr for Monkey {
             return Err(Error::msg("cannot find false monkey line"));
         };
 
+        if idx == true_monkey || idx == false_monkey {
+            return Err(Error::msg("trying to toss to myself"));
+        }
+
         let test = DivisitilibytTest {
             div_val,
             true_monkey,
             false_monkey,
         };
 
+        let activity = 0;
+
         Ok(Self {
             idx,
+            activity,
             items,
             op,
             test,
