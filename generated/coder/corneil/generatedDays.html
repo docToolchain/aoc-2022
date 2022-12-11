@@ -266,6 +266,20 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_11_kotlin">Day 11: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_monkey_in_the_middle">Monkey in the Middle</a>
+<ul class="sectlevel4">
+<li><a href="#_model_3">Model</a></li>
+<li><a href="#_parsing_7">Parsing</a></li>
+<li><a href="#_processing">Processing</a></li>
+<li><a href="#_part_1_7">Part 1</a></li>
+<li><a href="#_part_2_8">Part 2</a></li>
+<li><a href="#_full_source_9">Full source</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2347,6 +2361,307 @@ fun main() {
     check(crt == expectedCrt)
   }
   println("Day - 10")
+  separator()
+  part1()
+  separator()
+  part2()
+}</code></pre>
+</div>
+</div>
+<a id="day11" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_11_kotlin"><a class="anchor" href="#_day_11_kotlin"></a><a class="link" href="#_day_11_kotlin">Day 11: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_monkey_in_the_middle"><a class="anchor" href="#_monkey_in_the_middle"></a><a class="link" href="#_monkey_in_the_middle">Monkey in the Middle</a></h4>
+<div class="paragraph">
+<p>Today&#8217;s puzzle require the parsing of rules describing monkeys that have some of your items.
+Each monkey will toss the item to another monkey based on the worried factor perceived by the monkey.</p>
+</div>
+<div class="sect4">
+<h5 id="_model_3"><a class="anchor" href="#_model_3"></a><a class="link" href="#_model_3">Model</a></h5>
+<div class="paragraph">
+<p>The model represents all the rules as well as tracking the number of inspections performed by the monkey.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">data class Monkey(
+  val number: Int,
+  val worriedLevel: Long,
+  val items: MutableList&lt;Long&gt;,
+  val boredTarget: Int,
+  val worriedTarget: Int,
+  val expression: (Long) -&gt; Long,
+) {
+  var inspected: Int = 0
+    private set
+  fun inspect(value: Int) {
+    inspected += value
+  }
+  fun findTarget(boredLevel: Long) = if (boredLevel % worriedLevel != 0L) worriedTarget else boredTarget
+  override fun toString(): String {
+    return "Monkey(number=$number, inspected=$inspected, worriedLevel=$worriedLevel, boredTarget=$boredTarget, worriedTarget=$worriedTarget, items=$items)"
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_parsing_7"><a class="anchor" href="#_parsing_7"></a><a class="link" href="#_parsing_7">Parsing</a></h5>
+<div class="paragraph">
+<p>I decided to parse each monkey rules using a regular expression for each line.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">val regexMonkey = listOf(
+    "Monkey (\\d+):$",
+    "  Starting items:\\s*((\\S+(,\\s)*)*)\$",
+    "  Operation: new =\\s(\\S+)\\s(\\+|\\*)\\s(\\S+)\$",
+    "  Test: divisible by (\\d+)$",
+    "    If true: throw to monkey (\\d+)$",
+    "    If false: throw to monkey (\\d+)$"
+).map { it.toRegex() }
+fun parseMonkey(lines: List&lt;String&gt;): Monkey {
+  val result = regexMonkey.mapIndexed { index, regex -&gt; regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") }.toTypedArray()
+
+  val items = result[1].groupValues[1].split(",")
+        .map { it.trim().toLong() }
+        .toMutableList()
+
+  val words = result[2].groupValues.drop(1)
+  check(words[0] == "old")
+  val isAdd = words[1] == "+"
+  val constant = words[2].toLongOrNull()
+  val lambda: (Long) -&gt; Long = if (isAdd) { old -&gt; Math.addExact(old, constant ?: old) } else { old -&gt; Math.multiplyExact(old, constant ?: old) } <i class="conum" data-value="1"></i><b>(1)</b>
+
+  return Monkey(
+      result[0].groupValues[1].toInt(),
+      result[3].groupValues[1].toLong(),
+      items,
+      result[4].groupValues[1].toInt(),
+      result[5].groupValues[1].toInt(),
+      lambda
+  )
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>Math.addExact</code> and <code>Math.multiplyExact</code> will result in an exception if there is an overflow</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_processing"><a class="anchor" href="#_processing"></a><a class="link" href="#_processing">Processing</a></h5>
+<div class="paragraph">
+<p>Each monkey must process their items in the sequence of the assigned number.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun processItems(monkeys: Map&lt;Int, Monkey&gt;, rounds: Int, divisor: Long = 3L): Map&lt;Int, Monkey&gt; {
+  val divisors = monkeys.values.map { monkey -&gt; monkey.worriedLevel }.reduce { acc, l -&gt; acc * l * divisor } <i class="conum" data-value="1"></i><b>(1)</b>
+  val sorted = monkeys.values.sortedBy { it.number }
+  repeat(rounds) {
+    sorted.forEach { monkey -&gt;
+      monkey.items.forEach { item -&gt;
+        val level = monkey.expression(item)
+        val bored = level / divisor
+        val targetNumber = monkey.findTarget(bored)
+        val targetMonkey = monkeys[targetNumber] ?: error("Cannot find target Monkey:$targetNumber")
+        targetMonkey.items.add(bored % divisors) <i class="conum" data-value="2"></i><b>(2)</b>
+      }
+      monkey.inspect(monkey.items.size)
+      monkey.items.clear()
+    }
+  }
+  return monkeys
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>multiplying all <code>worriedLevel</code> with each other and the required <code>divisor</code> provides a <a href="#lcd">least common divisor</a>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>mod with <a href="#lcd">least common divisor</a> to ensure the smallest valid value.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_1_7"><a class="anchor" href="#_part_1_7"></a><a class="link" href="#_part_1_7">Part 1</a></h5>
+<div class="paragraph">
+<p>Initially using <code>Int</code> values caused an overflow and I changed the worriedLevel and items to Long.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcShenanigans1(input: List&lt;String&gt;): Int {
+  val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+  val result = processItems(monkeys, 20)
+  return result.values.map { it.inspected }
+    .sortedDescending().take(2).reduce { acc, i -&gt; acc * i }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_2_8"><a class="anchor" href="#_part_2_8"></a><a class="link" href="#_part_2_8">Part 2</a></h5>
+<div class="paragraph">
+<p>When we had to increase the number of rounds to 10000 the worriedLevel overflowed. Using BigInteger doesn&#8217;t solve the problem because the calculations for BigInteger take too long as the multiplication ofr BigInteger takes exponentially longer as the numbers increase.</p>
+</div>
+<div id="lcd" class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Using a smallest common divisor all the modulus and <code>/</code> operations will ensure that the overflow is prevented until the number of Monkeys become very large.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcShenanigans2(input: List&lt;String&gt;): Long {
+  val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+  val result = processItems(monkeys, 10000, 1)
+  return result.values.map { it.inspected.toLong() }
+    .sortedDescending().take(2).reduce { acc, i -&gt; acc * i }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_full_source_9"><a class="anchor" href="#_full_source_9"></a><a class="link" href="#_full_source_9">Full source</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">import utils.readFile
+import utils.separator
+
+fun main() {
+
+  val test = readFile("day11_test")
+  val input = readFile("day11")
+
+  data class Monkey(
+    val number: Int,
+    val worriedLevel: Long,
+    val items: MutableList&lt;Long&gt;,
+    val boredTarget: Int,
+    val worriedTarget: Int,
+    val expression: (Long) -&gt; Long,
+  ) {
+    var inspected: Int = 0
+      private set
+    fun inspect(value: Int) {
+      inspected += value
+    }
+    fun findTarget(boredLevel: Long) = if (boredLevel % worriedLevel != 0L) worriedTarget else boredTarget
+    override fun toString(): String {
+      return "Monkey(number=$number, inspected=$inspected, worriedLevel=$worriedLevel, boredTarget=$boredTarget, worriedTarget=$worriedTarget, items=$items)"
+    }
+  }
+
+  val regexMonkey = listOf(
+    "Monkey (\\d+):$",
+    "  Starting items:\\s*((\\S+(,\\s)*)*)\$",
+    "  Operation: new =\\s(\\S+)\\s(\\+|\\*)\\s(\\S+)\$",
+    "  Test: divisible by (\\d+)$",
+    "    If true: throw to monkey (\\d+)$",
+    "    If false: throw to monkey (\\d+)$"
+  ).map { it.toRegex() }
+  fun parseMonkey(lines: List&lt;String&gt;): Monkey {
+    val result = regexMonkey.mapIndexed { index, regex -&gt; regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") }.toTypedArray()
+
+    val items = result[1].groupValues[1].split(",")
+      .map { it.trim().toLong() }
+      .toMutableList()
+
+    val words = result[2].groupValues.drop(1)
+    check(words[0] == "old")
+    val isAdd = words[1] == "+"
+    val constant = words[2].toLongOrNull()
+    val lambda: (Long) -&gt; Long = if (isAdd) { old -&gt; old + (constant ?: old) } else { old -&gt; old * (constant ?: old) }
+
+    return Monkey(
+      result[0].groupValues[1].toInt(),
+      result[3].groupValues[1].toLong(),
+      items,
+      result[4].groupValues[1].toInt(),
+      result[5].groupValues[1].toInt(),
+      lambda
+    )
+  }
+
+  fun processItems(monkeys: Map&lt;Int, Monkey&gt;, rounds: Int, divisor: Long = 3L): Map&lt;Int, Monkey&gt; {
+    // The mod of the total of worriedLevels overcomes the Long overflow
+    // using all divisors ensure that it is the smallest value that will
+    // still satisfy all the requirements when using a large number of rounds
+    val divisors = monkeys.values.map { monkey -&gt; monkey.worriedLevel }.reduce { acc, l -&gt; acc * l * divisor }
+    val sorted = monkeys.values.sortedBy { it.number }
+    repeat(rounds) {
+      sorted.forEach { monkey -&gt;
+        monkey.items.forEach { item -&gt;
+          val level = monkey.expression(item)
+          val bored = level / divisor
+          val targetNumber = monkey.findTarget(bored)
+          val targetMonkey = monkeys[targetNumber] ?: error("Cannot find target Monkey:$targetNumber")
+          targetMonkey.items.add(bored % divisors) // mod to ensure smallest valid value
+        }
+        monkey.inspect(monkey.items.size)
+        monkey.items.clear()
+      }
+    }
+    return monkeys
+  }
+
+  fun calcShenanigans1(input: List&lt;String&gt;): Int {
+    val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+    println("Before: ====")
+    monkeys.values.forEach { println(it.toString()) }
+    val result = processItems(monkeys, 20)
+    println("After: ====")
+    result.values.forEach { println(it.toString()) }
+    return result.values.map { it.inspected }.sortedDescending().take(2).reduce { acc, i -&gt; acc * i }
+  }
+
+  fun calcShenanigans2(input: List&lt;String&gt;): Long {
+    val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+    println("Before: ====")
+    monkeys.values.forEach { println(it.toString()) }
+    val result = processItems(monkeys, 10000, 1)
+    println("After: ====")
+    result.values.forEach { println(it.toString()) }
+    return result.values.map { it.inspected.toLong() }.sortedDescending().take(2).reduce { acc, i -&gt; acc * i }
+  }
+
+  fun part1() {
+    val testResult = calcShenanigans1(test)
+    println("Part 1 Answer = $testResult")
+    check(testResult == 10605)
+    val result = calcShenanigans1(input)
+    println("Part 1 Answer = $result")
+    check(result == 151312)
+  }
+
+  fun part2() {
+    val testResult = calcShenanigans2(test)
+    println("Part 2 Answer = $testResult")
+    check(testResult == 2713310158L)
+    val result = calcShenanigans2(input)
+    println("Part 2 Answer = $result")
+    check(result == 51382025916L)
+  }
+  println("Day - 11")
   separator()
   part1()
   separator()
