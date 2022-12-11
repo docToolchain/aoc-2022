@@ -2267,30 +2267,34 @@ impl Cpu {
 </div>
 </div>
 <div class="paragraph">
-<p>After having that fixed, it was again straight forward.</p>
+<p>After having that fixed, it was again straight forward. It somehow feels incorrect to manually read the "LCD" to produce the result to enter at the website, hence I created a little helper which recognizes the letters. Since there is nothing to recognize for the sample data, I put the recognition in a separate function to still be able to run my code on the examples.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; String {
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn solve_2(data: &amp;PuzzleData) -&gt; [u8; 240] {
     const W: usize = 40;
     const H: usize = 6;
 
     // initialize lcd with new lines, W + 1 to keep new lines at the and
-    let mut lcd = vec!['\n'; (W + 1) * H];
+    let mut lcd = [b'.'; W * H];
 
     let mut cpu = Cpu::init(data.instructions());
     for row in 0..H {
         for col in 0..W {
-            lcd[col as usize + (W + 1) * row] = if (cpu.x - 1..=cpu.x + 1).contains(&amp;(col as _)) {
-                LIT
+            lcd[col as usize + W * row] = if (cpu.x - 1..=cpu.x + 1).contains(&amp;(col as _)) {
+                LIT as u8
             } else {
-                DARK
+                DARK as u8
             };
             cpu.step();
         }
     }
 
-    ['\n'].iter().chain(lcd.iter()).collect()
+    lcd
+}
+
+pub fn star_2(data: &amp;PuzzleData) -&gt; String {
+    solve_2(data).decode(0).unwrap()
 }</code></pre>
 </div>
 </div>
@@ -2319,9 +2323,17 @@ mod tests {
     }
 
     #[test]
-    pub fn test_star_2() {
+    pub fn test_solve_2() {
         let data = PuzzleData::from(CONTENT);
-        assert_eq!(EXP_2, star_2(&amp;data));
+        let b = solve_2(&amp;data);
+        let mut s = String::with_capacity(41 * 6);
+        for row in 0..6 {
+            for col in 0..40 {
+                s.push(b[col + 40 * row] as _);
+            }
+            s.push('\n');
+        }
+        assert_eq!(EXP_2, s);
     }
 
     #[test]
@@ -2342,13 +2354,12 @@ mod tests {
 addx 3
 addx -5"#;
 
-    const EXP_2: &amp;str = r"
-██..██..██..██..██..██..██..██..██..██..
-███...███...███...███...███...███...███.
-████....████....████....████....████....
-█████.....█████.....█████.....█████.....
-██████......██████......██████......████
-███████.......███████.......███████.....
+    const EXP_2: &amp;str = r"##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
 ";
 
     const CONTENT: &amp;str = r#"addx 15
