@@ -649,3 +649,5 @@ pub mod puzzle_io;
 
 #[cfg(feature = "template")]
 pub mod template;
+
+pub mod letters;
