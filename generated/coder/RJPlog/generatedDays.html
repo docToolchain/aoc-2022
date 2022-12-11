@@ -252,6 +252,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_11_kotlin">Day 11: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_11_monkey_in_the_middle">Day 11: Monkey in the Middle</a>
+<ul class="sectlevel4">
+<li><a href="#_first_star_11">First Star</a></li>
+<li><a href="#_second_star_11">Second Star</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1447,6 +1457,166 @@ All directions are multiplied and the highest score will be the result.</p>
 	println("*******************************")
 	println("Solution for part2")
 	var solution2 = CathodRay(2)
+	println()</code></pre>
+</div>
+</div>
+<a id="day11" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_11_kotlin"><a class="anchor" href="#_day_11_kotlin"></a><a class="link" href="#_day_11_kotlin">Day 11: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_11_monkey_in_the_middle"><a class="anchor" href="#_day_11_monkey_in_the_middle"></a><a class="link" href="#_day_11_monkey_in_the_middle">Day 11: Monkey in the Middle</a></h4>
+<div class="paragraph">
+<p>This solution is written in Kotlin.</p>
+</div>
+<div class="paragraph">
+<p>The original puzzle can be found at <a href="https://adventofcode.com/2022/day/11" class="bare">https://adventofcode.com/2022/day/11</a></p>
+</div>
+<div class="paragraph">
+<p>To solve the puzzle, first a data class <em>Monkey</em> is defined, it will hold all necessary informations of each monkey per turn.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin"></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For the solution itself, first the puzzle input is parsed and a list of <em>Monkey</em> is filled with all monkeys out of the puzzle input. After that, this list is used to iterate through each monkey and through each item of the monkey. For each item the worry factor is calculated and depending on the test result, the item thrown to the next monkey.</p>
+</div>
+<div class="sect4">
+<h5 id="_first_star_11"><a class="anchor" href="#_first_star_11"></a><a class="link" href="#_first_star_11">First Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>Each worry level is divided by 3, and the number of turns is 20. Since the number of evaluations is counted before, the to highest values are taken and multiplied by each other returned as a result.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun MonkeyMiddle(in1: Int): Long {
+
+	// parse puzzle input and fill list of monkeys with their roles and contents
+	var monkeyList = mutableListOf&lt;Monkey&gt;()
+	var monkey: Int = 0
+	var primeFactor = 1
+
+	File("day2211_puzzle_input.txt").forEachLine {
+		if (it.contains("Monkey")) {
+			monkey = it.substringAfter("Monkey ").dropLast(1).toInt()
+			monkeyList.add(Monkey(monkey))
+		} else if (it.contains("Starting")) {
+			var items = it.substringAfter("Starting items: ").split(", ")
+			items.forEach {
+				monkeyList[monkey].items.add(it.toLong())
+			}
+		} else if (it.contains("Operation")) {
+			var items = it.substringAfter("Operation: new = ").split(" ")
+			monkeyList[monkey].operation = items[1]
+			monkeyList[monkey].secondValue = items[2]
+		} else if (it.contains("Test")) {
+			var items = it.substringAfter("Test: divisible by ")
+			monkeyList[monkey].test = items.toLong()
+			primeFactor *= items.toInt()
+		} else if (it.contains("true")) {
+			var items = it.substringAfter("If true: throw to monkey ")
+			monkeyList[monkey].ifTrue = items.toInt()
+		} else if (it.contains("false")) {
+			var items = it.substringAfter("If false: throw to monkey ")
+			monkeyList[monkey].ifFalse = items.toInt()
+		}
+	}
+
+	// controll data flow for part one and part two
+	var n : Int
+	if (in1 == 1) {
+		n = 20
+	} else {
+		n = 10000
+	}
+
+	// play turns of the monkey in the middle game
+	for (i in 1..n) {
+		monkeyList.forEach {
+			var operation = it.operation
+			var secondValue = it.secondValue
+			var test = it.test
+			var ifTrue = it.ifTrue
+			var ifFalse = it.ifFalse
+			it.items.forEach {
+				var worry: Long = 0
+				var b: Long
+				if (secondValue == "old") {
+						b = it
+				} else {
+						b = secondValue.toLong()
+				}
+				if (operation == "+") {
+						worry = it + b
+				} else if (operation == "-") {
+						worry = it - b
+				} else if (operation == "*") {
+						worry = it * b
+				}
+				if( in1 == 3) {
+				worry = worry / 3
+				} else {
+					worry = worry % (primeFactor)
+				}
+				if (worry % test == 0L) {
+					monkeyList[ifTrue].items.add(worry)
+				} else {
+					monkeyList[ifFalse].items.add(worry)
+				}
+			}
+			it.counts += it.items.size
+			it.items.clear()
+		}
+	}
+
+	// prepare result
+	var countsList = mutableListOf&lt;Long&gt;()
+	monkeyList.forEach{
+		countsList.add(it.counts)
+	}
+	countsList.sortDescending()
+
+	return countsList[0]*countsList[1]
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_second_star_11"><a class="anchor" href="#_second_star_11"></a><a class="link" href="#_second_star_11">Second Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>Since the number of turns increased from 20 to 10000 and there was no recuction of the worry level any more, it was to be expected that numbers are growing very fast. Unfortunately switching from <em>Int</em> to <em>Long</em> did not help, so there must be an other solution for getting numbers down at each cycle.</p>
+</div>
+<div class="paragraph">
+<p>First of all I guessed it must have to do with primes, since every test value was a prime, and I wasted lots of time to think about deconstruction into prime factors (this is why the varialbe used is called <em>primeFactor</em>).</p>
+</div>
+<div class="paragraph">
+<p>At the end the key was that a worry level is only divisible if there is no rest, means if you simple reduce the worry factor each time it gets bigger than the test level of all monkeys multiplied by this value, the test works also for the remaining worry level.</p>
+</div>
+<div class="paragraph">
+<p>At the end, both solutions are printed out.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">// print solution for part 1
+	println("*******************************")
+	println("--- Day 10: Cathode-Ray Tube ---")
+	println("*******************************")
+	println("Solution for part1")
+	println("   $solution1 is the sum of these six signal strengths.")
+	println()
+// print solution for part 2
+	println("*******************************")
+	println("Solution for part2")
+	println("   $solution2 is the sum of these six signal strengths.")  //16068009780 to high
 	println()</code></pre>
 </div>
 </div>

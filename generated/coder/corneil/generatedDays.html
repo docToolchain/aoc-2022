@@ -452,11 +452,13 @@ object Rules {
 fun main() {
 
   fun toRps(hint: String): Rps {
-    return Rps.values().find { it.identifiers.contains(hint) } ?: error("Invalid RPS $hint")
+    return Rps.values().find { it.identifiers.contains(hint) }
+              ?: error("Invalid RPS $hint")
   }
 
   fun toOutcome(outcome: String): Outcome {
-    return Outcome.values().find { it.identifier == outcome } ?: error("Invalid Outcome:$outcome")
+    return Outcome.values().find { it.identifier == outcome }
+              ?: error("Invalid Outcome:$outcome")
   }
 
   fun readRounds(input: List&lt;String&gt;): List&lt;Hand&gt; {
@@ -554,9 +556,13 @@ fun main() {
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcRucksacks(input: List&lt;String&gt;): Int =
-  input.map { Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2)) }  <i class="conum" data-value="1"></i><b>(1)</b>
-    .map { it.first.toSet().intersect(it.second.toSet()).first() }                      <i class="conum" data-value="2"></i><b>(2)</b>
-    .sumOf { calcPriority(it) }                                                         <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+  input.map {
+      Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2)) <i class="conum" data-value="1"></i><b>(1)</b>
+    }
+    .map {
+      it.first.toSet().intersect(it.second.toSet()).first() <i class="conum" data-value="2"></i><b>(2)</b>
+    }
+    .sumOf { calcPriority(it) } <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -638,14 +644,19 @@ fun main() {
   }
 
   fun calcRucksacks(input: List&lt;String&gt;): Int =
-    input.map { Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2)) }
+    input.map {
+        Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2))
+      }
       .map { it.first.toSet().intersect(it.second.toSet()).first() }
       .sumOf { calcPriority(it) }
 
   fun calcBadges(input: List&lt;String&gt;): Int =
     input.mapIndexed { index, s -&gt; index / 3 to s }
       .groupBy({ it.first }, { it.second })
-      .map { e -&gt; e.value.map { it.toSet() }.reduce { a, b -&gt; a.intersect(b) }.first() }
+      .map { e -&gt; e.value.map { it.toSet() }
+          .reduce { a, b -&gt; a.intersect(b) }
+          .first()
+      }
       .sumOf { calcPriority(it) }
 
   fun part1() {
@@ -841,7 +852,10 @@ class Stack&lt;T&gt;(private val elements: MutableList&lt;T&gt; = mutableListOf&
 
 fun loadStacks(input: List&lt;String&gt;): List&lt;Stack&lt;Char&gt;&gt; {
   val lines = input.toMutableList()
-  val numbers = lines.last().split(" ").mapNotNull { if(it.isNotBlank()) it.toInt() else null }
+  val numbers = lines.last()
+        .split(" ")
+        .filter { it.isNotEmpty() }
+        .map { it.toInt() }
   lines.removeAt(lines.lastIndex)
   val stacks = mutableListOf&lt;Stack&lt;Char&gt;&gt;()
   for (stack in numbers.indices) {
@@ -875,7 +889,10 @@ fun loadInstructions(input: List&lt;String&gt;): List&lt;Instruction&gt; {
     stacks[instruction.to - 1].push(crate)
   }
 }
-fun performAndFindTops(stacks: List&lt;Stack&lt;Char&gt;&gt;, instructions: List&lt;Instruction&gt;): String {
+fun performAndFindTops(
+  stacks: List&lt;Stack&lt;Char&gt;&gt;,
+  instructions: List&lt;Instruction&gt;
+): String {
   instructions.forEach {
     perform(stacks, it)
   }
@@ -903,7 +920,10 @@ I decided to use a local stack to pop all the container and then push them again
     stacks[instruction.to - 1].push(tmp.pop())
   }
 }
-fun performAndFindTops9001(stacks: List&lt;Stack&lt;Char&gt;&gt;, instructions: List&lt;Instruction&gt;): String {
+fun performAndFindTops9001(
+    stacks: List&lt;Stack&lt;Char&gt;&gt;,
+    instructions: List&lt;Instruction&gt;
+): String {
   instructions.forEach {
     perform9001(stacks, it)
   }
@@ -1292,9 +1312,11 @@ I used the <code>Stack</code> from Day 05 to maintain the parent directories.</p
     private val directories = mutableMapOf&lt;String, Directory&gt;()
     fun listDirectories() = directories.values.toList()
 
-    fun hasDir(dirname: String): Boolean = directories.containsKey(dirname)
+    fun hasDir(dirname: String): Boolean =
+            directories.containsKey(dirname)
     fun getDir(dirname: String) = directories[dirname]
-    fun addDir(dirname: String): Directory = directories.getOrPut(dirname) { Directory(dirname) }
+    fun addDir(dirname: String): Directory =
+            directories.getOrPut(dirname) { Directory(dirname) }
     fun addFile(name: String, size: Int): FileInfo {
       val file = FileInfo(name, size)
       files[name] = file
@@ -1303,7 +1325,8 @@ I used the <code>Stack</code> from Day 05 to maintain the parent directories.</p
 
     fun listFiles(): List&lt;FileInfo&gt; = files.values.toList()
     fun fileSizes(): Int = files.values.sumOf { it.size }
-    fun totalSize(): Int = fileSizes() + directories.values.sumOf { it.totalSize() }
+    fun totalSize(): Int =
+            fileSizes() + directories.values.sumOf { it.totalSize() }
     override fun toString(): String {
       return "Directory(name='$name',directories=${
         directories.values.map { it.name }.toList()
@@ -1462,7 +1485,11 @@ I used the <code>Stack</code> from Day 05 to maintain the parent directories.</p
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun parseGrid(input: List&lt;String&gt;): Grid {
-  return Grid(input.map { line -&gt; line.toList().map { it - '0' }.toIntArray() }.toTypedArray())
+  return Grid(input.map { line -&gt;
+            line.toList()
+              .map { it - '0' }
+              .toIntArray()
+          }.toTypedArray())
 }</code></pre>
 </div>
 </div>
@@ -1674,7 +1701,12 @@ fun main() {
   }
 
   fun parseGrid(input: List&lt;String&gt;): Grid {
-    return Grid(input.map { line -&gt; line.toList().map { it - '0' }.toIntArray() }.toTypedArray())
+    return Grid(input.map { line -&gt;
+                 line.toList()
+                   .map { it - '0' }
+                   .toIntArray()
+             }.toTypedArray()
+     )
   }
 
   fun calcVisible(grid: Grid): Int {
@@ -2400,9 +2432,15 @@ Each monkey will toss the item to another monkey based on the worried factor per
   fun inspect(value: Int) {
     inspected += value
   }
-  fun findTarget(boredLevel: Long) = if (boredLevel % worriedLevel != 0L) worriedTarget else boredTarget
+  fun findTarget(boredLevel: Long) =
+      if (boredLevel % worriedLevel != 0L) worriedTarget else boredTarget
   override fun toString(): String {
-    return "Monkey(number=$number, inspected=$inspected, worriedLevel=$worriedLevel, boredTarget=$boredTarget, worriedTarget=$worriedTarget, items=$items)"
+    return "Monkey(number=$number, " +
+        "inspected=$inspected, " +
+        "worriedLevel=$worriedLevel, " +
+        "boredTarget=$boredTarget, " +
+        "worriedTarget=$worriedTarget, "+
+        "items=$items)"
   }
 }</code></pre>
 </div>
@@ -2424,7 +2462,9 @@ Each monkey will toss the item to another monkey based on the worried factor per
     "    If false: throw to monkey (\\d+)$"
 ).map { it.toRegex() }
 fun parseMonkey(lines: List&lt;String&gt;): Monkey {
-  val result = regexMonkey.mapIndexed { index, regex -&gt; regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") }.toTypedArray()
+  val result = regexMonkey.mapIndexed { index, regex -&gt;
+          regex.find(lines[index]) ?: error("Regex error for ${lines[index]}")
+      }.toTypedArray()
 
   val items = result[1].groupValues[1].split(",")
         .map { it.trim().toLong() }
@@ -2434,7 +2474,11 @@ fun parseMonkey(lines: List&lt;String&gt;): Monkey {
   check(words[0] == "old")
   val isAdd = words[1] == "+"
   val constant = words[2].toLongOrNull()
-  val lambda: (Long) -&gt; Long = if (isAdd) { old -&gt; Math.addExact(old, constant ?: old) } else { old -&gt; Math.multiplyExact(old, constant ?: old) } <i class="conum" data-value="1"></i><b>(1)</b>
+  val lambda: (Long) -&gt; Long =
+          if (isAdd)
+            { old -&gt; Math.addExact(old, constant ?: old) }
+          else
+            { old -&gt; Math.multiplyExact(old, constant ?: old) } <i class="conum" data-value="1"></i><b>(1)</b>
 
   return Monkey(
       result[0].groupValues[1].toInt(),
@@ -2463,8 +2507,14 @@ fun parseMonkey(lines: List&lt;String&gt;): Monkey {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun processItems(monkeys: Map&lt;Int, Monkey&gt;, rounds: Int, divisor: Long = 3L): Map&lt;Int, Monkey&gt; {
-  val divisors = monkeys.values.map { monkey -&gt; monkey.worriedLevel }.reduce { acc, l -&gt; acc * l * divisor } <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun processItems(
+    monkeys: Map&lt;Int, Monkey&gt;,
+    rounds: Int,
+    divisor: Long = 3L
+): Map&lt;Int, Monkey&gt; {
+  val divisors = monkeys.values
+      .map { monkey -&gt; monkey.worriedLevel }
+      .reduce { acc, l -&gt; acc * l * divisor } <i class="conum" data-value="1"></i><b>(1)</b>
   val sorted = monkeys.values.sortedBy { it.number }
   repeat(rounds) {
     sorted.forEach { monkey -&gt;
@@ -2472,7 +2522,8 @@ fun parseMonkey(lines: List&lt;String&gt;): Monkey {
         val level = monkey.expression(item)
         val bored = level / divisor
         val targetNumber = monkey.findTarget(bored)
-        val targetMonkey = monkeys[targetNumber] ?: error("Cannot find target Monkey:$targetNumber")
+        val targetMonkey = monkeys[targetNumber]
+            ?: error("Cannot find target Monkey:$targetNumber")
         targetMonkey.items.add(bored % divisors) <i class="conum" data-value="2"></i><b>(2)</b>
       }
       monkey.inspect(monkey.items.size)
@@ -2504,10 +2555,15 @@ fun parseMonkey(lines: List&lt;String&gt;): Monkey {
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcShenanigans1(input: List&lt;String&gt;): Int {
-  val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+  val monkeys = input.chunked(7)
+          .map { parseMonkey(it) }
+          .associateBy { it.number }
   val result = processItems(monkeys, 20)
-  return result.values.map { it.inspected }
-    .sortedDescending().take(2).reduce { acc, i -&gt; acc * i }
+  return result.values
+          .map { it.inspected }
+          .sortedDescending()
+          .take(2)
+          .reduce { acc, i -&gt; acc * i }
 }</code></pre>
 </div>
 </div>
@@ -2532,10 +2588,15 @@ Using a smallest common divisor all the modulus and <code>/</code> operations wi
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcShenanigans2(input: List&lt;String&gt;): Long {
-  val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+  val monkeys = input.chunked(7)
+          .map { parseMonkey(it) }
+          .associateBy { it.number }
   val result = processItems(monkeys, 10000, 1)
-  return result.values.map { it.inspected.toLong() }
-    .sortedDescending().take(2).reduce { acc, i -&gt; acc * i }
+  return result.values
+          .map { it.inspected.toLong() }
+          .sortedDescending()
+          .take(2)
+          .reduce { acc, i -&gt; acc * i }
 }</code></pre>
 </div>
 </div>
@@ -2580,7 +2641,9 @@ fun main() {
     "    If false: throw to monkey (\\d+)$"
   ).map { it.toRegex() }
   fun parseMonkey(lines: List&lt;String&gt;): Monkey {
-    val result = regexMonkey.mapIndexed { index, regex -&gt; regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") }.toTypedArray()
+    val result = regexMonkey.mapIndexed { index, regex -&gt;
+              regex.find(lines[index]) ?: error("Regex error for ${lines[index]}")
+        }.toTypedArray()
 
     val items = result[1].groupValues[1].split(",")
       .map { it.trim().toLong() }
@@ -2590,7 +2653,11 @@ fun main() {
     check(words[0] == "old")
     val isAdd = words[1] == "+"
     val constant = words[2].toLongOrNull()
-    val lambda: (Long) -&gt; Long = if (isAdd) { old -&gt; old + (constant ?: old) } else { old -&gt; old * (constant ?: old) }
+    val lambda: (Long) -&gt; Long =
+        if (isAdd)
+          { old -&gt; old + (constant ?: old) }
+        else
+          { old -&gt; old * (constant ?: old) }
 
     return Monkey(
       result[0].groupValues[1].toInt(),
@@ -2602,11 +2669,17 @@ fun main() {
     )
   }
 
-  fun processItems(monkeys: Map&lt;Int, Monkey&gt;, rounds: Int, divisor: Long = 3L): Map&lt;Int, Monkey&gt; {
+  fun processItems(
+    monkeys: Map&lt;Int, Monkey&gt;,
+    rounds: Int,
+    divisor: Long = 3L
+  ): Map&lt;Int, Monkey&gt; {
     // The mod of the total of worriedLevels overcomes the Long overflow
     // using all divisors ensure that it is the smallest value that will
     // still satisfy all the requirements when using a large number of rounds
-    val divisors = monkeys.values.map { monkey -&gt; monkey.worriedLevel }.reduce { acc, l -&gt; acc * l * divisor }
+    val divisors = monkeys.values
+          .map { monkey -&gt; monkey.worriedLevel }
+          .reduce { acc, l -&gt; acc * l * divisor }
     val sorted = monkeys.values.sortedBy { it.number }
     repeat(rounds) {
       sorted.forEach { monkey -&gt;
@@ -2614,7 +2687,8 @@ fun main() {
           val level = monkey.expression(item)
           val bored = level / divisor
           val targetNumber = monkey.findTarget(bored)
-          val targetMonkey = monkeys[targetNumber] ?: error("Cannot find target Monkey:$targetNumber")
+          val targetMonkey = monkeys[targetNumber]
+                  ?: error("Cannot find target Monkey:$targetNumber")
           targetMonkey.items.add(bored % divisors) // mod to ensure smallest valid value
         }
         monkey.inspect(monkey.items.size)
@@ -2625,23 +2699,35 @@ fun main() {
   }
 
   fun calcShenanigans1(input: List&lt;String&gt;): Int {
-    val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+    val monkeys = input.chunked(7)
+            .map { parseMonkey(it) }
+            .associateBy { it.number }
     println("Before: ====")
     monkeys.values.forEach { println(it.toString()) }
     val result = processItems(monkeys, 20)
     println("After: ====")
     result.values.forEach { println(it.toString()) }
-    return result.values.map { it.inspected }.sortedDescending().take(2).reduce { acc, i -&gt; acc * i }
+    return result.values
+            .map { it.inspected }
+            .sortedDescending()
+            .take(2)
+            .reduce { acc, i -&gt; acc * i }
   }
 
   fun calcShenanigans2(input: List&lt;String&gt;): Long {
-    val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+    val monkeys = input.chunked(7)
+            .map { parseMonkey(it) }
+            .associateBy { it.number }
     println("Before: ====")
     monkeys.values.forEach { println(it.toString()) }
     val result = processItems(monkeys, 10000, 1)
     println("After: ====")
     result.values.forEach { println(it.toString()) }
-    return result.values.map { it.inspected.toLong() }.sortedDescending().take(2).reduce { acc, i -&gt; acc * i }
+    return result.values
+            .map { it.inspected.toLong() }
+            .sortedDescending()
+            .take(2)
+            .reduce { acc, i -&gt; acc * i }
   }
 
   fun part1() {
