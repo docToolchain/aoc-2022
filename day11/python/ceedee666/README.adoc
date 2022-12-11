@@ -1,0 +1,28 @@
+== Day 11
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+Part one was quite easy. The parsing of the input file was the most complicated part. I used
+a `dict` to represent the monkey data. Depending on the operation the mokey performs I
+added `operator.add` or `operator.mul` to the dict. This allowed me to just invoke the correct
+operation later.
+
+I struggled a litte with the math for part two.
+
+
+=== What did I learn
+
+I should work on my basic math skills....
+
+
+=== How to run
+
+Run using:
+`$ python day_11.py --help`
