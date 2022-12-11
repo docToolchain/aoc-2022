@@ -83,7 +83,12 @@ fun main() {
   }
 
   fun parseGrid(input: List<String>): Grid {
-    return Grid(input.map { line -> line.toList().map { it - '0' }.toIntArray() }.toTypedArray())
+    return Grid(input.map { line -> 
+                 line.toList()
+                   .map { it - '0' }
+                   .toIntArray() 
+             }.toTypedArray()
+     )
   }
 
   fun calcVisible(grid: Grid): Int {

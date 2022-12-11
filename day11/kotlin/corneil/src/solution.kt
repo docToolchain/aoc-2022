@@ -34,7 +34,9 @@ fun main() {
     "    If false: throw to monkey (\\d+)$"
   ).map { it.toRegex() }
   fun parseMonkey(lines: List<String>): Monkey {
-    val result = regexMonkey.mapIndexed { index, regex -> regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") }.toTypedArray()
+    val result = regexMonkey.mapIndexed { index, regex -> 
+              regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") 
+        }.toTypedArray()
 
     val items = result[1].groupValues[1].split(",")
       .map { it.trim().toLong() }
@@ -44,7 +46,11 @@ fun main() {
     check(words[0] == "old")
     val isAdd = words[1] == "+"
     val constant = words[2].toLongOrNull()
-    val lambda: (Long) -> Long = if (isAdd) { old -> old + (constant ?: old) } else { old -> old * (constant ?: old) }
+    val lambda: (Long) -> Long = 
+        if (isAdd) 
+          { old -> old + (constant ?: old) } 
+        else 
+          { old -> old * (constant ?: old) }
 
     return Monkey(
       result[0].groupValues[1].toInt(),
@@ -56,11 +62,17 @@ fun main() {
     )
   }
 
-  fun processItems(monkeys: Map<Int, Monkey>, rounds: Int, divisor: Long = 3L): Map<Int, Monkey> {
+  fun processItems(
+    monkeys: Map<Int, Monkey>, 
+    rounds: Int, 
+    divisor: Long = 3L
+  ): Map<Int, Monkey> {
     // The mod of the total of worriedLevels overcomes the Long overflow
     // using all divisors ensure that it is the smallest value that will
     // still satisfy all the requirements when using a large number of rounds
-    val divisors = monkeys.values.map { monkey -> monkey.worriedLevel }.reduce { acc, l -> acc * l * divisor }
+    val divisors = monkeys.values
+          .map { monkey -> monkey.worriedLevel }
+          .reduce { acc, l -> acc * l * divisor }
     val sorted = monkeys.values.sortedBy { it.number }
     repeat(rounds) {
       sorted.forEach { monkey ->
@@ -68,7 +80,8 @@ fun main() {
           val level = monkey.expression(item)
           val bored = level / divisor
           val targetNumber = monkey.findTarget(bored)
-          val targetMonkey = monkeys[targetNumber] ?: error("Cannot find target Monkey:$targetNumber")
+          val targetMonkey = monkeys[targetNumber] 
+                  ?: error("Cannot find target Monkey:$targetNumber")
           targetMonkey.items.add(bored % divisors) // mod to ensure smallest valid value
         }
         monkey.inspect(monkey.items.size)
@@ -79,23 +92,35 @@ fun main() {
   }
 
   fun calcShenanigans1(input: List<String>): Int {
-    val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+    val monkeys = input.chunked(7)
+            .map { parseMonkey(it) }
+            .associateBy { it.number }
     println("Before: ====")
     monkeys.values.forEach { println(it.toString()) }
     val result = processItems(monkeys, 20)
     println("After: ====")
     result.values.forEach { println(it.toString()) }
-    return result.values.map { it.inspected }.sortedDescending().take(2).reduce { acc, i -> acc * i }
+    return result.values
+            .map { it.inspected }
+            .sortedDescending()
+            .take(2)
+            .reduce { acc, i -> acc * i }
   }
 
   fun calcShenanigans2(input: List<String>): Long {
-    val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+    val monkeys = input.chunked(7)
+            .map { parseMonkey(it) }
+            .associateBy { it.number }
     println("Before: ====")
     monkeys.values.forEach { println(it.toString()) }
     val result = processItems(monkeys, 10000, 1)
     println("After: ====")
     result.values.forEach { println(it.toString()) }
-    return result.values.map { it.inspected.toLong() }.sortedDescending().take(2).reduce { acc, i -> acc * i }
+    return result.values
+            .map { it.inspected.toLong() }
+            .sortedDescending()
+            .take(2)
+            .reduce { acc, i -> acc * i }
   }
 
   fun part1() {

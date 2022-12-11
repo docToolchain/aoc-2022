@@ -8,9 +8,11 @@ fun main() {
     private val directories = mutableMapOf<String, Directory>()
     fun listDirectories() = directories.values.toList()
 
-    fun hasDir(dirname: String): Boolean = directories.containsKey(dirname)
+    fun hasDir(dirname: String): Boolean = 
+            directories.containsKey(dirname)
     fun getDir(dirname: String) = directories[dirname]
-    fun addDir(dirname: String): Directory = directories.getOrPut(dirname) { Directory(dirname) }
+    fun addDir(dirname: String): Directory = 
+            directories.getOrPut(dirname) { Directory(dirname) }
     fun addFile(name: String, size: Int): FileInfo {
       val file = FileInfo(name, size)
       files[name] = file
@@ -19,7 +21,8 @@ fun main() {
 
     fun listFiles(): List<FileInfo> = files.values.toList()
     fun fileSizes(): Int = files.values.sumOf { it.size }
-    fun totalSize(): Int = fileSizes() + directories.values.sumOf { it.totalSize() }
+    fun totalSize(): Int = 
+            fileSizes() + directories.values.sumOf { it.totalSize() }
     override fun toString(): String {
       return "Directory(name='$name',directories=${
         directories.values.map { it.name }.toList()
