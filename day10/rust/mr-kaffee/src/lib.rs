@@ -1,20 +1,11 @@
 use input::*;
-use mr_kaffee_aoc::{Puzzle, Star};
+use mr_kaffee_aoc::{letters::Letters, Puzzle, Star};
 
-const LIT: char = '\u{2588}';
+const LIT: char = '#';
 const DARK: char = '.';
 
 /// the puzzle
 pub fn puzzle() -> Puzzle<'static, PuzzleData, isize, isize, String, String> {
-    const EXP_2: &str = r"
-████.███...██..███..████.███...██....██.
-█....█..█.█..█.█..█.█....█..█.█..█....█.
-███..█..█.█....█..█.███..█..█.█.......█.
-█....███..█....███..█....███..█.......█.
-█....█.█..█..█.█.█..█....█....█..█.█..█.
-████.█..█..██..█..█.████.█.....██...██..
-";
-
     Puzzle {
         year: 2022,
         day: 10,
@@ -27,7 +18,7 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, isize, isize, String, String> {
         star2: Some(Star {
             name: "Star 2",
             f: &star_2,
-            exp: Some(EXP_2.to_string()),
+            exp: Some("ERCREPCJ".to_string()),
         }),
     }
 }
@@ -148,26 +139,30 @@ pub fn star_1(data: &PuzzleData) -> isize {
 // end::star_1[]
 
 // tag::star_2[]
-pub fn star_2(data: &PuzzleData) -> String {
+pub fn solve_2(data: &PuzzleData) -> [u8; 240] {
     const W: usize = 40;
     const H: usize = 6;
 
     // initialize lcd with new lines, W + 1 to keep new lines at the and
-    let mut lcd = vec!['\n'; (W + 1) * H];
+    let mut lcd = [b'.'; W * H];
 
     let mut cpu = Cpu::init(data.instructions());
     for row in 0..H {
         for col in 0..W {
-            lcd[col as usize + (W + 1) * row] = if (cpu.x - 1..=cpu.x + 1).contains(&(col as _)) {
-                LIT
+            lcd[col as usize + W * row] = if (cpu.x - 1..=cpu.x + 1).contains(&(col as _)) {
+                LIT as u8
             } else {
-                DARK
+                DARK as u8
             };
             cpu.step();
         }
     }
 
-    ['\n'].iter().chain(lcd.iter()).collect()
+    lcd
+}
+
+pub fn star_2(data: &PuzzleData) -> String {
+    solve_2(data).decode(0).unwrap()
 }
 // end::star_2[]
 
@@ -189,9 +184,17 @@ mod tests {
     }
 
     #[test]
-    pub fn test_star_2() {
+    pub fn test_solve_2() {
         let data = PuzzleData::from(CONTENT);
-        assert_eq!(EXP_2, star_2(&data));
+        let b = solve_2(&data);
+        let mut s = String::with_capacity(41 * 6);
+        for row in 0..6 {
+            for col in 0..40 {
+                s.push(b[col + 40 * row] as _);
+            }
+            s.push('\n');
+        }
+        assert_eq!(EXP_2, s);
     }
 
     #[test]
@@ -212,13 +215,12 @@ mod tests {
 addx 3
 addx -5"#;
 
-    const EXP_2: &str = r"
-██..██..██..██..██..██..██..██..██..██..
-███...███...███...███...███...███...███.
-████....████....████....████....████....
-█████.....█████.....█████.....█████.....
-██████......██████......██████......████
-███████.......███████.......███████.....
+    const EXP_2: &str = r"##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
 ";
 
     const CONTENT: &str = r#"addx 15
