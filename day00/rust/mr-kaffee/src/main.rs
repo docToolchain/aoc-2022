@@ -28,6 +28,7 @@ fn puzzles() -> Vec<Box<dyn GenericPuzzle>> {
     let mut puzzles: Vec<Box<dyn GenericPuzzle>> = vec![
         Box::new(mr_kaffee_2022_0::puzzle()),
         // INCLUDE_PUZZLES:START
+        Box::new(mr_kaffee_2022_11::puzzle()),
         Box::new(mr_kaffee_2022_10::puzzle()),
         Box::new(mr_kaffee_2022_9::puzzle()),
         Box::new(mr_kaffee_2022_8::puzzle()),
