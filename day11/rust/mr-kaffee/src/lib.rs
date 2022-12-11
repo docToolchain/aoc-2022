@@ -1,6 +1,5 @@
 use input::*;
 use mr_kaffee_aoc::{Puzzle, Star};
-use std::collections::VecDeque;
 
 /// the puzzle
 pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
@@ -23,8 +22,6 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
 
 // tag::input[]
 pub mod input {
-    use std::collections::VecDeque;
-
     #[derive(Debug, PartialEq, Eq, Clone, Copy)]
     pub enum Operation {
         Plus(usize),
@@ -46,66 +43,51 @@ pub mod input {
 
     #[derive(Debug, PartialEq, Eq, Clone)]
     pub struct Monkey {
-        pub id: usize,
-        pub items: VecDeque<usize>,
-        pub operation: Operation,
+        pub worries: Vec<usize>,
+        pub upd: Operation,
         pub test: usize,
         pub if_true: usize,
         pub if_false: usize,
     }
 
-    fn advance_by<'a, T>(iter: &mut T, n: usize)
-    where
-        T: Iterator<Item = &'a str>,
-    {
-        for _ in 0..n {
-            iter.next();
-        }
-    }
-
     impl From<&'static str> for Monkey {
         fn from(monkey: &'static str) -> Self {
-            let mut parts = monkey.split_ascii_whitespace();
+            let words = monkey.split_ascii_whitespace();
 
-            advance_by(&mut parts, 1); // Monkey
+            let mut words = words.skip(4); // Monkey <id>: Starting items:
 
-            let id = parts.next().unwrap().trim_end_matches(':').parse().unwrap();
-
-            advance_by(&mut parts, 2); // Starting items:
-
-            let mut items = VecDeque::new();
-            let mut cur = parts.next().unwrap();
-            while cur != "Operation:" {
-                items.push_back(cur.trim_end_matches(',').parse().unwrap());
-                cur = parts.next().unwrap();
+            let mut worries = Vec::new();
+            let mut word = words.next().unwrap();
+            while word != "Operation:" {
+                worries.push(word.trim_end_matches(',').parse().unwrap());
+                word = words.next().unwrap();
             }
 
-            advance_by(&mut parts, 3); // new = old
+            let mut words = words.skip(3); // new = old
 
-            let operation = match (parts.next().unwrap(), parts.next().unwrap()) {
+            let upd = match (words.next().unwrap(), words.next().unwrap()) {
                 ("*", "old") => Operation::Square,
                 ("+", "old") => Operation::Double,
                 ("*", v) => Operation::Times(v.parse().unwrap()),
                 ("+", v) => Operation::Plus(v.parse().unwrap()),
-                (op, v) => panic!("Bad part: {op} {v}"),
+                _ => unreachable!(),
             };
 
-            advance_by(&mut parts, 3); // Test: divisible by
+            let mut words = words.skip(3); // Test: divisible by
 
-            let test = parts.next().unwrap().parse().unwrap();
+            let test = words.next().unwrap().parse().unwrap();
 
-            advance_by(&mut parts, 5); // If true: throw to monkey
+            let mut words = words.skip(5); // If true: throw to monkey
 
-            let if_true = parts.next().unwrap().parse().unwrap();
+            let if_true = words.next().unwrap().parse().unwrap();
 
-            advance_by(&mut parts, 5); // If false: throw to monkey
+            let mut words = words.skip(5); // If false: throw to monkey
 
-            let if_false = parts.next().unwrap().parse().unwrap();
+            let if_false = words.next().unwrap().parse().unwrap();
 
             Self {
-                id,
-                items,
-                operation,
+                worries,
+                upd,
                 test,
                 if_true,
                 if_false,
@@ -137,29 +119,27 @@ pub mod input {
 
 // tag::solution[]
 pub fn round(monkeys: &mut Vec<Monkey>, counts: &mut Vec<usize>, div: usize, m: usize) {
-    let mut queue = VecDeque::new();
     for id in 0..monkeys.len() {
-        counts[id] += monkeys[id].items.len();
-        while let Some(item) = monkeys[id].items.pop_front() {
-            let item = (monkeys[id].operation.apply(item) / div) % m;
-            if item % monkeys[id].test == 0 {
-                queue.push_back((monkeys[id].if_true, item));
+        counts[id] += monkeys[id].worries.len();
+        for k in 0..monkeys[id].worries.len() {
+            let worry = (monkeys[id].upd.apply(monkeys[id].worries[k]) / div) % m;
+            let target = if worry % monkeys[id].test == 0 {
+                monkeys[id].if_true
             } else {
-                queue.push_back((monkeys[id].if_false, item));
-            }
+                monkeys[id].if_false
+            };
+            monkeys[target].worries.push(worry);
         }
-        while let Some((id, item)) = queue.pop_front() {
-            monkeys[id].items.push_back(item);
-        }
+        monkeys[id].worries.clear();
     }
 }
 
 pub fn solve(data: &PuzzleData, div: usize, rounds: usize) -> usize {
     let mut monkeys = Vec::from(data.monkeys());
     let mut counts = vec![0; monkeys.len()];
-    let m = monkeys.iter().fold(1, |m, monkey| m * monkey.test);
+    let m = monkeys.iter().map(|monkey| monkey.test).product();
 
-    for _round in 0..rounds {
+    for _ in 0..rounds {
         round(&mut monkeys, &mut counts, div, m);
     }
 
@@ -215,13 +195,10 @@ Test: divisible by 17
         let mut monkeys = Vec::from(data.monkeys());
         let mut counts = vec![0; monkeys.len()];
         round(&mut monkeys, &mut counts, 3, usize::MAX);
-        assert_eq!(VecDeque::from([20, 23, 27, 26]), monkeys[0].items);
-        assert_eq!(
-            VecDeque::from([2080, 25, 167, 207, 401, 1046]),
-            monkeys[1].items
-        );
-        assert!(monkeys[2].items.is_empty());
-        assert!(monkeys[3].items.is_empty());
+        assert_eq!(vec![20, 23, 27, 26], monkeys[0].worries);
+        assert_eq!(vec![2080, 25, 167, 207, 401, 1046], monkeys[1].worries);
+        assert!(monkeys[2].worries.is_empty());
+        assert!(monkeys[3].worries.is_empty());
     }
 
     #[test]
