@@ -22,9 +22,15 @@ data class Monkey(
   fun inspect(value: Int) {
     inspected += value
   }
-  fun findTarget(boredLevel: Long) = if (boredLevel % worriedLevel != 0L) worriedTarget else boredTarget
+  fun findTarget(boredLevel: Long) = 
+      if (boredLevel % worriedLevel != 0L) worriedTarget else boredTarget
   override fun toString(): String {
-    return "Monkey(number=$number, inspected=$inspected, worriedLevel=$worriedLevel, boredTarget=$boredTarget, worriedTarget=$worriedTarget, items=$items)"
+    return "Monkey(number=$number, " + 
+        "inspected=$inspected, " + 
+        "worriedLevel=$worriedLevel, " + 
+        "boredTarget=$boredTarget, " +
+        "worriedTarget=$worriedTarget, "+
+        "items=$items)"
   }
 }
 ....
@@ -45,7 +51,9 @@ val regexMonkey = listOf(
     "    If false: throw to monkey (\\d+)$"
 ).map { it.toRegex() }
 fun parseMonkey(lines: List<String>): Monkey {
-  val result = regexMonkey.mapIndexed { index, regex -> regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") }.toTypedArray()
+  val result = regexMonkey.mapIndexed { index, regex -> 
+          regex.find(lines[index]) ?: error("Regex error for ${lines[index]}") 
+      }.toTypedArray()
 
   val items = result[1].groupValues[1].split(",")
         .map { it.trim().toLong() }
@@ -55,7 +63,11 @@ fun parseMonkey(lines: List<String>): Monkey {
   check(words[0] == "old")
   val isAdd = words[1] == "+"
   val constant = words[2].toLongOrNull()
-  val lambda: (Long) -> Long = if (isAdd) { old -> Math.addExact(old, constant ?: old) } else { old -> Math.multiplyExact(old, constant ?: old) } // <1>
+  val lambda: (Long) -> Long = 
+          if (isAdd) 
+            { old -> Math.addExact(old, constant ?: old) }
+          else 
+            { old -> Math.multiplyExact(old, constant ?: old) } // <1>
 
   return Monkey(
       result[0].groupValues[1].toInt(),
@@ -75,8 +87,14 @@ Each monkey must process their items in the sequence of the assigned number.
 
 [source,kotlin]
 ....
-fun processItems(monkeys: Map<Int, Monkey>, rounds: Int, divisor: Long = 3L): Map<Int, Monkey> {
-  val divisors = monkeys.values.map { monkey -> monkey.worriedLevel }.reduce { acc, l -> acc * l * divisor } // <1>
+fun processItems(
+    monkeys: Map<Int, Monkey>, 
+    rounds: Int, 
+    divisor: Long = 3L
+): Map<Int, Monkey> {
+  val divisors = monkeys.values
+      .map { monkey -> monkey.worriedLevel }
+      .reduce { acc, l -> acc * l * divisor } // <1>
   val sorted = monkeys.values.sortedBy { it.number }
   repeat(rounds) {
     sorted.forEach { monkey ->
@@ -84,7 +102,8 @@ fun processItems(monkeys: Map<Int, Monkey>, rounds: Int, divisor: Long = 3L): Ma
         val level = monkey.expression(item)
         val bored = level / divisor
         val targetNumber = monkey.findTarget(bored)
-        val targetMonkey = monkeys[targetNumber] ?: error("Cannot find target Monkey:$targetNumber")
+        val targetMonkey = monkeys[targetNumber] 
+            ?: error("Cannot find target Monkey:$targetNumber")
         targetMonkey.items.add(bored % divisors) // <2>
       }
       monkey.inspect(monkey.items.size)
@@ -105,10 +124,15 @@ Initially using `Int` values caused an overflow and I changed the worriedLevel a
 [source,kotlin]
 ....
 fun calcShenanigans1(input: List<String>): Int {
-  val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+  val monkeys = input.chunked(7)
+          .map { parseMonkey(it) }
+          .associateBy { it.number }
   val result = processItems(monkeys, 20)
-  return result.values.map { it.inspected }
-    .sortedDescending().take(2).reduce { acc, i -> acc * i }
+  return result.values
+          .map { it.inspected }
+          .sortedDescending()
+          .take(2)
+          .reduce { acc, i -> acc * i }
 }
 ....
 
@@ -122,10 +146,15 @@ NOTE: Using a smallest common divisor all the modulus and `/` operations will en
 [source,kotlin]
 ....
 fun calcShenanigans2(input: List<String>): Long {
-  val monkeys = input.chunked(7).map { parseMonkey(it) }.associateBy { it.number }
+  val monkeys = input.chunked(7)
+          .map { parseMonkey(it) }
+          .associateBy { it.number }
   val result = processItems(monkeys, 10000, 1)
-  return result.values.map { it.inspected.toLong() }
-    .sortedDescending().take(2).reduce { acc, i -> acc * i }
+  return result.values
+          .map { it.inspected.toLong() }
+          .sortedDescending()
+          .take(2)
+          .reduce { acc, i -> acc * i }
 }
 ....
 
