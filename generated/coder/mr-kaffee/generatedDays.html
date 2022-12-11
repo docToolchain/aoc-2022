@@ -283,6 +283,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_11_rust">Day 11: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_11_monkey_in_the_middle">Day 11: Monkey in the Middle</a>
+<ul class="sectlevel4">
+<li><a href="#_input_11">Input</a></li>
+<li><a href="#_solution_2">Solution</a></li>
+<li><a href="#_tests_12">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2487,6 +2498,268 @@ noop
 noop
 noop
 "#;
+}</code></pre>
+</div>
+</div>
+<a id="day11" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_11_rust"><a class="anchor" href="#_day_11_rust"></a><a class="link" href="#_day_11_rust">Day 11: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_11_monkey_in_the_middle"><a class="anchor" href="#_day_11_monkey_in_the_middle"></a><a class="link" href="#_day_11_monkey_in_the_middle">Day 11: Monkey in the Middle</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/11">AoC|2022|11</a>.</p>
+</div>
+<div class="paragraph">
+<p>It was quite tedious today for me to create the solution.</p>
+</div>
+<div class="paragraph">
+<p>I liked the twist in part 2. Since each monkey does a modulo <code>test</code> before passing on the item, we can safely do a modulo with the product of all tests of all monkeys to keep the numbers small. Still took me a while to complete part two because I just replaced the <code>/ 3</code> from the first part with <code>/ mod</code> in the second part which is obviously not the same as <code>% mod</code>. And I have to confess that my first attempt was to use 128bit numbers.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_11"><a class="anchor" href="#_input_11"></a><a class="link" href="#_input_11">Input</a></h5>
+<div class="paragraph">
+<p>Parsing was a pain today. I almost regret my decision to not use external dependencies (and thus not use Regex) &#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    use std::collections::VecDeque;
+
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+    pub enum Operation {
+        Plus(usize),
+        Times(usize),
+        Square,
+        Double,
+    }
+
+    impl Operation {
+        pub fn apply(&amp;self, item: usize) -&gt; usize {
+            match self {
+                Operation::Plus(v) =&gt; item + v,
+                Operation::Times(v) =&gt; item * v,
+                Operation::Square =&gt; item * item,
+                Operation::Double =&gt; item + item,
+            }
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq, Clone)]
+    pub struct Monkey {
+        pub id: usize,
+        pub items: VecDeque&lt;usize&gt;,
+        pub operation: Operation,
+        pub test: usize,
+        pub if_true: usize,
+        pub if_false: usize,
+    }
+
+    fn advance_by&lt;'a, T&gt;(iter: &amp;mut T, n: usize)
+    where
+        T: Iterator&lt;Item = &amp;'a str&gt;,
+    {
+        for _ in 0..n {
+            iter.next();
+        }
+    }
+
+    impl From&lt;&amp;'static str&gt; for Monkey {
+        fn from(monkey: &amp;'static str) -&gt; Self {
+            let mut parts = monkey.split_ascii_whitespace();
+
+            advance_by(&amp;mut parts, 1); // Monkey
+
+            let id = parts.next().unwrap().trim_end_matches(':').parse().unwrap();
+
+            advance_by(&amp;mut parts, 2); // Starting items:
+
+            let mut items = VecDeque::new();
+            let mut cur = parts.next().unwrap();
+            while cur != "Operation:" {
+                items.push_back(cur.trim_end_matches(',').parse().unwrap());
+                cur = parts.next().unwrap();
+            }
+
+            advance_by(&amp;mut parts, 3); // new = old
+
+            let operation = match (parts.next().unwrap(), parts.next().unwrap()) {
+                ("*", "old") =&gt; Operation::Square,
+                ("+", "old") =&gt; Operation::Double,
+                ("*", v) =&gt; Operation::Times(v.parse().unwrap()),
+                ("+", v) =&gt; Operation::Plus(v.parse().unwrap()),
+                (op, v) =&gt; panic!("Bad part: {op} {v}"),
+            };
+
+            advance_by(&amp;mut parts, 3); // Test: divisible by
+
+            let test = parts.next().unwrap().parse().unwrap();
+
+            advance_by(&amp;mut parts, 5); // If true: throw to monkey
+
+            let if_true = parts.next().unwrap().parse().unwrap();
+
+            advance_by(&amp;mut parts, 5); // If false: throw to monkey
+
+            let if_false = parts.next().unwrap().parse().unwrap();
+
+            Self {
+                id,
+                items,
+                operation,
+                test,
+                if_true,
+                if_false,
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        monkeys: Vec&lt;Monkey&gt;,
+    }
+
+    impl From&lt;&amp;'static str&gt; for PuzzleData {
+        /// parse the puzzle input
+        fn from(s: &amp;'static str) -&gt; Self {
+            Self {
+                monkeys: s.split("\n\n").map(Monkey::from).collect(),
+            }
+        }
+    }
+
+    impl PuzzleData {
+        pub fn monkeys(&amp;self) -&gt; &amp;[Monkey] {
+            &amp;self.monkeys
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_2"><a class="anchor" href="#_solution_2"></a><a class="link" href="#_solution_2">Solution</a></h5>
+<div class="paragraph">
+<p>Here is my solution for both parts. The <code>solve</code> function is called with <code>div = 3</code> for the first part and <code>div = 1</code> for the second.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn round(monkeys: &amp;mut Vec&lt;Monkey&gt;, counts: &amp;mut Vec&lt;usize&gt;, div: usize, m: usize) {
+    let mut queue = VecDeque::new();
+    for id in 0..monkeys.len() {
+        counts[id] += monkeys[id].items.len();
+        while let Some(item) = monkeys[id].items.pop_front() {
+            let item = (monkeys[id].operation.apply(item) / div) % m;
+            if item % monkeys[id].test == 0 {
+                queue.push_back((monkeys[id].if_true, item));
+            } else {
+                queue.push_back((monkeys[id].if_false, item));
+            }
+        }
+        while let Some((id, item)) = queue.pop_front() {
+            monkeys[id].items.push_back(item);
+        }
+    }
+}
+
+pub fn solve(data: &amp;PuzzleData, div: usize, rounds: usize) -&gt; usize {
+    let mut monkeys = Vec::from(data.monkeys());
+    let mut counts = vec![0; monkeys.len()];
+    let m = monkeys.iter().fold(1, |m, monkey| m * monkey.test);
+
+    for _round in 0..rounds {
+        round(&amp;mut monkeys, &amp;mut counts, div, m);
+    }
+
+    counts.sort_unstable();
+
+    counts.pop().unwrap() as usize * counts.pop().unwrap() as usize
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_12"><a class="anchor" href="#_tests_12"></a><a class="link" href="#_tests_12">Tests</a></h5>
+<div class="olist lowerroman">
+<ol class="lowerroman" type="i">
+<li>
+<p>and the tests</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"Monkey 0:
+Starting items: 79, 98
+Operation: new = old * 19
+Test: divisible by 23
+  If true: throw to monkey 2
+  If false: throw to monkey 3
+
+Monkey 1:
+Starting items: 54, 65, 75, 74
+Operation: new = old + 6
+Test: divisible by 19
+  If true: throw to monkey 2
+  If false: throw to monkey 0
+
+Monkey 2:
+Starting items: 79, 60, 97
+Operation: new = old * old
+Test: divisible by 13
+  If true: throw to monkey 1
+  If false: throw to monkey 3
+
+Monkey 3:
+Starting items: 74
+Operation: new = old + 3
+Test: divisible by 17
+  If true: throw to monkey 0
+  If false: throw to monkey 1
+"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_round() {
+        let data = PuzzleData::from(CONTENT);
+        let mut monkeys = Vec::from(data.monkeys());
+        let mut counts = vec![0; monkeys.len()];
+        round(&amp;mut monkeys, &amp;mut counts, 3, usize::MAX);
+        assert_eq!(VecDeque::from([20, 23, 27, 26]), monkeys[0].items);
+        assert_eq!(
+            VecDeque::from([2080, 25, 167, 207, 401, 1046]),
+            monkeys[1].items
+        );
+        assert!(monkeys[2].items.is_empty());
+        assert!(monkeys[3].items.is_empty());
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(10605, solve(&amp;data, 3, 20));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+
+        assert_eq!(4 * 6, solve(&amp;data, 1, 1));
+        assert_eq!(99 * 103, solve(&amp;data, 1, 20));
+
+        assert_eq!(2_713_310_158, solve(&amp;data, 1, 10_000));
+    }
 }</code></pre>
 </div>
 </div>
