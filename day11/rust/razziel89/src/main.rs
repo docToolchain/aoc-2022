@@ -53,7 +53,15 @@ fn solve(file: &str, part1: bool) -> Result<()> {
     monkeys.sort_by(|monkey1, monkey2| monkey1.how_active().cmp(&monkey2.how_active()));
     monkeys.reverse();
 
-    println!("{}", monkeys[0].how_active() * monkeys[1].how_active(),);
+    println!(
+        "most active: {} & {}",
+        monkeys[0].whoami(),
+        monkeys[1].whoami(),
+    );
+    println!(
+        "monkey business is {}",
+        monkeys[0].how_active() * monkeys[1].how_active()
+    );
 
     Ok(())
 }
