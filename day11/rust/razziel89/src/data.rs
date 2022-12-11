@@ -39,6 +39,14 @@ impl Monkey {
     pub fn how_active(&self) -> usize {
         self.activity
     }
+
+    pub fn set_all_divs(&mut self, prod: isize) {
+        self.op.prod = Some(prod);
+    }
+
+    pub fn get_div(&self) -> isize {
+        self.test.div_val
+    }
 }
 
 // All operations can be realised as a*x^2 + b*x + c
@@ -47,12 +55,21 @@ struct QuadraticOp {
     a: isize,
     b: isize,
     c: isize,
+    prod: Option<isize>,
 }
 
 impl QuadraticOp {
     fn apply(&self, val: &isize) -> isize {
-        // We update our worry level but always divide by 3 in the end.
-        (self.a * val * val + self.b * val + self.c) / (3 as isize)
+        if let Some(prod) = self.prod {
+            // We update our worry level but don't divide by anything. Instead, to keep the numbers
+            // small and avoid weirdness due to divisibility checks, we take the modulo with
+            // respect to the product of all unique divisibility checks. Doing so never influences
+            // any of the divisibility checks.
+            (self.a * val * val + self.b * val + self.c) % prod
+        } else {
+            // We update our worry level but always divide by 3 in the end. This is for part 1.
+            (self.a * val * val + self.b * val + self.c) / 3
+        }
     }
 }
 
@@ -120,16 +137,23 @@ impl FromStr for Monkey {
             lines[2].split("=").collect::<Vec<_>>().as_slice()
         {
             match op_str.split_whitespace().collect::<Vec<_>>().as_slice() {
-                ["old", "*", "old"] => Ok(QuadraticOp { a: 1, b: 0, c: 0 }),
+                ["old", "*", "old"] => Ok(QuadraticOp {
+                    a: 1,
+                    b: 0,
+                    c: 0,
+                    prod: None,
+                }),
                 ["old", "*", num] => Ok(QuadraticOp {
                     a: 0,
                     b: num.parse().context("multiplier")?,
                     c: 0,
+                    prod: None,
                 }),
                 ["old", "+", num] => Ok(QuadraticOp {
                     a: 0,
                     b: 1,
                     c: num.parse().context("adder")?,
+                    prod: None,
                 }),
                 _ => Err(Error::msg("cannot build op")),
             }
@@ -166,6 +190,10 @@ impl FromStr for Monkey {
             return Err(Error::msg("trying to toss to myself"));
         }
 
+        if !is_prime(div_val) {
+            return Err(Error::msg("div val is no prime"));
+        }
+
         let test = DivisitilibytTest {
             div_val,
             true_monkey,
@@ -183,4 +211,15 @@ impl FromStr for Monkey {
         })
     }
 }
+
+// This is a quick check for being prime.
+fn is_prime(val: isize) -> bool {
+    for i in 2..val {
+        if val % i == 0 {
+            return false;
+        }
+    }
+    true
+}
+
 // end::data[]

@@ -10,9 +10,10 @@ mod io;
 
 // tag::main[]
 use anyhow::Result;
+use std::collections::HashSet;
 // Constants.
 
-fn solve(file: &str) -> Result<()> {
+fn solve(file: &str, part1: bool) -> Result<()> {
     eprintln!("PROCESSING {}", file);
 
     // Read file and convert into data.
@@ -23,7 +24,22 @@ fn solve(file: &str) -> Result<()> {
         None,
     )?;
 
-    for _round in 0..20 {
+    let prod_of_div_vals = monkeys
+        .iter()
+        .map(|el| el.get_div())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .product::<isize>();
+
+    if !part1 {
+        for monkey in &mut monkeys {
+            monkey.set_all_divs(prod_of_div_vals);
+        }
+    }
+
+    let rounds = if part1 { 20 } else { 10_000 };
+
+    for _round in 0..rounds {
         for monkey_idx in 0..monkeys.len() {
             // println!("check: {:?}", monkeys[monkey_idx]);
             for (target, item) in monkeys[monkey_idx].inspect_and_toss().into_iter() {
@@ -43,9 +59,11 @@ fn solve(file: &str) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    solve(SAMPLE1)?;
-    solve(REAL)?;
+    solve(SAMPLE1, true)?;
+    solve(REAL, true)?;
 
+    solve(SAMPLE1, false)?;
+    solve(REAL, false)?;
     Ok(())
 }
 // end::main[]
