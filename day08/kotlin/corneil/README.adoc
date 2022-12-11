@@ -33,7 +33,11 @@ Parsing meant converting each line to an array of int by converting each charact
 [source,kotlin]
 ....
 fun parseGrid(input: List<String>): Grid {
-  return Grid(input.map { line -> line.toList().map { it - '0' }.toIntArray() }.toTypedArray())
+  return Grid(input.map { line -> 
+            line.toList()
+              .map { it - '0' }
+              .toIntArray() 
+          }.toTypedArray())
 }
 ....
 
