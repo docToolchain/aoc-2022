@@ -1,0 +1,31 @@
+==  Day 11: Monkey in the Middle  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/11
+
+
+=== First Star
+
+How does it work: +
+
+Description to be updated.
+
+[source, kotlin, numbered]
+....
+include::day2211_1_2.kt[tags=MonkeyMiddle]
+....
+
+
+=== Second Star
+
+How does it work: +
+
+Values exceed by far the limit of _long_. Some other solution is need, currently I have no glue, but I guess it has something to do with primes.
+
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2211_1_2.kt[tags=output]
+....
