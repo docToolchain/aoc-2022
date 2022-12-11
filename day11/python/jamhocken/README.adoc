@@ -1,0 +1,33 @@
+
+Day 11 of year 2022
+https://adventofcode.com/2022/day/11
+
+== What I learned
+
+. The first day this year that you really had to think a bit. No new programming tricks, just had to think about the math (especially what happens to remainders).
+
+== Approach
+
+. I take the input and turn it into a monkey dictionary with the worry values of each item that monkey has, the operator and number (or "old"), the divisor and to which monkeys the items go in a list.
+
+. This worked fine for star 1 but was not well suited for star 2.
+
+**Star 1** +
+
+. You go through a loop 20 times, each time you do the math and move the monkeys around. The worries grow, but with 20 loops its not an issue. Each round through you count how many items that monkey looked at. At the end, you grab the number of looks for each monkey, sort the list and multiple the first 2.
+
+**Star 2** +
+
+. My first attempt was to move the worry numbers out of the monkey dictionary into a seperate dictionary. That way, I saved a copy and the performance was better, but the numbers get too big at some point. So, this way was a day end.
+
+. I thought about the math a bit. Actually, you only need the remainder each time to decide where to send the item. So, I calculated the remainder of each item divided by the rule of each monkey. If you think about it, adding a number can be added to the remainder, multiplying as well and squaring and doubling as well. You just need to mod it again afterwards. So, I just keep track of the remainders (which never get big obviously...). It ran in a second or 2.
+
+. I think I could have saved the extra dictionary in the end, but I left it since it works fine.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
