@@ -52,7 +52,7 @@ cd %base_dir%
 :: Define command to execute
 set target_dir=%repo_dir%day%day%\rust\mr-kaffee\
 set runner_dir=%repo_dir%day00\rust\mr-kaffee\
-set cmd=%executable% init -r %runner_dir% -t %target_dir% -l ../../../day00/rust/mr-kaffee/aoc -y %year% -d %1
+set cmd=%executable% init -r %runner_dir% -t %target_dir% -y %year% -d %1
 
 echo Executing '%cmd%' ...
 
