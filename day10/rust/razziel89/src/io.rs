@@ -2,20 +2,24 @@
 use anyhow::{Context, Error, Result};
 use std::str::FromStr;
 
-fn read_lines_from_file(path: &str) -> Result<Vec<String>> {
+pub fn read_lines_from_file(path: &str, chunk_size: usize) -> Result<Vec<String>> {
     Ok(std::fs::read_to_string(path)
         .context("reading from disk")?
         .trim_end()
         .split('\n')
         .map(|el| String::from(el))
-        .collect())
+        .collect::<Vec<_>>()
+        .as_slice()
+        .chunks(chunk_size)
+        .map(|chunk| chunk.to_vec().join("\n"))
+        .collect::<Vec<_>>())
 }
 
 pub type Predicate = fn(&String) -> bool;
 pub type Transform = fn(String) -> String;
 
-pub fn parse_lines_to_data<T>(
-    file: &str,
+pub fn parse_chunks_to_data<T>(
+    chunks: Vec<String>,
     type_name: &str,
     filter: Option<Predicate>,
     transform: Option<Transform>,
@@ -29,8 +33,7 @@ where
     let mut errs: Vec<String> = vec![];
 
     // Read file and convert into actions.
-    let data = read_lines_from_file(file)
-        .context("reading lines")?
+    let data = chunks
         .into_iter()
         .filter(filter_fn)
         .map(transformer)

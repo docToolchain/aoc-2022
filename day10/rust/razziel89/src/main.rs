@@ -63,7 +63,8 @@ fn solve(file: &str, part1: bool, fill: char) -> Result<()> {
     eprintln!("PROCESSING {}", file);
 
     // Read file and convert into data.
-    let ops = io::parse_lines_to_data::<data::Op>(file, "op", None, None)?;
+    let ops =
+        io::parse_chunks_to_data::<data::Op>(io::read_lines_from_file(file, 1)?, "op", None, None)?;
 
     // We avoid that one-cycle-two-cycle weridness by replacing each addx operation by a noop and
     // an addx operation that is assumed to take only one cycle.
