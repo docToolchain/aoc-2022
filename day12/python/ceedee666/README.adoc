@@ -1,0 +1,24 @@
+== Day 11
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea is to implement breath first search to find the shortest path from the start
+to the highest point.
+
+
+=== What did I learn
+
+I struggled a little with finding possible neighbours. It took me some time to realize
+that I need to take the hight into account.
+
+=== How to run
+
+Run using:
+`$ python day_11.py --help`
