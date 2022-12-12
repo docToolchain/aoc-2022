@@ -294,6 +294,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_12_rust">Day 12: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_12_hill_climbing_algorithm">Day 12: Hill Climbing Algorithm</a>
+<ul class="sectlevel4">
+<li><a href="#_input_12">Input</a></li>
+<li><a href="#_star_1_10">Star 1</a></li>
+<li><a href="#_star_2_10">Star 2</a></li>
+<li><a href="#_tests_13">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2748,6 +2760,236 @@ Test: divisible by 17
         assert_eq!(99 * 103, solve(&amp;data, 1, 20));
 
         assert_eq!(2_713_310_158, solve(&amp;data, 1, 10_000));
+    }
+}</code></pre>
+</div>
+</div>
+<a id="day12" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_12_rust"><a class="anchor" href="#_day_12_rust"></a><a class="link" href="#_day_12_rust">Day 12: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_12_hill_climbing_algorithm"><a class="anchor" href="#_day_12_hill_climbing_algorithm"></a><a class="link" href="#_day_12_hill_climbing_algorithm">Day 12: Hill Climbing Algorithm</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/12">AoC|2022|12</a>.</p>
+</div>
+<div class="paragraph">
+<p>The first path finding challenge in 2022&#8217;s AoC edition ;)</p>
+</div>
+<div class="sect4">
+<h5 id="_input_12"><a class="anchor" href="#_input_12"></a><a class="link" href="#_input_12">Input</a></h5>
+<div class="paragraph">
+<p>I parse the input into a grid of bytes stored in a vec and additionally determine the starting position, the target position and the width of the grid.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        pub grid: Vec&lt;u8&gt;,
+        pub width: usize,
+        pub start: usize,
+        pub target: usize,
+    }
+
+    impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData {
+        /// parse the puzzle input
+        fn from(s: &amp;'a str) -&gt; Self {
+            let width = s.find('\n').unwrap();
+
+            let mut grid: Vec&lt;_&gt; = s
+                .as_bytes()
+                .iter()
+                .cloned()
+                .filter(|b| *b != b'\n')
+                .collect();
+            let start = grid.iter().position(|&amp;b| b == b'S').unwrap();
+            let target = grid.iter().position(|&amp;b| b == b'E').unwrap();
+
+            grid[start] = b'a';
+            grid[target] = b'z';
+
+            Self {
+                grid,
+                width,
+                start,
+                target,
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_10"><a class="anchor" href="#_star_1_10"></a><a class="link" href="#_star_1_10">Star 1</a></h5>
+<div class="paragraph">
+<p>The shortest path is found by a breadth first traversal.</p>
+</div>
+<div class="paragraph">
+<p>The function <code>shortest_path</code> returns an option with a <code>None</code> value in case no path is found. My initial version just panicked in that case which turned out to not be good enough for part 2.</p>
+</div>
+<div class="paragraph">
+<p>Today, I made the baddest mistake ever: I put the wrong number in my test (32 instead of 31) and was trying to figure out for quite some while where I inserted an off-by-one error in my code until I figured that my expected value was wrong.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn shortest_path(data: &amp;PuzzleData, start: usize) -&gt; Option&lt;usize&gt; {
+    let mut queue = VecDeque::new();
+    queue.push_back((0, start));
+
+    let mut seen = vec![false; data.grid.len()];
+    seen[start] = true;
+
+    let height = data.grid.len() / data.width;
+
+    while let Some((steps, pos)) = queue.pop_front() {
+        if pos == data.target {
+            return Some(steps);
+        }
+
+        let x = pos % data.width;
+        let y = pos / data.width;
+
+        for (chk, nxt) in [
+            (x &gt; 0, pos as isize - 1),
+            (x &lt; data.width - 1, pos as isize + 1),
+            (y &gt; 0, pos as isize - data.width as isize),
+            (y &lt; height - 1, pos as isize + data.width as isize),
+        ] {
+            if chk &amp;&amp; !seen[nxt as usize] &amp;&amp; data.grid[nxt as usize] &lt;= data.grid[pos] + 1 {
+                queue.push_back((steps + 1, nxt as _));
+                seen[nxt as usize] = true;
+            }
+        }
+    }
+
+    None
+}
+
+pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    shortest_path(data, data.start).unwrap()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_10"><a class="anchor" href="#_star_2_10"></a><a class="link" href="#_star_2_10">Star 2</a></h5>
+<div class="paragraph">
+<p>Just perform shortest path calculation for all possible starting positions (that was my solution to submit the answer)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2_original(data: &amp;PuzzleData) -&gt; usize {
+    (0..data.grid.len())
+        .filter(|&amp;k| data.grid[k] == b'a')
+        .filter_map(|start| shortest_path(data, start))
+        .min()
+        .unwrap()
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then I realized it is much simpler if I just reverse the search direction and look for the shortest path from the target to any 'a'. So I did that to have another sub 1ms solution.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn shortest_path_2&lt;F, G&gt;(data: &amp;PuzzleData, start: usize, reached: F, check: G) -&gt; Option&lt;usize&gt;
+where
+    F: Fn(usize) -&gt; bool,
+    G: Fn(u8, u8) -&gt; bool,
+{
+    let mut queue = VecDeque::new();
+    queue.push_back((0, start));
+
+    let mut seen = vec![false; data.grid.len()];
+    seen[start] = true;
+
+    let height = data.grid.len() / data.width;
+
+    while let Some((steps, pos)) = queue.pop_front() {
+        if reached(pos) {
+            return Some(steps);
+        }
+
+        let x = pos % data.width;
+        let y = pos / data.width;
+
+        for (chk, nxt) in [
+            (x &gt; 0, pos as isize - 1),
+            (x &lt; data.width - 1, pos as isize + 1),
+            (y &gt; 0, pos as isize - data.width as isize),
+            (y &lt; height - 1, pos as isize + data.width as isize),
+        ] {
+            if chk &amp;&amp; !seen[nxt as usize] &amp;&amp; check(data.grid[pos], data.grid[nxt as usize]) {
+                queue.push_back((steps + 1, nxt as _));
+                seen[nxt as usize] = true;
+            }
+        }
+    }
+
+    None
+}
+
+pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    shortest_path_2(
+        data,
+        data.target,
+        |pos| data.grid[pos] == b'a',
+        |f, t| f &lt;= t + 1,
+    )
+    .unwrap()
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>shortest_path_2</code> function is generic to also work for part 1, but I did not change it in my code. Here is how to call it:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-rust" data-lang="rust">shortest_path_2(data, data.start, |pos| pos == data.target, |f, t| t &lt;= f + 1).unwrap()</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_13"><a class="anchor" href="#_tests_13"></a><a class="link" href="#_tests_13">Tests</a></h5>
+<div class="paragraph">
+<p>And the mandatory tests. But be careful, if a test of the type <code>expected == actual</code> fails, there are two possible reasons: <code>actual</code> can be wrong or <code>expected</code> can be wrong.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi
+"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(8, data.width);
+        assert_eq!(0, data.start);
+        assert_eq!(21, data.target);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(31, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(29, star_2(&amp;data));
     }
 }</code></pre>
 </div>
