@@ -6,8 +6,8 @@ use std::str::FromStr;
 
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
 pub struct Point {
-    x: isize,
-    y: isize,
+    pub x: isize,
+    pub y: isize,
 }
 
 impl Point {
@@ -35,9 +35,17 @@ impl Point {
             },
         ]
     }
+
+    pub fn as_node(&self) -> Node {
+        Node {
+            p: *self,
+            h: Height::End,
+            neighbours: HashSet::<Point>::new(),
+        }
+    }
 }
 
-#[derive(Copy, Clone, Debug, Hash)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq)]
 pub enum Height {
     Normal(usize),
     Start,
@@ -73,7 +81,7 @@ impl FromStr for Height {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
     p: Point,
     h: Height,
@@ -85,8 +93,24 @@ impl Node {
         self.p
     }
 
+    pub fn neighbours<'a>(&'a self) -> &'a HashSet<Point> {
+        &self.neighbours
+    }
+
     pub fn new(p: Point, h: Height, neighbours: HashSet<Point>) -> Self {
         Self { p, h, neighbours }
+    }
+
+    pub fn get_height(&self) -> Height {
+        self.h
+    }
+
+    pub fn set_height(&mut self, height: Height) {
+        self.h = height;
+    }
+
+    pub fn infinity_dist(&self, other: &Point) -> usize {
+        ((self.p.x - other.x).abs() + (self.p.y - other.y).abs()) as usize
     }
 }
 
