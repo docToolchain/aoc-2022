@@ -7,7 +7,7 @@ The original puzzle can be found at https://adventofcode.com/2022/day/11
 To solve the puzzle, first a data class _Monkey_ is defined, it will hold all necessary informations of each monkey per turn.
 [source, kotlin, numbered]
 ....
-include::day2211_1_2.kt[tags=Monkeye]
+include::day2211_1_2.kt[tags=Monkey]
 ....
 
 For the solution itself, first the puzzle input is parsed and a list of _Monkey_ is filled with all monkeys out of the puzzle input. After that, this list is used to iterate through each monkey and through each item of the monkey. For each item the worry factor is calculated and depending on the test result, the item thrown to the next monkey.
