@@ -1,0 +1,34 @@
+==  Day 12: Hill Climbing Algorithm  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/12
+
+to be updated
+[source, kotlin, numbered]
+....
+include::day2212_1_2.kt[tags=Hillclimbing]
+....
+
+For the solution itself, first the puzzle input is parsed and a list of _Monkey_ is filled with all monkeys out of the puzzle input. After that, this list is used to iterate through each monkey and through each item of the monkey. For each item the worry factor is calculated and depending on the test result, the item thrown to the next monkey.
+
+
+=== First Star
+
+How does it work: +
+
+to be updated
+
+
+
+=== Second Star
+
+How does it work: +
+
+to be updated  
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2212_1_2.kt[tags=output]
+....
