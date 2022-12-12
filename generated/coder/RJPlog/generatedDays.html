@@ -1653,15 +1653,15 @@ All directions are multiplied and the highest score will be the result.</p>
 <p>The original puzzle can be found at <a href="https://adventofcode.com/2022/day/12" class="bare">https://adventofcode.com/2022/day/12</a></p>
 </div>
 <div class="paragraph">
-<p>to be updated</p>
+<p>Today started with difficulties for me. First I wanted to generate all possible pathes in list of list but failed with different issues. After reading a lot of stuff about optimization algorithms I considered A* for to complicated. That&#8217;s why I stripped it down to the following "low" A*. A list <em>distList</em> with all possible fields is generated. It is initialized with width*heigth, means the maximum possible length. Then for a given start point all reachable neighbours are evaluated, and for each the minimum distance is stored, either the previous value or the parent place plus one. The list will be iterated and for all values reached (distList != width*heigth) the evaluation of the neighbours is started.</p>
+</div>
+<div class="paragraph">
+<p>I guess this is still some kind of brute force, since there is no distinguishing between already finished positions, and there is no priorization of the positions with the lowest distance.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin"></code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>For the solution itself, first the puzzle input is parsed and a list of <em>Monkey</em> is filled with all monkeys out of the puzzle input. After that, this list is used to iterate through each monkey and through each item of the monkey. For each item the worry factor is calculated and depending on the test result, the item thrown to the next monkey.</p>
 </div>
 <div class="sect4">
 <h5 id="_first_star_12"><a class="anchor" href="#_first_star_12"></a><a class="link" href="#_first_star_12">First Star</a></h5>
@@ -1669,7 +1669,7 @@ All directions are multiplied and the highest score will be the result.</p>
 <p>How does it work:<br></p>
 </div>
 <div class="paragraph">
-<p>to be updated</p>
+<p>While reading the input file the coordinates for the starting point are evaluated. For the starting point the distance in the distList is set to zero, this is the starting point of the evaluation. After distList does not change anymore, the distance at endpoint is the solution</p>
 </div>
 </div>
 <div class="sect4">
@@ -1678,7 +1678,7 @@ All directions are multiplied and the highest score will be the result.</p>
 <p>How does it work:<br></p>
 </div>
 <div class="paragraph">
-<p>to be updated</p>
+<p>For part two not only for the starting point the distance in the distList is set to zero, but for all values with 'a', they are the starting point of the evaluation. After distList does not change anymore, the distance at endpoint is the solution</p>
 </div>
 <div class="paragraph">
 <p>At the end, both solutions are printed out.</p>
