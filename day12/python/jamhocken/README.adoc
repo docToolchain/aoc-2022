@@ -1,0 +1,27 @@
+
+Day 12 of year 2022
+https://adventofcode.com/2022/day/12
+
+== What I learned
+
+. Refreshed Dijkstra's algorithm which I used last year for Day 15.
+
+== Approach
+
+. I took the input and created a list of lists from it. The list contains an index, the letter, a distance, the neighbors of the entry and a zero (for the parent, which isn't known yet). The distance is zero if the letter is "S" and Inf for anything else. I then clean up the neighbors to only include those that you can reach (lower or at most one letter bigger than the current letter. "S" counts as "a" and "E" counts as z, as exceptions).
+
+**Star 1** +
+
+. You just use Dijkstra's algorithm and stop the loop whenever you hit "E". The current distance is then the answer.
+
+**Star 2** +
+
+. Again, Dijkstra's, but multiple times. You just have to reinitialize your list of lists to set the distances right (you are starting at a particular "a" and not "S" anymore). You also have the case now that you can't actually reach "E" from an "a". Then, I set the distance to Inf. You find the min over all of your runs for the answer.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
