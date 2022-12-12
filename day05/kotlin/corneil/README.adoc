@@ -42,7 +42,10 @@ fun readStack(lines: List<String>, stack: Int): Stack<Char> {
 
 fun loadStacks(input: List<String>): List<Stack<Char>> {
   val lines = input.toMutableList()
-  val numbers = lines.last().split(" ").mapNotNull { if(it.isNotBlank()) it.toInt() else null }
+  val numbers = lines.last()
+        .split(" ")
+        .filter { it.isNotEmpty() }
+        .map { it.toInt() }
   lines.removeAt(lines.lastIndex)
   val stacks = mutableListOf<Stack<Char>>()
   for (stack in numbers.indices) {
@@ -74,7 +77,10 @@ fun perform(stacks: List<Stack<Char>>, instruction: Instruction) {
     stacks[instruction.to - 1].push(crate)
   }
 }
-fun performAndFindTops(stacks: List<Stack<Char>>, instructions: List<Instruction>): String {
+fun performAndFindTops(
+  stacks: List<Stack<Char>>, 
+  instructions: List<Instruction>
+): String {
   instructions.forEach {
     perform(stacks, it)
   }
@@ -100,7 +106,10 @@ fun perform9001(stacks: List<Stack<Char>>, instruction: Instruction) {
     stacks[instruction.to - 1].push(tmp.pop())
   }
 }
-fun performAndFindTops9001(stacks: List<Stack<Char>>, instructions: List<Instruction>): String {
+fun performAndFindTops9001(
+    stacks: List<Stack<Char>>, 
+    instructions: List<Instruction>
+): String {
   instructions.forEach {
     perform9001(stacks, it)
   }

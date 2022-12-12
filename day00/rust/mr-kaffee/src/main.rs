@@ -1,11 +1,12 @@
 use clap::Parser;
 use itertools::Itertools;
 use mr_kaffee_aoc::{
-    puzzle_io::{submit_result, PuzzleIO, Star},
-    template::{update_files, write_files, read_config},
+    err::PuzzleError,
+    puzzle_io::PuzzleIO,
+    template::{upd_files, write_files},
     GenericPuzzle,
 };
-use std::{error::Error, fs, time::Instant};
+use std::{error::Error, fs, path::PathBuf, time::Instant};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // parse command line
@@ -24,9 +25,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn puzzles() -> Vec<Box<dyn GenericPuzzle>> {
-    let puzzles: Vec<Box<dyn GenericPuzzle>> = vec![
+    let mut puzzles: Vec<Box<dyn GenericPuzzle>> = vec![
         Box::new(mr_kaffee_2022_0::puzzle()),
         // INCLUDE_PUZZLES:START
+        Box::new(mr_kaffee_2022_11::puzzle()),
         Box::new(mr_kaffee_2022_10::puzzle()),
         Box::new(mr_kaffee_2022_9::puzzle()),
         Box::new(mr_kaffee_2022_8::puzzle()),
@@ -39,13 +41,15 @@ fn puzzles() -> Vec<Box<dyn GenericPuzzle>> {
         Box::new(mr_kaffee_2022_1::puzzle()),
         // INCLUDE_PUZZLES:END
     ];
+
+    puzzles.sort_unstable_by(|p1, p2| (p1.year(), p1.day()).cmp(&(p2.year(), p2.day())));
+
     puzzles
 }
 
 fn exec_run(run: cli::Run) {
     // get and sort puzzles
-    let mut puzzles = puzzles();
-    puzzles.sort_by(|p1, p2| (p1.year(), p1.day()).cmp(&(p2.year(), p2.day())));
+    let puzzles = puzzles();
 
     // run puzzles grouped by year
     let timer = Instant::now();
@@ -69,23 +73,39 @@ fn exec_run(run: cli::Run) {
     println!("\n====> Solved {oks} out of {cnt} puzzles in {d:?}");
 }
 
-fn exec_init(init: cli::Init) -> Result<(), std::io::Error> {
-    let session = fs::read_to_string("session.cookie")?;
-    let input_provider = PuzzleIO {
-        session: session.trim(),
-    };
+fn read_config() -> String {
+    let config_path = PathBuf::from("template.json");
+    if config_path.is_file() {
+        match fs::read_to_string(config_path.as_path()) {
+            Ok(v) => v,
+            Err(err) => {
+                println!(
+                    "Could not read config from file {}: {err}",
+                    config_path.to_string_lossy()
+                );
+                "{}".to_string()
+            }
+        }
+    } else {
+        "{}".to_string()
+    }
+}
+
+fn exec_init(init: cli::Init) -> Result<(), PuzzleError> {
+    let input_provider = PuzzleIO::try_from(PathBuf::from("session.cookie").as_path())?;
+    let config = read_config();
 
     write_files(
         &init.target_path,
         &input_provider,
-        read_config,
+        || &config,
         init.year,
         init.day,
         init.force,
     )?;
 
     if let Some(runner_path) = init.runner_path {
-        update_files(runner_path.as_path(), init.year, init.day)?;
+        upd_files(runner_path.as_path(), || &config, init.year, init.day)?;
     }
 
     Ok(())
@@ -97,12 +117,14 @@ fn exec_submit(submit: cli::Submit) -> Result<(), Box<dyn Error>> {
         .iter()
         .find(|puzzle| puzzle.year() == submit.year && puzzle.day() == submit.day);
     if let Some(puzzle) = puzzle {
-        let (star, result) = match submit.part {
-            1 => (Star::One, puzzle.solve_star_1()?),
-            _ => (Star::Two, puzzle.solve_star_2()?),
+        let (level, result) = match submit.part {
+            1 => (1, puzzle.solve_star_1()?),
+            2 => (2, puzzle.solve_star_2()?),
+            v => return Err(format!("Illegal part: {v}").into()),
         };
         if let Some(result) = result {
-            submit_result(None, submit.year, submit.day, star, &result)?;
+            let puzzle_io = PuzzleIO::try_from(PathBuf::from("session.cookie").as_path())?;
+            puzzle_io.submit_result(submit.year, submit.day, level, &result)?;
         } else {
             println!(
                 "Part {} not implemented for {}/{}",

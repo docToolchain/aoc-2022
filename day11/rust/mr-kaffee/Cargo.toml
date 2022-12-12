@@ -1,0 +1,9 @@
+[package]
+name = "mr-kaffee-2022-11"
+description = "Solution to AoC 2022/11, http://adventofcode.com/2022/day/11/"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+mr-kaffee-aoc = { path = "../../../day00/rust/mr-kaffee/aoc/" }

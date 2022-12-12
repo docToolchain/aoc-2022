@@ -39,7 +39,7 @@ Again, reading carefully is important. I did not get the meaning of
 In this system, there is no such thing as "vertical position"
 ----
 
-After having that fixed, it was again straight forward.
+After having that fixed, it was again straight forward. It somehow feels incorrect to manually read the "LCD" to produce the result to enter at the website, hence I created a little helper which recognizes the letters. Since there is nothing to recognize for the sample data, I put the recognition in a separate function to still be able to run my code on the examples.
 
 [source,rust,numbered]
 ----

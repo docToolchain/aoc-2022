@@ -16,9 +16,13 @@ fun calcPriority(value: Char): Int = when (value) {
 [source,kotlin]
 ....
 fun calcRucksacks(input: List<String>): Int =
-  input.map { Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2)) }  // <1>
-    .map { it.first.toSet().intersect(it.second.toSet()).first() }                      // <2>
-    .sumOf { calcPriority(it) }                                                         // <3>
+  input.map { 
+      Pair(it.substring(0 until it.length / 2), it.substring(it.length / 2)) // <1>
+    }  
+    .map { 
+      it.first.toSet().intersect(it.second.toSet()).first() // <2>
+    }  
+    .sumOf { calcPriority(it) } // <3>
 ....
 <1> Split string into equal parts to represent compartments
 <2> Determine common character by converting to set of characters and finding union

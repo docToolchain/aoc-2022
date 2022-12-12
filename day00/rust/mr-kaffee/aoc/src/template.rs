@@ -1,143 +1,51 @@
-use crate::puzzle_io::PuzzleIO;
+use crate::{err::PuzzleError, puzzle_io::PuzzleIO};
 use regex::Regex;
-use std::{
-    collections::HashMap,
-    fs,
-    io::{Error, ErrorKind},
-    path::{Path, PathBuf},
-};
+use std::{collections::HashMap, fs, path::Path};
 
-pub fn read_config() -> String {
-    let config_path = PathBuf::from("template.json");
-    if config_path.is_file() {
-        match fs::read_to_string(config_path.as_path()) {
-            Ok(v) => v,
-            Err(err) => {
-                println!(
-                    "Could not read config from file {}: {err}",
-                    config_path.to_string_lossy()
-                );
-                "{}".to_string()
-            }
-        }
-    } else {
-        "{}".to_string()
-    }
-}
-
-pub fn build_var_map<F>(config: F, year: u16, day: u16) -> HashMap<String, String>
-where
-    F: FnOnce() -> String,
-{
-    let mut vars = HashMap::from([
-        ("YEAR".to_string(), year.to_string()),
-        ("YEAR2".to_string(), format!("{:02}", year % 100)),
-        (
-            "YEAR4".to_string(),
-            format!("{:04}", if year < 100 { year + 2000 } else { year }),
-        ),
-        ("DAY".to_string(), day.to_string()),
-        ("DAY2".to_string(), format!("{day:02}")),
-    ]);
-
-    let mut configs = match serde_json::from_str::<HashMap<String, String>>(&config()) {
-        Ok(configs) => configs,
-        Err(err) => {
-            println!("Could not parse config JSON: {err}");
-            HashMap::new()
-        }
-    };
-    for value in configs.values_mut() {
-        *value = replace_vars(value, &vars);
-    }
-
-    vars.extend(configs);
-
-    vars
-}
-
-pub fn replace_vars(template: &str, vars: &HashMap<String, String>) -> String {
-    let mut content = template.to_string();
-    for (name, value) in vars {
-        content = content.replace(format!("{{{name}}}").as_str(), value);
-    }
-    content
-}
-
-pub fn write_files<F>(
-    target_path: &Path,
+pub fn write_files<F, S>(
+    path: &Path,
     input_provider: &dyn InputProvider,
     config: F,
     year: u16,
     day: u16,
     force: bool,
-) -> Result<(), Error>
+) -> Result<(), PuzzleError>
 where
-    F: FnOnce() -> String,
+    S: AsRef<str>,
+    F: FnOnce() -> S,
 {
-    let variables = build_var_map(config, year, day);
+    let vars = build_var_map(config, year, day);
 
-    if target_path.exists() && !force {
-        return Err(Error::new(
-            ErrorKind::AlreadyExists,
-            format!(
-                "The target directory '{}' exists. Use the --force option to overwrite.",
-                target_path.to_string_lossy()
-            ),
-        ));
+    if path.exists() && !force {
+        return Err(PuzzleError::from(format!(
+            "The target directory '{}' exists. Use the --force option to overwrite.",
+            path.to_string_lossy()
+        )));
     }
 
-    let target_src_path = target_path.join("src");
-    println!(
-        "Creating directories for {}",
-        target_src_path.to_string_lossy()
-    );
-    fs::create_dir_all(target_src_path.as_path())?;
+    let src_path = path.join("src");
+    println!("Creating directories for {}", src_path.to_string_lossy());
+    fs::create_dir_all(src_path.as_path())?;
 
-    // input file from web
-    write_file(
-        input_provider.load_input(year, day)?.as_str(),
-        &HashMap::new(),
-        target_path.join("input.txt").as_path(),
-    )?;
+    // input file from provided input
+    let input = input_provider.load_input(year, day)?;
+    write_file(&input, &HashMap::new(), path.join("input.txt").as_path())?;
 
     // other files from templates
-    write_file(
-        GITIGNORE,
-        &variables,
-        target_path.join(".gitignore").as_path(),
-    )?;
-    write_file(
-        CARGO_TOML,
-        &variables,
-        target_path.join("Cargo.toml").as_path(),
-    )?;
-    write_file(
-        README_ADOC,
-        &variables,
-        target_path.join("README.adoc").as_path(),
-    )?;
-    write_file(
-        MAIN_RS,
-        &variables,
-        target_src_path.join("main.rs").as_path(),
-    )?;
-    write_file(LIB_RS, &variables, target_src_path.join("lib.rs").as_path())?;
+    write_file(GITIGNORE, &vars, path.join(".gitignore").as_path())?;
+    write_file(CARGO_TOML, &vars, path.join("Cargo.toml").as_path())?;
+    write_file(README_ADOC, &vars, path.join("README.adoc").as_path())?;
+    write_file(MAIN_RS, &vars, src_path.join("main.rs").as_path())?;
+    write_file(LIB_RS, &vars, src_path.join("lib.rs").as_path())?;
 
     Ok(())
 }
 
-pub trait InputProvider {
-    fn load_input(&self, year: u16, day: u16) -> Result<String, Error>;
-}
-
-impl<'a> InputProvider for PuzzleIO<'a> {
-    fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
-        PuzzleIO::load_input(self, year, day)
-    }
-}
-
-fn write_file(template: &str, vars: &HashMap<String, String>, path: &Path) -> Result<(), Error> {
+fn write_file(
+    template: &str,
+    vars: &HashMap<String, String>,
+    path: &Path,
+) -> Result<(), PuzzleError> {
     let content = replace_vars(template, vars);
 
     println!("Writing file {} ...", path.to_string_lossy());
@@ -146,23 +54,36 @@ fn write_file(template: &str, vars: &HashMap<String, String>, path: &Path) -> Re
     Ok(())
 }
 
-pub fn update_files(runner_path: &Path, year: u16, day: u16) -> Result<(), Error> {
-    let vars = build_var_map(read_config, year, day);
-    update_file(
-        "INCLUDE_PUZZLES",
-        &replace_vars(PUZZLE_FACTORY_SNIPPET, &vars).as_str(),
-        runner_path.join("src/main.rs").as_path(),
-    )?;
-    update_file(
-        "INCLUDE_PUZZLES",
-        &replace_vars(PUZZLE_INCLUDE_SNIPPET, &vars).as_str(),
-        runner_path.join("Cargo.toml").as_path(),
-    )?;
+pub trait InputProvider {
+    fn load_input(&self, year: u16, day: u16) -> Result<String, PuzzleError>;
+}
+
+impl InputProvider for PuzzleIO {
+    fn load_input(&self, year: u16, day: u16) -> Result<String, PuzzleError> {
+        PuzzleIO::load_input(self, year, day)
+    }
+}
+
+pub fn upd_files<F, S>(path: &Path, config: F, year: u16, day: u16) -> Result<(), PuzzleError>
+where
+    S: AsRef<str>,
+    F: FnOnce() -> S,
+{
+    let vars = build_var_map(config, year, day);
+    let separator = "INCLUDE_PUZZLES";
+
+    let line = replace_vars(PUZZLE_FACTORY_SNIPPET, &vars);
+    upd_file(separator, &line, path.join("src/main.rs").as_path())?;
+
+    let line = replace_vars(PUZZLE_INCLUDE_SNIPPET, &vars);
+    upd_file(separator, &line, path.join("Cargo.toml").as_path())?;
+
     Ok(())
 }
 
-fn update_file(separator: &str, line: &str, path: &Path) -> Result<bool, Error> {
+fn upd_file(separator: &str, line: &str, path: &Path) -> Result<bool, PuzzleError> {
     println!("Updating file {} ...", path.to_string_lossy());
+
     let re = Regex::new(
         format!(r"(?ms:(?P<prefix>^.*{separator}:START.*?[\r\n]+)(?P<indent>\s*)(?P<data>.*?{separator}:END)(?P<suffix>.*$))")
             .as_str(),
@@ -200,6 +121,49 @@ const GITIGNORE: &str = include_str!("../templates/_.gitignore_");
 const PUZZLE_FACTORY_SNIPPET: &str = include_str!("../templates/_puzzle_factory_snippet_");
 const PUZZLE_INCLUDE_SNIPPET: &str = include_str!("../templates/_puzzle_include_snippet_");
 
+/// build variables map, the function `config` is used to load custom configuration,
+/// the standard use case is `config = read_config`
+fn build_var_map<F, S>(config: F, year: u16, day: u16) -> HashMap<String, String>
+where
+    S: AsRef<str>,
+    F: FnOnce() -> S,
+{
+    let mut vars = HashMap::from([
+        ("YEAR".to_string(), year.to_string()),
+        ("YEAR2".to_string(), format!("{:02}", year % 100)),
+        (
+            "YEAR4".to_string(),
+            format!("{:04}", if year < 100 { year + 2000 } else { year }),
+        ),
+        ("DAY".to_string(), day.to_string()),
+        ("DAY2".to_string(), format!("{day:02}")),
+    ]);
+
+    let mut configs = match serde_json::from_str::<HashMap<String, String>>(config().as_ref()) {
+        Ok(configs) => configs,
+        Err(err) => {
+            println!("Could not parse config JSON: {err}");
+            HashMap::new()
+        }
+    };
+    for value in configs.values_mut() {
+        *value = replace_vars(value, &vars);
+    }
+
+    vars.extend(configs);
+
+    vars
+}
+
+/// replace variables in given template
+fn replace_vars(template: &str, vars: &HashMap<String, String>) -> String {
+    let mut content = template.to_string();
+    for (name, value) in vars {
+        content = content.replace(format!("{{{name}}}").as_str(), value);
+    }
+    content
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -210,7 +174,7 @@ mod tests {
     struct TestInputProvider {}
 
     impl InputProvider for TestInputProvider {
-        fn load_input(&self, year: u16, day: u16) -> Result<String, Error> {
+        fn load_input(&self, year: u16, day: u16) -> Result<String, PuzzleError> {
             Ok(format!("Test input for {}/{}\n", year, day))
         }
     }
@@ -220,9 +184,7 @@ mod tests {
     pub fn test_write_files() {
         let target_path = Path::new("target/test_write_file");
         let input_provider = TestInputProvider {};
-        let config = || {
-            r#"{"LIB_DIR": "../../"}"#.to_string()
-        };
+        let config = || r#"{"LIB_DIR": "../../"}"#.to_string();
         let year = 2022;
         let day = 25;
         let force = true;
