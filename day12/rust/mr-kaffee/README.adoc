@@ -1,0 +1,59 @@
+== Day 12: Hill Climbing Algorithm ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/12[AoC|2022|12].
+
+The first path finding challenge in 2022's AoC edition ;)
+
+=== Input ===
+
+I parse the input into a grid of bytes stored in a vec and additionally determine the starting position, the target position and the width of the grid.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+The shortest path is found by a breadth first traversal.
+
+The function `shortest_path` returns an option with a `None` value in case no path is found. My initial version just panicked in that case which turned out to not be good enough for part 2.
+
+Today, I made the baddest mistake ever: I put the wrong number in my test (32 instead of 31) and was trying to figure out for quite some while where I inserted an off-by-one error in my code until I figured that my expected value was wrong.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Just perform shortest path calculation for all possible starting positions (that was my solution to submit the answer)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2_original]
+----
+
+Then I realized it is much simpler if I just reverse the search direction and look for the shortest path from the target to any 'a'. So I did that to have another sub 1ms solution.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+The `shortest_path_2` function is generic to also work for part 1, but I did not change it in my code. Here is how to call it:
+[source,rust]
+----
+shortest_path_2(data, data.start, |pos| pos == data.target, |f, t| t <= f + 1).unwrap()
+----
+
+
+=== Tests ===
+
+And the mandatory tests. But be careful, if a test of the type `expected == actual` fails, there are two possible reasons: `actual` can be wrong or `expected` can be wrong.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
