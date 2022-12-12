@@ -254,6 +254,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_11_rust">Day 11: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_11_monkey_in_the_middle">Day 11: Monkey in the Middle</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_9">Oveview</a></li>
+<li><a href="#_solution_10">Solution</a></li>
+<li><a href="#_how_to_run_11">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2605,7 +2616,8 @@ fn solve(file: &amp;str, part1: bool, fill: char) -&gt; Result&lt;()&gt; {
     eprintln!("PROCESSING {}", file);
 
     // Read file and convert into data.
-    let ops = io::parse_lines_to_data::&lt;data::Op&gt;(file, "op", None, None)?;
+    let ops =
+        io::parse_chunks_to_data::&lt;data::Op&gt;(io::read_lines_from_file(file, 1)?, "op", None, None)?;
 
     // We avoid that one-cycle-two-cycle weridness by replacing each addx operation by a noop and
     // an addx operation that is assumed to take only one cycle.
@@ -2721,6 +2733,358 @@ impl FromStr for Op {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_10"><a class="anchor" href="#_how_to_run_10"></a><a class="link" href="#_how_to_run_10">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day11" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_11_rust"><a class="anchor" href="#_day_11_rust"></a><a class="link" href="#_day_11_rust">Day 11: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_11_monkey_in_the_middle"><a class="anchor" href="#_day_11_monkey_in_the_middle"></a><a class="link" href="#_day_11_monkey_in_the_middle">Day 11: Monkey in the Middle</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_9"><a class="anchor" href="#_oveview_9"></a><a class="link" href="#_oveview_9">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_10"><a class="anchor" href="#_solution_10"></a><a class="link" href="#_solution_10">Solution</a></h5>
+<div class="paragraph">
+<p>No time to write much.
+The code has comments that should explain the solution.
+In part 1, you simply have to code what the task says.
+In part 2, the realisation helps that you can display any number as <code>c=n*p+m</code> with
+<code>n</code> being a natural number.
+Then, you can subtract as many multiples of <code>p</code> from <code>c</code> and not change
+divisibility conditions, especially since all <code>p</code> are prime numbers here.
+If you pick <code>p</code> to the the product of all unique prime numbers against which
+divisibility is being checked, you can keep your numbers small.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::Result;
+use std::collections::HashSet;
+// Constants.
+
+fn solve(file: &amp;str, part1: bool) -&gt; Result&lt;()&gt; {
+    eprintln!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let mut monkeys = io::parse_chunks_to_data::&lt;data::Monkey&gt;(
+        io::read_lines_from_file(file, 7)?,
+        "monkey",
+        None,
+        None,
+    )?;
+
+    let prod_of_div_vals = monkeys
+        .iter()
+        .map(|el| el.get_div())
+        .collect::&lt;HashSet&lt;_&gt;&gt;()
+        .into_iter()
+        .product::&lt;isize&gt;();
+
+    if !part1 {
+        for monkey in &amp;mut monkeys {
+            monkey.set_all_divs(prod_of_div_vals);
+        }
+    }
+
+    let rounds = if part1 { 20 } else { 10_000 };
+
+    for _round in 0..rounds {
+        for monkey_idx in 0..monkeys.len() {
+            // println!("check: {:?}", monkeys[monkey_idx]);
+            for (target, item) in monkeys[monkey_idx].inspect_and_toss().into_iter() {
+                monkeys[target].catch(item);
+                // println!("toss:  {:?} &lt;- {}", monkeys[target], item);
+            }
+            // println!("\n")
+        }
+    }
+
+    monkeys.sort_by(|monkey1, monkey2| monkey1.how_active().cmp(&amp;monkey2.how_active()));
+    monkeys.reverse();
+
+    println!(
+        "most active: {} &amp; {}",
+        monkeys[0].whoami(),
+        monkeys[1].whoami(),
+    );
+    println!(
+        "monkey business is {}",
+        monkeys[0].how_active() * monkeys[1].how_active()
+    );
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1, true)?;
+    solve(REAL, true)?;
+
+    solve(SAMPLE1, false)?;
+    solve(REAL, false)?;
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Context, Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub struct Monkey {
+    idx: usize,
+    activity: usize,
+    items: Vec&lt;isize&gt;,
+    op: QuadraticOp,
+    test: DivisitilibytTest,
+}
+
+impl Monkey {
+    pub fn inspect_and_toss(&amp;mut self) -&gt; Vec&lt;(usize, isize)&gt; {
+        let result = self
+            .items
+            .iter()
+            .map(|item_val| {
+                self.activity += 1;
+                let new_item_val = self.op.apply(item_val);
+                (self.test.which_monkey(&amp;new_item_val), new_item_val)
+            })
+            .collect::&lt;Vec&lt;_&gt;&gt;();
+
+        self.items = vec![];
+
+        result
+    }
+
+    pub fn catch(&amp;mut self, item: isize) {
+        self.items.push(item);
+    }
+
+    pub fn whoami(&amp;self) -&gt; usize {
+        self.idx
+    }
+
+    pub fn how_active(&amp;self) -&gt; usize {
+        self.activity
+    }
+
+    pub fn set_all_divs(&amp;mut self, prod: isize) {
+        self.op.prod = Some(prod);
+    }
+
+    pub fn get_div(&amp;self) -&gt; isize {
+        self.test.div_val
+    }
+}
+
+// All operations can be realised as a*x^2 + b*x + c
+#[derive(Debug)]
+struct QuadraticOp {
+    a: isize,
+    b: isize,
+    c: isize,
+    prod: Option&lt;isize&gt;,
+}
+
+impl QuadraticOp {
+    fn apply(&amp;self, val: &amp;isize) -&gt; isize {
+        if let Some(prod) = self.prod {
+            // We update our worry level but don't divide by anything. Instead, to keep the numbers
+            // small and avoid weirdness due to divisibility checks, we take the modulo with
+            // respect to the product of all unique divisibility checks. Doing so never influences
+            // any of the divisibility checks.
+            (self.a * val * val + self.b * val + self.c) % prod
+        } else {
+            // We update our worry level but always divide by 3 in the end. This is for part 1.
+            (self.a * val * val + self.b * val + self.c) / 3
+        }
+    }
+}
+
+#[derive(Debug)]
+struct DivisitilibytTest {
+    div_val: isize,
+    true_monkey: usize,
+    false_monkey: usize,
+}
+
+impl DivisitilibytTest {
+    fn which_monkey(&amp;self, val: &amp;isize) -&gt; usize {
+        if val % self.div_val == 0 {
+            self.true_monkey
+        } else {
+            self.false_monkey
+        }
+    }
+}
+
+// This one is not pretty but it works and correctly reports errors. More context can always be
+// added if there are unexpected errors.
+impl FromStr for Monkey {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        let lines = s
+            .split("\n")
+            .map(|el| el.trim())
+            .collect::&lt;std::vec::Vec&lt;_&gt;&gt;();
+
+        let idx = if let ["Monkey", idx_str] =
+            lines[0].split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice()
+        {
+            idx_str.trim_end_matches(":").parse().context("monkey id")?
+        } else {
+            return Err(Error::msg("canot find monkey id string"));
+        };
+
+        let maybe_items = if let ["Starting items", items_str] =
+            lines[1].split(":").collect::&lt;Vec&lt;_&gt;&gt;().as_slice()
+        {
+            items_str
+                .split(", ")
+                .map(|el| el.trim().parse::&lt;isize&gt;())
+                .collect::&lt;Vec&lt;_&gt;&gt;()
+        } else {
+            return Err(Error::msg("canot find items line"));
+        };
+
+        if maybe_items
+            .iter()
+            .any(|el| if let Err(_) = el { true } else { false })
+        {
+            return Err(Error::msg("cannot parse items line"));
+        }
+
+        // The next line can never panic.
+        let items = maybe_items
+            .into_iter()
+            .map(|el| el.unwrap())
+            .collect::&lt;Vec&lt;_&gt;&gt;();
+
+        let op = if let ["Operation: new ", op_str] =
+            lines[2].split("=").collect::&lt;Vec&lt;_&gt;&gt;().as_slice()
+        {
+            match op_str.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+                ["old", "*", "old"] =&gt; Ok(QuadraticOp {
+                    a: 1,
+                    b: 0,
+                    c: 0,
+                    prod: None,
+                }),
+                ["old", "*", num] =&gt; Ok(QuadraticOp {
+                    a: 0,
+                    b: num.parse().context("multiplier")?,
+                    c: 0,
+                    prod: None,
+                }),
+                ["old", "+", num] =&gt; Ok(QuadraticOp {
+                    a: 0,
+                    b: 1,
+                    c: num.parse().context("adder")?,
+                    prod: None,
+                }),
+                _ =&gt; Err(Error::msg("cannot build op")),
+            }
+        } else {
+            return Err(Error::msg("cannot find operations line"));
+        }
+        .context("operation")?;
+
+        let div_val = if let ["Test:", "divisible", "by", val] =
+            lines[3].split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice()
+        {
+            val.parse().context("divisibility")?
+        } else {
+            return Err(Error::msg("cannot find divisibility line"));
+        };
+
+        let true_monkey = if let ["If", "true:", "throw", "to", "monkey", val] =
+            lines[4].split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice()
+        {
+            val.parse().context("true monkey")?
+        } else {
+            return Err(Error::msg("cannot find true monkey line"));
+        };
+
+        let false_monkey = if let ["If", "false:", "throw", "to", "monkey", val] =
+            lines[5].split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice()
+        {
+            val.parse().context("false monkey")?
+        } else {
+            return Err(Error::msg("cannot find false monkey line"));
+        };
+
+        if idx == true_monkey || idx == false_monkey {
+            return Err(Error::msg("trying to toss to myself"));
+        }
+
+        if !is_prime(div_val) {
+            return Err(Error::msg("div val is no prime"));
+        }
+
+        let test = DivisitilibytTest {
+            div_val,
+            true_monkey,
+            false_monkey,
+        };
+
+        let activity = 0;
+
+        Ok(Self {
+            idx,
+            activity,
+            items,
+            op,
+            test,
+        })
+    }
+}
+
+// This is a quick check for being prime.
+fn is_prime(val: isize) -&gt; bool {
+    for i in 2..val {
+        if val % i == 0 {
+            return false;
+        }
+    }
+    true
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_11"><a class="anchor" href="#_how_to_run_11"></a><a class="link" href="#_how_to_run_11">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
