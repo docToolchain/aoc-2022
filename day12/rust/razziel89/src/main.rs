@@ -73,7 +73,7 @@ fn find_path<'a>(
             .ok_or(Error::msg("cannot find next node"))?
             .0
             .clone();
-        let (_, (predecessor, _)) = checkable
+        let (_, (predecessor, old_estimate)) = checkable
             .remove_entry(next_best_node)
             .ok_or(Error::msg("cannot find predecessor"))?;
 
@@ -89,8 +89,14 @@ fn find_path<'a>(
         for neigh in next_best_node.neighbours() {
             let neigh_node = get_node(neigh)?;
             if !connections.contains_key(neigh_node) {
-                let estimate = estimator(neigh_node);
-                checkable.insert(neigh_node, (next_best_node.pos(), estimate));
+                let estimate = cost_of_predecessor + estimator(neigh_node);
+                let previous_best = checkable
+                    .get(neigh_node)
+                    .unwrap_or(&(*neigh, std::usize::MAX))
+                    .1;
+                if previous_best > estimate {
+                    checkable.insert(neigh_node, (next_best_node.pos(), estimate));
+                }
                 // connections.insert(neigh_node, Some(start.pos()));
             }
         }
@@ -150,22 +156,39 @@ fn solve(file: &str) -> Result<()> {
         .replace(end_node.clone())
         .ok_or(Error::msg("cannot replace end node"))?;
 
-    // println!(
-    //     "{:?}\n{:?} {:?}",
-    //     graph,
-    //     graph.get(&start_node).unwrap(),
-    //     graph.get(&end_node).unwrap()
-    // );
-
     let estimator = |node: &data::Node, ref_point: &data::Point| node.infinity_dist(&ref_point);
 
     let path = find_path(&start_node, &end_node, &graph, estimator)
         .map(|el| extract_shortest_path(&end_node, el, &graph))??;
 
-    // for node in path.iter().rev() {
-    //     println!("{:?}", node.pos());
-    // }
-    println!("{}", path.len());
+    println!("part 1: {}", path.len() - 1);
+
+    // Part 2.
+    // Add an additional node at a position that hadn't yet been part of the graph and connect it
+    // to all nodes of zero elevation.
+    let possible_starts = graph
+        .iter()
+        .filter(|node| node.get_height().height() == 0)
+        .map(|node| node.pos())
+        .collect::<HashSet<_>>();
+
+    let far_away_fake_node = data::Node::new(
+        data::Point { x: -10, y: -10 },
+        data::Height::Normal(0),
+        possible_starts,
+    );
+
+    if !graph.insert(far_away_fake_node) {
+        return Err(Error::msg(
+            "refusing to overwrite existing node for fake nod",
+        ));
+    }
+
+    let path2 = find_path(&start_node, &end_node, &graph, estimator)
+        .map(|el| extract_shortest_path(&end_node, el, &graph))??;
+
+    // We have to ignore the first two steps here because of the real and fake start nodes.
+    println!("part 2: {}", path2.len() - 2);
 
     Ok(())
 }
@@ -173,9 +196,6 @@ fn solve(file: &str) -> Result<()> {
 fn main() -> Result<()> {
     solve(SAMPLE1)?;
     solve(REAL)?;
-
-    // solve(SAMPLE1)?;
-    // solve(REAL)?;
     Ok(())
 }
 // end::main[]
