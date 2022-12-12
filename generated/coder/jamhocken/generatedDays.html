@@ -228,6 +228,13 @@
 <li><a href="#_run_script_12">Run script</a></li>
 </ul>
 </li>
+<li><a href="#_day_12_python">Day 12: python</a>
+<ul class="sectlevel3">
+<li><a href="#_what_i_learned_12">What I learned</a></li>
+<li><a href="#_approach_12">Approach</a></li>
+<li><a href="#_run_script_13">Run script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1394,6 +1401,169 @@ def main():
     inspections = [value[5] for value in monkeys.values()]
     inspections.sort(reverse=True)
     print(inspections[0]*inspections[1])
+
+main()</code></pre>
+</div>
+</div>
+<a id="day12" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_12_python"><a class="anchor" href="#_day_12_python"></a><a class="link" href="#_day_12_python">Day 12: python</a></h3>
+<div class="paragraph">
+<p>Day 12 of year 2022
+<a href="https://adventofcode.com/2022/day/12" class="bare">https://adventofcode.com/2022/day/12</a></p>
+</div>
+<div class="sect3">
+<h4 id="_what_i_learned_12"><a class="anchor" href="#_what_i_learned_12"></a><a class="link" href="#_what_i_learned_12">What I learned</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Refreshed Dijkstra&#8217;s algorithm which I used last year for Day 15.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_approach_12"><a class="anchor" href="#_approach_12"></a><a class="link" href="#_approach_12">Approach</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I took the input and created a list of lists from it. The list contains an index, the letter, a distance, the neighbors of the entry and a zero (for the parent, which isn&#8217;t known yet). The distance is zero if the letter is "S" and Inf for anything else. I then clean up the neighbors to only include those that you can reach (lower or at most one letter bigger than the current letter. "S" counts as "a" and "E" counts as z, as exceptions).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Star 1</strong><br></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>You just use Dijkstra&#8217;s algorithm and stop the loop whenever you hit "E". The current distance is then the answer.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Star 2</strong><br></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Again, Dijkstra&#8217;s, but multiple times. You just have to reinitialize your list of lists to set the distances right (you are starting at a particular "a" and not "S" anymore). You also have the case now that you can&#8217;t actually reach "E" from an "a". Then, I set the distance to Inf. You find the min over all of your runs for the answer.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_run_script_13"><a class="anchor" href="#_run_script_13"></a><a class="link" href="#_run_script_13">Run script</a></h4>
+<div class="paragraph">
+<p>Run the solution with <code>python solution.py</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-python" data-lang="python">def process_input(file_contents):
+    lines_stripped = [line.strip() for line in file_contents]
+
+    nodes = list()
+    line_length = len(lines_stripped[0])
+    no_rows = len(lines_stripped)
+    for i,line in enumerate(lines_stripped):
+        for j,letter in enumerate(line):
+            adjacent = set()
+            index = i*line_length+j
+            if i != 0:
+                adjacent.add(index-line_length)
+            if i != no_rows-1:
+                adjacent.add(index+line_length)
+            if index % line_length != 0:
+                adjacent.add(index-1)
+            if (index+1) % (line_length) != 0:
+                adjacent.add(index+1)
+            if letter == "S":
+                distance = 0
+            else:
+                distance = float('Inf')
+            nodes.append([index,letter,distance,adjacent,0])
+
+    for node in range(len(nodes)):
+        temp_neighbors = nodes[node][3].copy()
+        for neighbor in nodes[node][3]:
+            if nodes[neighbor][1] == "S":
+                temp_neighbor = "a"
+            elif nodes[neighbor][1] == "E":
+                temp_neighbor = "z"
+            else:
+                temp_neighbor = nodes[neighbor][1]
+            if nodes[node][1] == "S":
+                temp_node = "a"
+            elif nodes[node][1] == "E":
+                temp_node = "z"
+            else:
+                temp_node = nodes[node][1]
+            if ord(temp_neighbor) &gt; ord(temp_node)+1:
+                temp_neighbors.remove(neighbor)
+        nodes[node][3] = temp_neighbors
+
+    return nodes
+
+def find_shortest_path(nodes,current_node):
+    visited = set()
+
+    valued = {current_node}
+    while nodes[current_node][1] != 'E':
+        neighbors = nodes[current_node][3]
+        valued.update(neighbors-visited)
+        for neighbor in neighbors:
+            if neighbor not in visited:
+                if nodes[neighbor][2] &gt; nodes[current_node][2]+1:
+                    nodes[neighbor][2] = nodes[current_node][2]+1
+                    nodes[neighbor][4] = current_node
+
+        visited.add(current_node)
+        valued.remove(current_node)
+
+        if valued != set():
+            min_distance = min([nodes[node][2] for node in valued])
+        else:
+            return float('Inf')
+
+        for node in valued:
+            if nodes[node][2] == min_distance:
+                current_node = node
+
+    risk = nodes[current_node][2]
+
+    return risk
+
+
+def main():
+    with open("input.txt",'r') as input_file:
+        input_lines = input_file.readlines()
+
+    #star 1
+    nodes = process_input(input_lines)
+
+    for node in nodes:
+        if node[1] == 'S':
+            current_node = node[0]
+            node_S = node[0]
+
+    risk = find_shortest_path(nodes,current_node)
+
+    print(risk)
+
+    #star 2
+
+    for node in nodes:
+        if node[1] == "a":
+            nodes = process_input(input_lines)
+            nodes[node_S][2] = float('Inf')
+            nodes[node[0]][2] = 0
+            temp_risk = find_shortest_path(nodes,node[0])
+            if temp_risk &lt; risk:
+                risk = temp_risk
+
+    print(risk)
 
 main()</code></pre>
 </div>
