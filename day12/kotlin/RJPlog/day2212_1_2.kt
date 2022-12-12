@@ -80,7 +80,7 @@ fun HillClimbing(in1: Int): Int {
 	}
 	return distList[xEnd + yEnd * width]
 }
-// end::Hillclimbing[]
+// end::HillClimbing[]
 
 fun main() {
 	var t1 = System.currentTimeMillis()
