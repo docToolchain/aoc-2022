@@ -280,6 +280,20 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_12_kotlin">Day 12: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_hill_climbing_algorithm">Hill Climbing Algorithm</a>
+<ul class="sectlevel4">
+<li><a href="#_model_4">Model</a></li>
+<li><a href="#_parsing_8">Parsing</a></li>
+<li><a href="#_processing_2">Processing</a></li>
+<li><a href="#_part_1_8">Part 1</a></li>
+<li><a href="#_part_2_9">Part 2</a></li>
+<li><a href="#_full_source_10">Full source</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2751,6 +2765,328 @@ fun main() {
   separator()
   part1()
   separator()
+  part2()
+}</code></pre>
+</div>
+</div>
+<a id="day12" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_12_kotlin"><a class="anchor" href="#_day_12_kotlin"></a><a class="link" href="#_day_12_kotlin">Day 12: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_hill_climbing_algorithm"><a class="anchor" href="#_hill_climbing_algorithm"></a><a class="link" href="#_hill_climbing_algorithm">Hill Climbing Algorithm</a></h4>
+<div class="paragraph">
+<p>Today&#8217;s puzzle required graph traversal. I decided to use <a href="https://github.com/corneil/aoc-2022-in-kotlin/tree/main/src/main/kotlin/utils">utilities</a> I created during the 2019 edition of Aoc.</p>
+</div>
+<div class="paragraph">
+<p>The problem used a grid of letter to describe a map. Each letter describes an elevation starting at <code>a</code> as the lowest and <code>z</code> the highest.
+The user may only navigate horizontally or vertically and only to one step higher, the same level, or lower by any amount. (You may jump off a cliff!)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-text" data-lang="text">Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi</code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_model_4"><a class="anchor" href="#_model_4"></a><a class="link" href="#_model_4">Model</a></h5>
+<div class="paragraph">
+<p>The Graph requires a list of Edges. Each of the edges must contain two Comparable items that are linked with a distance.
+In our case the distance is always one and since you can go from low to only one step higher but jump off a cliff the graph will be directed and the distance between cells will always be 1.</p>
+</div>
+<div class="paragraph">
+<p>The Graph uses the Dijkstra algorithm to find the shortest path between nodes.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="graph.png" alt="Class Diagram">
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">data class Cell(
+  val c: Char,
+  val pos: Coord
+) : Comparable&lt;Cell&gt; {
+  override fun compareTo(other: Cell): Int {
+    var result = c.compareTo(other.c)
+    if (result == 0) {
+      result = pos.compareTo(other.pos)
+    }
+    return result
+  }
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    other as Cell
+    if (c != other.c) return false
+    if (pos != other.pos) return false
+    return true
+  }
+  override fun hashCode(): Int {
+    return pos.hashCode() * c.hashCode()
+  }
+  fun actual(): Char = when (c) {
+    'S' -&gt; 'a'
+    'E' -&gt; 'z'
+    else -&gt; c
+  }
+  override fun toString(): String {
+    return "Cell($c, $pos)"
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_parsing_8"><a class="anchor" href="#_parsing_8"></a><a class="link" href="#_parsing_8">Parsing</a></h5>
+<div class="paragraph">
+<p>The parsing of the grid and creating of Cells and Edges will be in one function.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun createGrid(input: List&lt;String&gt;): List&lt;Edge&lt;Cell&gt;&gt; {
+  val edges = mutableListOf&lt;Edge&lt;Cell&gt;&gt;()
+  val cells = input.mapIndexed { y, line -&gt;
+    line.mapIndexed { x, c -&gt;
+      Cell(c, Coord(x, input.lastIndex - y))
+    }
+  }.flatMap { row -&gt; row.map { it } }.associateBy { it.pos }
+  cells.values.forEach { cell -&gt;
+    cell.pos.surrounds().forEach { coord -&gt;
+      val neighbour = cells[coord]
+      if (neighbour != null) {  <i class="conum" data-value="1"></i><b>(1)</b>
+        val height = neighbour.actual() - cell.actual()
+        if (height &lt;= 1) { <i class="conum" data-value="2"></i><b>(2)</b>
+          edges.add(Edge(cell, neighbour))
+        }
+      }
+    }
+  }
+  return edges
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>If there is no neighbour at the surrounding coordinates it will be skipped. This will happen for the cells on the edges of the grid.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>We are interested in cells that are 1 step higher or lower.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_processing_2"><a class="anchor" href="#_processing_2"></a><a class="link" href="#_processing_2">Processing</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calculateSteps(
+  edges: List&lt;Edge&lt;Cell&gt;&gt;,
+  start: Cell,
+  end: Cell
+): Int? {
+  val graph = Graph(edges, true)
+  val path = graph.findPath(start, end)
+  return if (path.isEmpty()) null else path.size - 1 <i class="conum" data-value="1"></i><b>(1)</b>
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The path includes the start and end node and we will subtract 1 from the path length to obtain the number of steps. Null is returned for an empty path.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_1_8"><a class="anchor" href="#_part_1_8"></a><a class="link" href="#_part_1_8">Part 1</a></h5>
+<div class="paragraph">
+<p>In part 1 we had to find the shortest path between <code>S</code> (which is the same as <code>a</code>) and <code>E</code> (which is the same elevation as <code>z</code>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcSolution1(input: List&lt;String&gt;): Int {
+  val edges = createGrid(input)
+  val end = edges.map { edge -&gt; edge.c2 }
+    .find { it.c == 'E' } ?: error("Cannot find E")
+  val start = edges.map { edge -&gt; edge.c1 }
+    .find { it.c == 'S' } ?: error("Cannot find S")
+  return calculateSteps(edges, start, end)
+    ?: error("Cannot find solution from $start to $end")
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_2_9"><a class="anchor" href="#_part_2_9"></a><a class="link" href="#_part_2_9">Part 2</a></h5>
+<div class="paragraph">
+<p>In part 2 we had to find the shortest paths for all cells labelled <code>a</code> and report the shortest of those.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcSolution2(input: List&lt;String&gt;): Int {
+  val edges = createGrid(input)
+  val end = edges.map { edge -&gt; edge.c2 }
+    .find { it.c == 'E' } ?: error("Cannot find E")
+  return edges.map { edge -&gt; edge.c1 }
+    .filter { it.actual() == 'a' }
+    .mapNotNull { start -&gt; calculateSteps(edges, start, end) }
+    .min()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_full_source_10"><a class="anchor" href="#_full_source_10"></a><a class="link" href="#_full_source_10">Full source</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">package day12
+
+import main.utils.Edge
+import main.utils.Graph
+import main.utils.measureAndPrint
+import utils.Coord
+import utils.readFile
+import utils.readLines
+
+fun main() {
+
+  val test = readLines(
+    """Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi"""
+  )
+  val input = readFile("day12")
+
+  data class Cell(
+    val c: Char,
+    val pos: Coord
+  ) : Comparable&lt;Cell&gt; {
+
+    override fun compareTo(other: Cell): Int {
+      var result = c.compareTo(other.c)
+      if (result == 0) {
+        result = pos.compareTo(other.pos)
+      }
+      return result
+    }
+
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      other as Cell
+      if (c != other.c) return false
+      if (pos != other.pos) return false
+
+
+      return true
+    }
+
+    override fun hashCode(): Int {
+      return pos.hashCode() * c.hashCode()
+    }
+
+    fun actual(): Char = when (c) {
+      'S' -&gt; 'a'
+      'E' -&gt; 'z'
+      else -&gt; c
+    }
+
+    override fun toString(): String {
+      return "Cell($c, $pos)"
+    }
+
+  }
+
+  fun createGrid(input: List&lt;String&gt;): List&lt;Edge&lt;Cell&gt;&gt; {
+    val edges = mutableListOf&lt;Edge&lt;Cell&gt;&gt;()
+    val cells = input.mapIndexed { y, line -&gt;
+      line.mapIndexed { x, c -&gt;
+        Cell(c, Coord(x, input.lastIndex - y))
+      }
+    }.flatMap { row -&gt; row.map { it } }.associateBy { it.pos }
+    cells.values.forEach { cell -&gt;
+      cell.pos.surrounds().forEach { coord -&gt;
+        val neighbour = cells[coord]
+        if (neighbour != null) {
+          val height = neighbour.actual() - cell.actual()
+          if (height &lt;= 1) {
+            edges.add(Edge(cell, neighbour))
+          }
+        }
+      }
+    }
+    return edges
+  }
+
+  fun calculateSteps(
+    edges: List&lt;Edge&lt;Cell&gt;&gt;,
+    start: Cell,
+    end: Cell
+  ): Int? {
+    val graph = Graph(edges, true)
+    val path = graph.findPath(start, end)
+    return if (path.isEmpty()) null else path.size - 1
+  }
+
+  fun calcSolution1(input: List&lt;String&gt;): Int {
+    val edges = createGrid(input)
+    val end = edges.map { edge -&gt; edge.c2 }
+      .find { it.c == 'E' } ?: error("Cannot find E")
+    val start = edges.map { edge -&gt; edge.c1 }
+      .find { it.c == 'S' } ?: error("Cannot find S")
+    return calculateSteps(edges, start, end)
+      ?: error("Cannot find solution from $start to $end")
+  }
+
+  fun calcSolution2(input: List&lt;String&gt;): Int {
+    val edges = createGrid(input)
+    val end = edges.map { edge -&gt; edge.c2 }
+      .find { it.c == 'E' } ?: error("Cannot find E")
+    return edges.map { edge -&gt; edge.c1 }
+      .filter { it.actual() == 'a' }
+      .mapNotNull { start -&gt; calculateSteps(edges, start, end) }
+      .min()
+  }
+
+  fun part1() {
+    val testResult = measureAndPrint("Part 1 Test Time: ") {
+      calcSolution1(test)
+    }
+    println("Part 1 Answer = $testResult")
+    check(testResult == 31)
+    val result = measureAndPrint("Part 1 Time: ") {
+      calcSolution1(input)
+    }
+    println("Part 1 Answer = $result")
+    check(result == 339)
+  }
+
+  fun part2() {
+    val testResult = measureAndPrint("Part 2 Test Time: ") {
+      calcSolution2(test)
+    }
+    println("Part 2 Answer = $testResult")
+    check(testResult == 29)
+    val result = measureAndPrint("Part 2 Time: ") {
+      calcSolution2(input)
+    }
+    println("Part 2 Answer = $result")
+    check(result == 332)
+  }
+  println("Day - 12")
+  part1()
   part2()
 }</code></pre>
 </div>
