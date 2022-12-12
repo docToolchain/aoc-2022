@@ -1,0 +1,49 @@
+== Day 11: Monkey in the Middle ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+No time to write much.
+The code has comments that should explain the solution.
+In part 1, you simply have to code what the task says.
+In part 2, the realisation helps that you can display any number as `c=n*p+m` with
+`n` being a natural number.
+Then, you can subtract as many multiples of `p` from `c` and not change
+divisibility conditions, especially since all `p` are prime numbers here.
+If you pick `p` to the the product of all unique prime numbers against which
+divisibility is being checked, you can keep your numbers small.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
