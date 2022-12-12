@@ -10,7 +10,7 @@ I guess this is still some kind of brute force, since there is no distinguishing
 
 [source, kotlin, numbered]
 ....
-include::day2212_1_2.kt[tags=Hillclimbing]
+include::day2212_1_2.kt[tags=HillClimbing]
 ....
 
 === First Star
