@@ -1,0 +1,27 @@
+@startuml
+
+class Edge<Cell> {
+    distance: Int
+}
+class Graph<Cell> {
+    directed: Boolean
+    fun findPath(start: Cell, end: Cell): [(Cell,Int)]
+}
+Graph -down-* Edge: edges
+
+class Coord {
+    x: Int
+    y: Int
+    surrounds(): [Coord]
+}
+class Cell {
+    c: Char
+    actual(): Char
+}
+
+Cell -down-o Coord: pos
+
+Edge -right-o Cell: c1
+Edge -right-o Cell: c2
+
+@enduml
