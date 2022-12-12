@@ -262,6 +262,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_12_kotlin">Day 12: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_12_hill_climbing_algorithm">Day 12: Hill Climbing Algorithm</a>
+<ul class="sectlevel4">
+<li><a href="#_first_star_12">First Star</a></li>
+<li><a href="#_second_star_12">Second Star</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1479,7 +1489,15 @@ All directions are multiplied and the highest score will be the result.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin"></code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">data class Monkey(var number: Int) {
+	var items = mutableListOf&lt;Long&gt;()
+	var operation: String = ""
+	var secondValue: String = ""
+	var test: Long = 0
+	var ifTrue: Int = 0
+	var ifFalse: Int = 0
+	var counts:Long = 0
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1618,6 +1636,66 @@ All directions are multiplied and the highest score will be the result.</p>
 	println("Solution for part2")
 	println("   $solution2 is the sum of these six signal strengths.")  //16068009780 to high
 	println()</code></pre>
+</div>
+</div>
+<a id="day12" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_12_kotlin"><a class="anchor" href="#_day_12_kotlin"></a><a class="link" href="#_day_12_kotlin">Day 12: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_12_hill_climbing_algorithm"><a class="anchor" href="#_day_12_hill_climbing_algorithm"></a><a class="link" href="#_day_12_hill_climbing_algorithm">Day 12: Hill Climbing Algorithm</a></h4>
+<div class="paragraph">
+<p>This solution is written in Kotlin.</p>
+</div>
+<div class="paragraph">
+<p>The original puzzle can be found at <a href="https://adventofcode.com/2022/day/12" class="bare">https://adventofcode.com/2022/day/12</a></p>
+</div>
+<div class="paragraph">
+<p>to be updated</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin"></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For the solution itself, first the puzzle input is parsed and a list of <em>Monkey</em> is filled with all monkeys out of the puzzle input. After that, this list is used to iterate through each monkey and through each item of the monkey. For each item the worry factor is calculated and depending on the test result, the item thrown to the next monkey.</p>
+</div>
+<div class="sect4">
+<h5 id="_first_star_12"><a class="anchor" href="#_first_star_12"></a><a class="link" href="#_first_star_12">First Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>to be updated</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_second_star_12"><a class="anchor" href="#_second_star_12"></a><a class="link" href="#_second_star_12">Second Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>to be updated</p>
+</div>
+<div class="paragraph">
+<p>At the end, both solutions are printed out.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">// print solution for part 1
+	println("***************************************")
+	println("--- Day 12: Hill Climbing Algorithm ---")
+	println("***************************************")
+	println("Solution for part1")
+	println("   $solution1 is the fewest steps.")
+	println()
+// print solution for part 2
+	println("***************************************")
+	println("Solution for part2")
+	println("   $solution2 is the fewest steps.")</code></pre>
 </div>
 </div>
 </div>
