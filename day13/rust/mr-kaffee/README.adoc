@@ -13,7 +13,7 @@ include::src/lib.rs[tags=input]
 
 === Solution ===
 
-The whole work for the solution is in the recursive `Node` enum modeling the trees represented by the puzzle input with its implementation. Namely recursive parsing in the `parse` function and comparison in the `Ordering` trait implementation.
+The whole work for the solution is in the recursive `Node` enum modeling the trees represented by the puzzle input with its implementation. Namely recursive parsing in the `parse` function and comparison in the `Ord` trait implementation.
 
 [source,rust,numbered]
 ----
