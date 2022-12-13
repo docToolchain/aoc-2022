@@ -54,21 +54,16 @@ fn solve(file: &str) -> Result<()> {
     );
 
     // Sort using the comparison method created for part 1.
-    all_pkgs.sort_by(|(_marker1, pkg1), (_marker2, pkg2)| pkg1.compare(pkg2).as_ordering());
+    all_pkgs.sort_by(|(_marker1, pkg1), (_marker2, pkg2)| pkg1.compare(pkg2));
 
-    let (key_idx1, _) = all_pkgs
+    let decoder_key = all_pkgs
         .iter()
         .enumerate()
-        .find(|(_idx, (marker, _pkg))| *marker)
-        .ok_or(Error::msg("cannot find first marker"))?;
+        .filter(|(_idx, (marker, _pkg))| *marker)
+        .map(|(idx, (_marker, _pkg))| idx + 1)
+        .product::<usize>();
 
-    let (key_idx2, _) = all_pkgs
-        .iter()
-        .enumerate()
-        .find(|(idx, (marker, _pkg))| *marker && *idx != key_idx1)
-        .ok_or(Error::msg("cannot find second marker"))?;
-
-    println!("decoder key is {}", (key_idx1 + 1) * (key_idx2 + 1));
+    println!("decoder key is {}", decoder_key);
 
     Ok(())
 }
