@@ -1,0 +1,47 @@
+== Day 13: Distress Signal ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/13[AoC|2022|13].
+
+If the input looks like a tree structure, parse it into a tree structure!
+
+=== Input ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Solution ===
+
+The whole work for the solution is in the recursive `Node` enum modeling the trees represented by the puzzle input with its implementation. Namely recursive parsing in the `parse` function and comparison in the `Ordering` trait implementation.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=node]
+----
+
+
+=== Star 1 ===
+
+Do the pairwise comparisons.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Find the position of the divider packets after sorting.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----

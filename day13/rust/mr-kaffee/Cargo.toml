@@ -1,0 +1,13 @@
+[package]
+name = "mr-kaffee-2022-13"
+description = "Solution to AoC 2022/13, http://adventofcode.com/2022/day/13/"
+authors = ["Peter Wieland <peter@die-wielands.net>"]
+license = "MIT"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+mr-kaffee-aoc = { path = "./aoc/" }
