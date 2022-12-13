@@ -200,6 +200,16 @@
 <li><a href="#_python_11">python</a></li>
 </ul>
 </li>
+<li><a href="#_day_12_python">Day 12: python</a>
+<ul class="sectlevel3">
+<li><a href="#_python_12">python</a></li>
+</ul>
+</li>
+<li><a href="#_day_13_python">Day 13: python</a>
+<ul class="sectlevel3">
+<li><a href="#_python_13">python</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -236,6 +246,46 @@
 </div>
 <div class="sect3">
 <h4 id="_python"><a class="anchor" href="#_python"></a><a class="link" href="#_python">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>def load_input():
+    data = list()
+    with open('input') as fd:
+        data = list()
+        temp = list()
+        for line in fd:
+            line = line.strip()
+            if line:
+                temp.append(int(line))
+            else:
+                data.append(temp)
+                temp = list()
+    return data
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    calories = list()
+    for values in data:
+        calories.append(sum(values))
+    result = max(calories)
+    print("Result 1: ", result)
+
+    # Task 2
+    calories.sort()
+    result = sum(calories[-3:])
+    print("Result 2: ", result)
+
+    return 0
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -2492,46 +2542,6 @@
 7697</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>def load_input():
-    data = list()
-    with open('input') as fd:
-        data = list()
-        temp = list()
-        for line in fd:
-            line = line.strip()
-            if line:
-                temp.append(int(line))
-            else:
-                data.append(temp)
-                temp = list()
-    return data
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    calories = list()
-    for values in data:
-        calories.append(sum(values))
-    result = max(calories)
-    print("Result 1: ", result)
-
-    # Task 2
-    calories.sort()
-    result = sum(calories[-3:])
-    print("Result 2: ", result)
-
-    return 0
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day02" />
 </div>
 </div>
@@ -2542,6 +2552,77 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_2"><a class="anchor" href="#_python_2"></a><a class="link" href="#_python_2">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>SHAPE2POINTS = {
+    'X': 1,
+    'Y': 2,
+    'Z': 3,
+    'A': 1,
+    'B': 2,
+    'C': 3
+}
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        data = list()
+        for line in fd:
+            line = line.strip()
+            data.append(list(map(lambda x: SHAPE2POINTS[x], line.split())))
+    return data
+
+
+def get_result_task1(rd):
+    result = 0
+    if rd[0] == rd[1]:
+        result = 3
+    elif (rd[0] == 1 and rd[1] == 3) or (rd[0] == 2 and rd[1] == 1) or \
+         (rd[0] == 3 and rd[1] == 2):
+        result = 0
+    else:
+        result = 6
+    result += rd[1]
+    return result
+
+
+def get_result_task2(rd):
+    if rd[1] == 2:
+        return rd[0] + 3
+    elif rd[1] == 1:
+        shape = rd[0] - 1 if rd[0] - 1 != 0 else 3
+        return shape
+    else:
+        shape = rd[0] + 1 if rd[0] + 1 != 4 else 1
+        return shape + 6
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    score = 0
+    for rd in data:
+        score += get_result_task1(rd)
+
+    result = score
+    print("Result 1: ", result)
+
+    # Task 2
+    score = 0
+    for rd in data:
+        score += get_result_task2(rd)
+
+    result = score
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -5047,77 +5128,6 @@ A Y
 C Z</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>SHAPE2POINTS = {
-    'X': 1,
-    'Y': 2,
-    'Z': 3,
-    'A': 1,
-    'B': 2,
-    'C': 3
-}
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        data = list()
-        for line in fd:
-            line = line.strip()
-            data.append(list(map(lambda x: SHAPE2POINTS[x], line.split())))
-    return data
-
-
-def get_result_task1(rd):
-    result = 0
-    if rd[0] == rd[1]:
-        result = 3
-    elif (rd[0] == 1 and rd[1] == 3) or (rd[0] == 2 and rd[1] == 1) or \
-         (rd[0] == 3 and rd[1] == 2):
-        result = 0
-    else:
-        result = 6
-    result += rd[1]
-    return result
-
-
-def get_result_task2(rd):
-    if rd[1] == 2:
-        return rd[0] + 3
-    elif rd[1] == 1:
-        shape = rd[0] - 1 if rd[0] - 1 != 0 else 3
-        return shape
-    else:
-        shape = rd[0] + 1 if rd[0] + 1 != 4 else 1
-        return shape + 6
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    score = 0
-    for rd in data:
-        score += get_result_task1(rd)
-
-    result = score
-    print("Result 1: ", result)
-
-    # Task 2
-    score = 0
-    for rd in data:
-        score += get_result_task2(rd)
-
-    result = score
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day03" />
 </div>
 </div>
@@ -5128,6 +5138,57 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_3"><a class="anchor" href="#_python_3"></a><a class="link" href="#_python_3">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>import string
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        data = list()
+        for line in fd:
+            line = line.strip()
+            data.append(line)
+    return data
+
+
+def get_priority(char):
+    return string.ascii_letters.index(char) + 1
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    result = 0
+    for rucksack in data:
+        length = int(len(rucksack)/2)
+        common = set(rucksack[0:length]).intersection(set(rucksack[length:]))
+        result += sum(list(map(lambda x: get_priority(x), common)))
+
+    print("Result 1: ", result)
+
+    # Task 2
+    chars = set()
+    result = 0
+    for i, rucksack in enumerate(data):
+        if i % 3 == 0:
+            chars = set(rucksack)
+        else:
+            chars.intersection_update(rucksack)
+
+        if i % 3 == 2:
+            result += sum(list(map(lambda x: get_priority(x), chars)))
+
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -5433,57 +5494,6 @@ vQfSBdbDbMbQNBJrlhmGnrgrgwZhvm
 SHSCbdbddcVWqqFPCLqR</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>import string
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        data = list()
-        for line in fd:
-            line = line.strip()
-            data.append(line)
-    return data
-
-
-def get_priority(char):
-    return string.ascii_letters.index(char) + 1
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    result = 0
-    for rucksack in data:
-        length = int(len(rucksack)/2)
-        common = set(rucksack[0:length]).intersection(set(rucksack[length:]))
-        result += sum(list(map(lambda x: get_priority(x), common)))
-
-    print("Result 1: ", result)
-
-    # Task 2
-    chars = set()
-    result = 0
-    for i, rucksack in enumerate(data):
-        if i % 3 == 0:
-            chars = set(rucksack)
-        else:
-            chars.intersection_update(rucksack)
-
-        if i % 3 == 2:
-            result += sum(list(map(lambda x: get_priority(x), chars)))
-
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day04" />
 </div>
 </div>
@@ -5494,6 +5504,52 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_4"><a class="anchor" href="#_python_4"></a><a class="link" href="#_python_4">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        data = list()
+        for line in fd:
+            temp = list()
+            for values in line.strip().split(','):
+                temp.append(list(map(lambda x: int(x), values.split('-'))))
+            data.append(temp)
+    return data
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    fully_contains = 0
+    for a, b in data:
+        if a[0] &lt;= b[0] and a[1] &gt;= b[1]:
+            fully_contains += 1
+        elif a[0] &gt;= b[0] and a[1] &lt;= b[1]:
+            fully_contains += 1
+        else:
+            pass
+    result = fully_contains
+    print("Result 1: ", result)
+
+    # Task 2
+    non_overlaps = 0
+    for a, b in data:
+        if a[1] &lt; b[0] or a[0] &gt; b[1]:
+            non_overlaps += 1
+
+    result = len(data) - non_overlaps
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -6499,52 +6555,6 @@ if __name__ == '__main__':
 22-23,22-60</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        data = list()
-        for line in fd:
-            temp = list()
-            for values in line.strip().split(','):
-                temp.append(list(map(lambda x: int(x), values.split('-'))))
-            data.append(temp)
-    return data
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    fully_contains = 0
-    for a, b in data:
-        if a[0] &lt;= b[0] and a[1] &gt;= b[1]:
-            fully_contains += 1
-        elif a[0] &gt;= b[0] and a[1] &lt;= b[1]:
-            fully_contains += 1
-        else:
-            pass
-    result = fully_contains
-    print("Result 1: ", result)
-
-    # Task 2
-    non_overlaps = 0
-    for a, b in data:
-        if a[1] &lt; b[0] or a[0] &gt; b[1]:
-            non_overlaps += 1
-
-    result = len(data) - non_overlaps
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day05" />
 </div>
 </div>
@@ -6555,6 +6565,77 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_5"><a class="anchor" href="#_python_5"></a><a class="link" href="#_python_5">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+import re
+from collections import deque
+
+
+def load_input():
+    number_list = 9
+
+    data = list()
+    commands = list()
+
+    pattern = re.compile('move (\d+) from (\d+) to (\d+)')
+
+    with open('input') as fd:
+        data = [deque() for _ in range(number_list)]
+        section = 0
+        for line in fd:
+            if section == 0:
+                if line[1] == '1':
+                    section = 1
+                    continue
+                for i in range(number_list):
+                    pos = 4*i+1
+                    if pos &lt; len(line):
+                        char = line[pos]
+                        if char != ' ':
+                            data[i].appendleft(char)
+                    else:
+                        break
+            elif section == 1:
+                section = 2
+            else:
+                line = line.strip()
+                match = pattern.search(line)
+                commands.append([int(match.group(1)), int(match.group(2))-1, int(match.group(3))-1])
+
+    return data, commands
+
+
+def main():
+    data, commands = load_input()
+
+    # Task 1
+    for command in commands:
+        for _ in range(command[0]):
+            temp = data[command[1]].pop()
+            data[command[2]].append(temp)
+
+    result = "".join([char[-1] for char in data])
+    print("Result 1: ", result)
+
+    # Task 2
+    data, commands = load_input()
+    for command in commands:
+        temp = deque()
+        for _ in range(command[0]):
+            temp.appendleft(data[command[1]].pop())
+        data[command[2]].extend(temp)
+
+    result = "".join([char[-1] for char in data])
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -7072,77 +7153,6 @@ move 1 from 5 to 2
 move 8 from 4 to 9</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-import re
-from collections import deque
-
-
-def load_input():
-    number_list = 9
-
-    data = list()
-    commands = list()
-
-    pattern = re.compile('move (\d+) from (\d+) to (\d+)')
-
-    with open('input') as fd:
-        data = [deque() for _ in range(number_list)]
-        section = 0
-        for line in fd:
-            if section == 0:
-                if line[1] == '1':
-                    section = 1
-                    continue
-                for i in range(number_list):
-                    pos = 4*i+1
-                    if pos &lt; len(line):
-                        char = line[pos]
-                        if char != ' ':
-                            data[i].appendleft(char)
-                    else:
-                        break
-            elif section == 1:
-                section = 2
-            else:
-                line = line.strip()
-                match = pattern.search(line)
-                commands.append([int(match.group(1)), int(match.group(2))-1, int(match.group(3))-1])
-
-    return data, commands
-
-
-def main():
-    data, commands = load_input()
-
-    # Task 1
-    for command in commands:
-        for _ in range(command[0]):
-            temp = data[command[1]].pop()
-            data[command[2]].append(temp)
-
-    result = "".join([char[-1] for char in data])
-    print("Result 1: ", result)
-
-    # Task 2
-    data, commands = load_input()
-    for command in commands:
-        temp = deque()
-        for _ in range(command[0]):
-            temp.appendleft(data[command[1]].pop())
-        data[command[2]].extend(temp)
-
-    result = "".join([char[-1] for char in data])
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day06" />
 </div>
 </div>
@@ -7153,12 +7163,6 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_6"><a class="anchor" href="#_python_6"></a><a class="link" href="#_python_6">python</a></h4>
-<div class="listingblock">
-<div class="title">input</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>rvnvzvhzzjgjgffclllnhhtltptgptgpttjhttsllmbbphbpbzpbpjjcwjwqwccnrrtvrtrfrwffnqffsggwzzhtzhthqhffmrrzsrrnrtrqqbllhrlrjrvvrvvgdgjgfjjtzznffrfvfggswgssccpcwpccstcsstwssgzssswsgwsgsnsshcsscsffcwcmmhmsmrsrddwhhszsfsjfsfccwssvdssmzzwrzzjfzzvzzfsfsvshschhvlhhvmvpvhhstsdtstgtrrtjjcssgfssnsnfsnscnsslvvqbbhthqtqzqmzmjjfmmbdmmzdmdpmpnnfjnnrwnwbwrrwjrrttfzzlwwfmmnhhqlhqqbnqnqznncmmhfmfftsfszssftstggppfddtztltctqcqjcqcmclcnccdgcggvmvvcsstztbzttsccmgcghcczfzszbzmbmjjggsqgghbhjjhhrrjljmllczlzzqssjfjqfjfmfdfgffczfzwwpfwpwbbftbffplphhfcftctlcclhlnlhnhlhnhqnhhjbjmmtpmmlsmllvhhjghhmzzwpzprrjrzzvrvcvqvssgssnccmgmppfhfwhhczhhprhrffpvvqrqvqccdhdvvvssvdvwdwwzggfvfnvvqvwwzwmzzvttgzzwjjfvvpvffqpqhqrrwccjbjppbzbrbrrphrhgrhhzbbhrrblbjjznnlccsffpcfpcfpfddfwddbffczztzsttzsstddrqdqqchqccrlccfcwwghwhnhbhjbhhzrrgprrftrffqlljlslggzdzvvrgvgcgnnngtnggdcgddhjhchqcqfqwfwjffqppblbddgmdgmddrnddjtdjttgzgpzggwvwjvwwhdwwbvvtftcfttpftpfpzfznnchnhrrdtdbtdbdppsjsgsttptsptssnwntwnnsshqqgnnqnddhjjtqqjhhmghmhmsstrrhmmwvvlssprsrbbswsddbnntmtbmtbmmtmrrffvjffdrffnttbffbccgchghjgjwwshwswdswdsdsrdsdjdvjjgbjbssptpddzbdddqdpdspswssjrjwwcbbvsspnspslpplzlqlccvlvfllntlntnqnrqnqpqlqflfrfsfgsfswwptwwgqggrhghzghhrthtzhzsswhhzffpsffhnnrvnrvvhmmlvvqsslddhcddsllpmpggrhrcrbbmnmjmqmlmpmrrqwqhqrqhrrgrqqsrrpjpdjppzhphthddlzdzhddjvdjdcjcncnvnzzvwzvzgzjggcllvpllgdgqqdvvwnvwvwqqvwvvrbbtqqwhdztqfzzcqrshjzwqnpdsshmpjzwqdptbvfqzmfnbtlgbbsjbqgnblhbbpsfdzvcmpzfwczcnbdndsjzccjcqnrdglwfrvwtnjwpvpvvgwtmnpzhbwnbqwznmdvdrsjnlsfrpcnhlbmlgmrcjbbvhqnvbrmlnfttjllstqnqqnhqrzrhfqjbfbwfhhjzwtwzjmszzhjnjbhrlbnnpfvdmlftjnfsfnvddqfhqqlljrthptvmhbqrdmdcmljwgbrqrjwcrtmvjgqtblnslgbjmdsrrpgfsctrhwlwnszpljhrfnsfpcsgczzltgsztclhgcqljrcmbbpdlztncnrnrmgrttplcnldfqddqhznmcczbmwvsztmwmcqnrzmlmqchnhnhrrhhfntjzqcbnttspptqwvphlbtpfcbhdqzbhsbvhmsqbsdntwpcrnzvmbgqsgttbqhhblfjpmvfcrzhfnzwrzbzgsdfqndzzhfdnrvsnvfbptthjnhgljhrvwwrlbnfpvvjdjchcgbhfrqvszhrhqvtzplwsptvdhqwlzhcjpclmmrlccvgvtgsfpnjhqhrbqglznpdhmsqwwsbmhmlsmmvvghsmplqjchrfctltmnqnddzqjfpljwljbdqjcqdqzwsbcclqsmsmlstvljwwtfmpnhqzqfjghjfchjccqrchsvngvrnwfwttsnvrdlfvwfptsjcpslvvpmjclfcpljqjszptsgsmntzrdjbgrzmgvzddqrlsndjzzqbznqnphbnwfhtjjlwjpsvffrdrbsbttpgrvmqrdndqvlgzcpfbttvqdgvrmtvfclcbcwllthmdzjcflwpnrsqzrjdzbvqgzsqvjjpjjpnjtcjqhcfbjdqndlcwzhcbjtgtlvtdwctdnqcbcgsmrcrmwjntdwbjdbzmshbvlspjfdbvmlrbdzlmlggthvphnrqlrcdsqpsgqcmpgmgdzvdqlmcldvztpsbmpwjgjfhswplwrvwpbwbsgsvlhdvmpzwnnbwjwmshwcnqfqjdpchfjjcbdnslqchhnznpqpnnctznbtccclgjhmnngdjlmqnzpsdptqqcrblmrlnnpgvrfrtmbjnmspfrbwpclhgtbsghndrjfbggsplvcjnhjjbqzsfdpfnvchzjgbhdqgddfgddvzdcrjlntnsmscqwmpptqgbnvtsvpjvmhcfpbfrpzqbpfhlbjrmbmvdvvnvfqsndglvhfrqcsbsbbprscrbfthzcwcdrprqrwjzwrpblfllpwzlhmqvltjgpcjzpzwbltgwsrgrrhzcqfpvhcprdhnzcfphqrwcvtpcbppjwzmmwjhbvwbblnbwvcqzvlfzjhgmlnhlhrbsplfctggfbhbgwpncznvtmdtqqmjsvsnrlqswzvflrfsncgpdcndlwrfrqwqnqtjmsphwsgzhdjpnsdgrbrfhbfdrntwvgvbwnvwnrmdbhqgrglbfwprflnrljrwsgwtpgtmfhvvghtzndvwlzjchhmlwcncmpvrslrglzjcnhfdqhcrljhgbzpssvdnmfwzstmvrztgpsscfswltnbwrrtcnvbswmmjbmnnnvqwjzhprfnvlbvzzdvbwlwchrvqnwwpbnttbhfdvjjvzsznhczjcncmcrmwtrlsvbwpsrcwqdvgcfjsbqnwmjmtcgpnmcbfbcqhzrjbtlpvwzhjqqprbdnbgzfwlprlcspwjwnfftldqzbcgqnjtglvbpqffdvjbpslqcdzwdnmncvcwfshdhsmssttqfrsbnjgmhfqzlgrbpdfqtfdwslsgphfzzgbzjssfbgnwztzmczplqwjmhtlflpvqqqmrvlllhngtfgsvbbnvhzqbcgpmnlsmpwqwgqfjpzplzjhrslwzrsrgjgpppjlnhrnggcdzvspsztnschnqftgffbtvrpzndzpqmtsfmwgnrvpmtgpvnmqfmwgcvlznwqnjnjwpgnqfjwtdhhmztlvlcvrlzmlpmjdvdnzwbfsshfsvbbhqsmphjhqtlnvlsmvwlqvfqpnjnzlgmdvwzzrllmcgwtqdwphhbwmlrqhqrfmdvtqswvsllqvwmfbbpllsbjbvgsmrcgqvfgsnszfrdlcjbtfgcbclhmzlmqlnhmslcmgrcvjjlbpsjjcznzqwmztcgdgbmrlgwzjzzjrpndfrdzztzzgmsrcnwrvqrdcczrbhdpfjwvqsmbrcvllvjrrbrsqnzldltdgzscjrssvdhzhnvltpgfdfcvfbtqmphdzhpzgjhjbwsmdlbqqgcrhjrwhgvfgdllmmlnpsbtvdrrzmltfwgrcsfrrsdbdmjtrwhnlgcrgjgmbzvzvqbflvbrsqcssjgsvpjmlhtcggzwbvddmwwtfdrlltjqcpwnthczzlzdszvtmrmhbpcgstvrsnmbdcmjzsvnncmgmlnrzzhfvmblgptwwwbrmtcczjwcqmvdrsvfjgqqvghnhbntqcdrppfmvdzbcjvztrnpdhmdpmnvsnzzldvdfqbdrwqqqqsmswthwpjwdrflszbspqhpfwztjjcbdsrftdsrsfdltnfztcslmbsghgrtcscrfmptqplwpmtqdzthgfjhbqdnsffrpjmgczmrlfvzcjttwtmtqfbtlqrttvjdwhfgcgcclrlswmzhzbfhjrggnhwtnffnqqcvldlttvvgrbcqbmqzvtflfmdblhdbzphrqtbshvp</code></pre>
-</div>
-</div>
 <div class="listingblock">
 <div class="title">sol.py</div>
 <div class="content">
@@ -7196,6 +7200,12 @@ if __name__ == '__main__':
     main()</code></pre>
 </div>
 </div>
+<div class="listingblock">
+<div class="title">input</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>rvnvzvhzzjgjgffclllnhhtltptgptgpttjhttsllmbbphbpbzpbpjjcwjwqwccnrrtvrtrfrwffnqffsggwzzhtzhthqhffmrrzsrrnrtrqqbllhrlrjrvvrvvgdgjgfjjtzznffrfvfggswgssccpcwpccstcsstwssgzssswsgwsgsnsshcsscsffcwcmmhmsmrsrddwhhszsfsjfsfccwssvdssmzzwrzzjfzzvzzfsfsvshschhvlhhvmvpvhhstsdtstgtrrtjjcssgfssnsnfsnscnsslvvqbbhthqtqzqmzmjjfmmbdmmzdmdpmpnnfjnnrwnwbwrrwjrrttfzzlwwfmmnhhqlhqqbnqnqznncmmhfmfftsfszssftstggppfddtztltctqcqjcqcmclcnccdgcggvmvvcsstztbzttsccmgcghcczfzszbzmbmjjggsqgghbhjjhhrrjljmllczlzzqssjfjqfjfmfdfgffczfzwwpfwpwbbftbffplphhfcftctlcclhlnlhnhlhnhqnhhjbjmmtpmmlsmllvhhjghhmzzwpzprrjrzzvrvcvqvssgssnccmgmppfhfwhhczhhprhrffpvvqrqvqccdhdvvvssvdvwdwwzggfvfnvvqvwwzwmzzvttgzzwjjfvvpvffqpqhqrrwccjbjppbzbrbrrphrhgrhhzbbhrrblbjjznnlccsffpcfpcfpfddfwddbffczztzsttzsstddrqdqqchqccrlccfcwwghwhnhbhjbhhzrrgprrftrffqlljlslggzdzvvrgvgcgnnngtnggdcgddhjhchqcqfqwfwjffqppblbddgmdgmddrnddjtdjttgzgpzggwvwjvwwhdwwbvvtftcfttpftpfpzfznnchnhrrdtdbtdbdppsjsgsttptsptssnwntwnnsshqqgnnqnddhjjtqqjhhmghmhmsstrrhmmwvvlssprsrbbswsddbnntmtbmtbmmtmrrffvjffdrffnttbffbccgchghjgjwwshwswdswdsdsrdsdjdvjjgbjbssptpddzbdddqdpdspswssjrjwwcbbvsspnspslpplzlqlccvlvfllntlntnqnrqnqpqlqflfrfsfgsfswwptwwgqggrhghzghhrthtzhzsswhhzffpsffhnnrvnrvvhmmlvvqsslddhcddsllpmpggrhrcrbbmnmjmqmlmpmrrqwqhqrqhrrgrqqsrrpjpdjppzhphthddlzdzhddjvdjdcjcncnvnzzvwzvzgzjggcllvpllgdgqqdvvwnvwvwqqvwvvrbbtqqwhdztqfzzcqrshjzwqnpdsshmpjzwqdptbvfqzmfnbtlgbbsjbqgnblhbbpsfdzvcmpzfwczcnbdndsjzccjcqnrdglwfrvwtnjwpvpvvgwtmnpzhbwnbqwznmdvdrsjnlsfrpcnhlbmlgmrcjbbvhqnvbrmlnfttjllstqnqqnhqrzrhfqjbfbwfhhjzwtwzjmszzhjnjbhrlbnnpfvdmlftjnfsfnvddqfhqqlljrthptvmhbqrdmdcmljwgbrqrjwcrtmvjgqtblnslgbjmdsrrpgfsctrhwlwnszpljhrfnsfpcsgczzltgsztclhgcqljrcmbbpdlztncnrnrmgrttplcnldfqddqhznmcczbmwvsztmwmcqnrzmlmqchnhnhrrhhfntjzqcbnttspptqwvphlbtpfcbhdqzbhsbvhmsqbsdntwpcrnzvmbgqsgttbqhhblfjpmvfcrzhfnzwrzbzgsdfqndzzhfdnrvsnvfbptthjnhgljhrvwwrlbnfpvvjdjchcgbhfrqvszhrhqvtzplwsptvdhqwlzhcjpclmmrlccvgvtgsfpnjhqhrbqglznpdhmsqwwsbmhmlsmmvvghsmplqjchrfctltmnqnddzqjfpljwljbdqjcqdqzwsbcclqsmsmlstvljwwtfmpnhqzqfjghjfchjccqrchsvngvrnwfwttsnvrdlfvwfptsjcpslvvpmjclfcpljqjszptsgsmntzrdjbgrzmgvzddqrlsndjzzqbznqnphbnwfhtjjlwjpsvffrdrbsbttpgrvmqrdndqvlgzcpfbttvqdgvrmtvfclcbcwllthmdzjcflwpnrsqzrjdzbvqgzsqvjjpjjpnjtcjqhcfbjdqndlcwzhcbjtgtlvtdwctdnqcbcgsmrcrmwjntdwbjdbzmshbvlspjfdbvmlrbdzlmlggthvphnrqlrcdsqpsgqcmpgmgdzvdqlmcldvztpsbmpwjgjfhswplwrvwpbwbsgsvlhdvmpzwnnbwjwmshwcnqfqjdpchfjjcbdnslqchhnznpqpnnctznbtccclgjhmnngdjlmqnzpsdptqqcrblmrlnnpgvrfrtmbjnmspfrbwpclhgtbsghndrjfbggsplvcjnhjjbqzsfdpfnvchzjgbhdqgddfgddvzdcrjlntnsmscqwmpptqgbnvtsvpjvmhcfpbfrpzqbpfhlbjrmbmvdvvnvfqsndglvhfrqcsbsbbprscrbfthzcwcdrprqrwjzwrpblfllpwzlhmqvltjgpcjzpzwbltgwsrgrrhzcqfpvhcprdhnzcfphqrwcvtpcbppjwzmmwjhbvwbblnbwvcqzvlfzjhgmlnhlhrbsplfctggfbhbgwpncznvtmdtqqmjsvsnrlqswzvflrfsncgpdcndlwrfrqwqnqtjmsphwsgzhdjpnsdgrbrfhbfdrntwvgvbwnvwnrmdbhqgrglbfwprflnrljrwsgwtpgtmfhvvghtzndvwlzjchhmlwcncmpvrslrglzjcnhfdqhcrljhgbzpssvdnmfwzstmvrztgpsscfswltnbwrrtcnvbswmmjbmnnnvqwjzhprfnvlbvzzdvbwlwchrvqnwwpbnttbhfdvjjvzsznhczjcncmcrmwtrlsvbwpsrcwqdvgcfjsbqnwmjmtcgpnmcbfbcqhzrjbtlpvwzhjqqprbdnbgzfwlprlcspwjwnfftldqzbcgqnjtglvbpqffdvjbpslqcdzwdnmncvcwfshdhsmssttqfrsbnjgmhfqzlgrbpdfqtfdwslsgphfzzgbzjssfbgnwztzmczplqwjmhtlflpvqqqmrvlllhngtfgsvbbnvhzqbcgpmnlsmpwqwgqfjpzplzjhrslwzrsrgjgpppjlnhrnggcdzvspsztnschnqftgffbtvrpzndzpqmtsfmwgnrvpmtgpvnmqfmwgcvlznwqnjnjwpgnqfjwtdhhmztlvlcvrlzmlpmjdvdnzwbfsshfsvbbhqsmphjhqtlnvlsmvwlqvfqpnjnzlgmdvwzzrllmcgwtqdwphhbwmlrqhqrfmdvtqswvsllqvwmfbbpllsbjbvgsmrcgqvfgsnszfrdlcjbtfgcbclhmzlmqlnhmslcmgrcvjjlbpsjjcznzqwmztcgdgbmrlgwzjzzjrpndfrdzztzzgmsrcnwrvqrdcczrbhdpfjwvqsmbrcvllvjrrbrsqnzldltdgzscjrssvdhzhnvltpgfdfcvfbtqmphdzhpzgjhjbwsmdlbqqgcrhjrwhgvfgdllmmlnpsbtvdrrzmltfwgrcsfrrsdbdmjtrwhnlgcrgjgmbzvzvqbflvbrsqcssjgsvpjmlhtcggzwbvddmwwtfdrlltjqcpwnthczzlzdszvtmrmhbpcgstvrsnmbdcmjzsvnncmgmlnrzzhfvmblgptwwwbrmtcczjwcqmvdrsvfjgqqvghnhbntqcdrppfmvdzbcjvztrnpdhmdpmnvsnzzldvdfqbdrwqqqqsmswthwpjwdrflszbspqhpfwztjjcbdsrftdsrsfdltnfztcslmbsghgrtcscrfmptqplwpmtqdzthgfjhbqdnsffrpjmgczmrlfvzcjttwtmtqfbtlqrttvjdwhfgcgcclrlswmzhzbfhjrggnhwtnffnqqcvldlttvvgrbcqbmqzvtflfmdblhdbzphrqtbshvp</code></pre>
+</div>
+</div>
 <a id="day07" />
 </div>
 </div>
@@ -7206,6 +7216,81 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_7"><a class="anchor" href="#_python_7"></a><a class="link" href="#_python_7">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+import networkx as nx
+
+
+def load_input():
+    data = nx.DiGraph()
+    cur_dir = ''
+    with open('input') as fd:
+        for line in fd:
+            temp = line.strip().split()
+            if temp[0] == '$' and temp[1] == 'cd':
+                if temp[2] == '..':
+                    preds = list(data.predecessors(cur_dir))
+                    cur_dir = preds[0]
+                else:
+                    cur_dir = cur_dir + temp[2]
+                if not cur_dir.endswith('/'):
+                    cur_dir += '/'
+                data.add_node(cur_dir)
+            elif temp[0] == '$' and temp[1] == 'ls':
+                pass
+            elif temp[0] == 'dir':
+                data.add_edge(cur_dir, cur_dir + temp[1] + '/')
+            else:
+                size = int(temp[0])
+                filename = temp[1]
+                data.nodes[cur_dir][filename] = size
+    return data
+
+
+def get_total_size(g, node):
+    total = sum(g.nodes[node].values())
+    for successor in g.successors(node):
+        total += get_total_size(g, successor)
+    g.nodes[node]['total'] = total
+    return total
+
+
+def part1():
+    data = load_input()
+    total = get_total_size(data, '/')
+
+    result = 0
+    for node in data.nodes:
+        total = data.nodes[node]['total']
+        if total &lt;= 100000:
+            result += total
+
+    print("Result 1: ", result)
+
+
+def part2():
+    data = load_input()
+    total = get_total_size(data, '/')
+
+    needed_space = 30000000 - (70000000 - total)
+    temp = [data.nodes[node]['total'] for node in data.nodes if data.nodes[node]['total'] &gt; needed_space]
+    temp.sort()
+    result = temp[0]
+    print("Result 2: ", result)
+
+
+def main():
+    part1()
+    part2()
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -8228,81 +8313,6 @@ $ ls
 221301 nrcg.pqw</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-import networkx as nx
-
-
-def load_input():
-    data = nx.DiGraph()
-    cur_dir = ''
-    with open('input') as fd:
-        for line in fd:
-            temp = line.strip().split()
-            if temp[0] == '$' and temp[1] == 'cd':
-                if temp[2] == '..':
-                    preds = list(data.predecessors(cur_dir))
-                    cur_dir = preds[0]
-                else:
-                    cur_dir = cur_dir + temp[2]
-                if not cur_dir.endswith('/'):
-                    cur_dir += '/'
-                data.add_node(cur_dir)
-            elif temp[0] == '$' and temp[1] == 'ls':
-                pass
-            elif temp[0] == 'dir':
-                data.add_edge(cur_dir, cur_dir + temp[1] + '/')
-            else:
-                size = int(temp[0])
-                filename = temp[1]
-                data.nodes[cur_dir][filename] = size
-    return data
-
-
-def get_total_size(g, node):
-    total = sum(g.nodes[node].values())
-    for successor in g.successors(node):
-        total += get_total_size(g, successor)
-    g.nodes[node]['total'] = total
-    return total
-
-
-def part1():
-    data = load_input()
-    total = get_total_size(data, '/')
-
-    result = 0
-    for node in data.nodes:
-        total = data.nodes[node]['total']
-        if total &lt;= 100000:
-            result += total
-
-    print("Result 1: ", result)
-
-
-def part2():
-    data = load_input()
-    total = get_total_size(data, '/')
-
-    needed_space = 30000000 - (70000000 - total)
-    temp = [data.nodes[node]['total'] for node in data.nodes if data.nodes[node]['total'] &gt; needed_space]
-    temp.sort()
-    result = temp[0]
-    print("Result 2: ", result)
-
-
-def main():
-    part1()
-    part2()
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day08" />
 </div>
 </div>
@@ -8313,6 +8323,90 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_8"><a class="anchor" href="#_python_8"></a><a class="link" href="#_python_8">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+
+import numpy as np
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        for line in fd:
+            line = line.strip()
+            data.append([int(value) for value in line])
+    data = np.array(data)
+    return data
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    visibles = np.full(data.shape, True, dtype=np.bool_)
+    visibles[1:-1, 1:-1] = False
+
+    inner = data[1:-1, 1:-1]
+    it = np.nditer(inner, flags=['multi_index'])
+    for value in it:
+        i, j = it.multi_index
+        i += 1
+        j += 1
+        for k in range(4):
+            highest = 0
+            if k == 0:
+                highest = max(data[0:i, j])
+            elif k == 1:
+                highest = max(data[i+1:, j])
+            elif k == 2:
+                highest = max(data[i, 0:j])
+            else:
+                highest = max(data[i, j+1:])
+            if highest &lt; value:
+                visibles[i, j] = True
+                break
+
+    result = np.sum(visibles)
+    print("Result 1: ", result)
+
+    # Task2
+    directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    options = visibles.copy()
+
+    options[0, :] = False
+    options[:, 0] = False
+    options[-1, :] = False
+    options[:, -1] = False
+    indexes = np.argwhere(options)
+
+    most_scenic = 0
+
+    for i, j in indexes:
+        temp = 1
+        for d in directions:
+            y = i
+            x = j
+            while True:
+                y += d[0]
+                x += d[1]
+                if x == 0 or x == data.shape[1] - 1 or y == 0 or \
+                   y == data.shape[0] - 1 or data[y, x] &gt;= data[i, j]:
+                    temp *= abs(j-x) + abs(i-y)
+                    break
+
+        most_scenic = most_scenic if most_scenic &gt; temp else temp
+
+    result = most_scenic
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -8417,90 +8511,6 @@ if __name__ == '__main__':
 012221120210002201233041204141124034134123443133233422423453224352410321301023102020300131022311221</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-
-import numpy as np
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        for line in fd:
-            line = line.strip()
-            data.append([int(value) for value in line])
-    data = np.array(data)
-    return data
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    visibles = np.full(data.shape, True, dtype=np.bool_)
-    visibles[1:-1, 1:-1] = False
-
-    inner = data[1:-1, 1:-1]
-    it = np.nditer(inner, flags=['multi_index'])
-    for value in it:
-        i, j = it.multi_index
-        i += 1
-        j += 1
-        for k in range(4):
-            highest = 0
-            if k == 0:
-                highest = max(data[0:i, j])
-            elif k == 1:
-                highest = max(data[i+1:, j])
-            elif k == 2:
-                highest = max(data[i, 0:j])
-            else:
-                highest = max(data[i, j+1:])
-            if highest &lt; value:
-                visibles[i, j] = True
-                break
-
-    result = np.sum(visibles)
-    print("Result 1: ", result)
-
-    # Task2
-    directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    options = visibles.copy()
-
-    options[0, :] = False
-    options[:, 0] = False
-    options[-1, :] = False
-    options[:, -1] = False
-    indexes = np.argwhere(options)
-
-    most_scenic = 0
-
-    for i, j in indexes:
-        temp = 1
-        for d in directions:
-            y = i
-            x = j
-            while True:
-                y += d[0]
-                x += d[1]
-                if x == 0 or x == data.shape[1] - 1 or y == 0 or \
-                   y == data.shape[0] - 1 or data[y, x] &gt;= data[i, j]:
-                    temp *= abs(j-x) + abs(i-y)
-                    break
-
-        most_scenic = most_scenic if most_scenic &gt; temp else temp
-
-    result = most_scenic
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day09" />
 </div>
 </div>
@@ -8511,6 +8521,77 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_9"><a class="anchor" href="#_python_9"></a><a class="link" href="#_python_9">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+import numpy as np
+
+
+direction = {
+    'R': (0, 1),
+    'L': (0, -1),
+    'D': (-1, 0),
+    'U': (1, 0)
+}
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        for line in fd:
+            a, b = line.strip().split()
+            data.append((a, int(b)))
+    return data
+
+
+def next_pos(pos, d):
+    next_pos = (pos[0] + d[0], pos[1] + d[1])
+    return next_pos
+
+
+def next_tail_pos(head, tail):
+    next_tail_pos = tail
+    diff = [i - j for i, j in zip(head, tail)]
+    if max([abs(v) for v in diff]) &gt; 1:
+        d = [np.sign(i) for i in diff]
+        next_tail_pos = next_pos(tail, d)
+
+    return next_tail_pos
+
+
+def get_tail_pos(pos, value, length):
+    tail_pos = list()
+    for i in range(value[1]):
+        pos[0] = next_pos(pos[0], direction[value[0]])
+        for j in range(length):
+            pos[j+1] = next_tail_pos(pos[j], pos[j+1])
+        tail_pos.append(pos[length])
+    return tail_pos
+
+
+def part_n(number, length):
+    data = load_input()
+    length = length
+    pos = [(0, 0) for _ in range(length+1)]
+    tail_pos = list()
+    for value in data:
+        tail_pos.extend(get_tail_pos(pos, value, length))
+
+    result = len(set(tail_pos))
+    print(f"Result: {number}: {result}")
+
+
+def main():
+    part_n(1, 1)
+    part_n(2, 9)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -10516,77 +10597,6 @@ D 18
 U 1</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-import numpy as np
-
-
-direction = {
-    'R': (0, 1),
-    'L': (0, -1),
-    'D': (-1, 0),
-    'U': (1, 0)
-}
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        for line in fd:
-            a, b = line.strip().split()
-            data.append((a, int(b)))
-    return data
-
-
-def next_pos(pos, d):
-    next_pos = (pos[0] + d[0], pos[1] + d[1])
-    return next_pos
-
-
-def next_tail_pos(head, tail):
-    next_tail_pos = tail
-    diff = [i - j for i, j in zip(head, tail)]
-    if max([abs(v) for v in diff]) &gt; 1:
-        d = [np.sign(i) for i in diff]
-        next_tail_pos = next_pos(tail, d)
-
-    return next_tail_pos
-
-
-def get_tail_pos(pos, value, length):
-    tail_pos = list()
-    for i in range(value[1]):
-        pos[0] = next_pos(pos[0], direction[value[0]])
-        for j in range(length):
-            pos[j+1] = next_tail_pos(pos[j], pos[j+1])
-        tail_pos.append(pos[length])
-    return tail_pos
-
-
-def part_n(number, length):
-    data = load_input()
-    length = length
-    pos = [(0, 0) for _ in range(length+1)]
-    tail_pos = list()
-    for value in data:
-        tail_pos.extend(get_tail_pos(pos, value, length))
-
-    result = len(set(tail_pos))
-    print(f"Result: {number}: {result}")
-
-
-def main():
-    part_n(1, 1)
-    part_n(2, 9)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day10" />
 </div>
 </div>
@@ -10597,6 +10607,75 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_10"><a class="anchor" href="#_python_10"></a><a class="link" href="#_python_10">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        for line in fd:
+            line = line.strip().split()
+            if line[0] == 'addx':
+                data.append([line[0], int(line[1])])
+            else:
+                data.append(line)
+    return data
+
+
+def update_pic(pic, value, cycle):
+    if cycle in list(range(value-1, value+2)):
+        pic += '#'
+    else:
+        pic += ' '
+    return pic
+
+
+def part():
+    data = load_input()
+    value = 1
+    cycle = 0
+    limit = 20
+
+    result = 0
+    pic = ''
+
+    next_add = 0
+
+    for cmd in data:
+        value += next_add
+        next_add = 0
+
+        pic = update_pic(pic, value, cycle % 40)
+        cycle += 1
+
+        if cmd[0] == 'addx':
+            pic = update_pic(pic, value, cycle % 40)
+            cycle += 1
+            next_add = cmd[1]
+
+        if cycle &gt;= limit:
+            result += value*limit
+            limit += 40
+
+    print("Result 1: ", result)
+
+    # Task2
+    print("Result2:")
+    for i in range(cycle//40):
+        print(pic[40*i:40*i+40])
+
+
+def main():
+    part()
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -10744,75 +10823,6 @@ noop
 noop</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        for line in fd:
-            line = line.strip().split()
-            if line[0] == 'addx':
-                data.append([line[0], int(line[1])])
-            else:
-                data.append(line)
-    return data
-
-
-def update_pic(pic, value, cycle):
-    if cycle in list(range(value-1, value+2)):
-        pic += '#'
-    else:
-        pic += ' '
-    return pic
-
-
-def part():
-    data = load_input()
-    value = 1
-    cycle = 0
-    limit = 20
-
-    result = 0
-    pic = ''
-
-    next_add = 0
-
-    for cmd in data:
-        value += next_add
-        next_add = 0
-
-        pic = update_pic(pic, value, cycle % 40)
-        cycle += 1
-
-        if cmd[0] == 'addx':
-            pic = update_pic(pic, value, cycle % 40)
-            cycle += 1
-            next_add = cmd[1]
-
-        if cycle &gt;= limit:
-            result += value*limit
-            limit += 40
-
-    print("Result 1: ", result)
-
-    # Task2
-    print("Result2:")
-    for i in range(cycle//40):
-        print(pic[40*i:40*i+40])
-
-
-def main():
-    part()
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day11" />
 </div>
 </div>
@@ -10823,6 +10833,97 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_11"><a class="anchor" href="#_python_11"></a><a class="link" href="#_python_11">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+from copy import deepcopy
+from collections import deque
+import math as m
+
+
+def load_input():
+    d = {
+        'items': deque(),
+        'op': "",
+        'cond': list(),
+        'count': 0
+         }
+    data = list()
+
+    with open('input') as fd:
+        for i, line in enumerate(fd):
+            line = line.strip().replace(',', '')
+            temp = line.split()
+            if i%7 == 0:
+                data.append(deepcopy(d))
+            elif (i+6)%7 == 0:
+                data[-1]['items'] = deque([int(v) for v in temp[2:]])
+            elif (i+5)%7 == 0:
+                data[-1]['op'] = "".join(temp[-3:])
+            elif (i+4)%7 == 0:
+                data[-1]['cond'].append(int(temp[-1]))
+            elif (i+3)%7 == 0:
+                data[-1]['cond'].append(int(temp[-1]))
+            elif (i+2)%7 == 0:
+                data[-1]['cond'].append(int(temp[-1]))
+            else:
+                pass
+
+    return data
+
+
+def part1():
+    data = load_input()
+    rounds = 20
+    worry_factor = m.prod([monkey['cond'][0] for monkey in data])
+    for _ in range(rounds):
+        for monkey in data:
+            for _ in range(len(monkey['items'])):
+                old = monkey['items'].popleft()
+                monkey['count'] += 1
+                worry = eval(monkey['op'])//3
+                if worry % monkey['cond'][0] == 0:
+                    data[monkey['cond'][1]]['items'].append(worry)
+                else:
+                    data[monkey['cond'][2]]['items'].append(worry)
+
+    temp = sorted([monkey['count'] for monkey in data], reverse=True)
+    result = temp[0]*temp[1]
+    print("Result 1: ", result)
+
+
+def part2():
+    data = load_input()
+    rounds = 10000
+    worry_factor = m.prod([monkey['cond'][0] for monkey in data])
+    for _ in range(rounds):
+        for monkey in data:
+            for _ in range(len(monkey['items'])):
+                old = monkey['items'].popleft()
+                monkey['count'] += 1
+                worry = eval(monkey['op'])%worry_factor
+                if worry % monkey['cond'][0] == 0:
+                    data[monkey['cond'][1]]['items'].append(worry)
+                else:
+                    data[monkey['cond'][2]]['items'].append(worry)
+
+    temp = sorted([monkey['count'] for monkey in data], reverse=True)
+    result = temp[0]*temp[1]
+    print("Result 2: ", result)
+
+
+
+def main():
+    part1()
+    part2()
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -10883,86 +10984,91 @@ Monkey 7:
     If false: throw to monkey 5</code></pre>
 </div>
 </div>
+<a id="day12" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_12_python"><a class="anchor" href="#_day_12_python"></a><a class="link" href="#_day_12_python">Day 12: python</a></h3>
+<div class="paragraph">
+<p><span class="small">this documentation is autogenerated. Add a <code>README.adoc</code> to your solution to take over the control of this :-)</span></p>
+</div>
+<div class="sect3">
+<h4 id="_python_12"><a class="anchor" href="#_python_12"></a><a class="link" href="#_python_12">python</a></h4>
 <div class="listingblock">
 <div class="title">sol.py</div>
 <div class="content">
 <pre class="prettyprint highlight"><code>#!/usr/bin/env python3
 
-from copy import deepcopy
+
+import networkx as nx
+import string
 import math as m
 
 
 def load_input():
-    d = {
-        'items': deque(),
-        'op': "",
-        'cond': list(),
-        'count': 0
-         }
-    data = list()
-
     with open('input') as fd:
+        data = list()
+        start = None
+        end = None
         for i, line in enumerate(fd):
-            line = line.strip().replace(',', '')
-            temp = line.split()
-            if i%7 == 0:
-                data.append(deepcopy(d))
-            elif (i+6)%7 == 0:
-                data[-1]['items'] = deque([int(v) for v in temp[2:]])
-            elif (i+5)%7 == 0:
-                data[-1]['op'] = "".join(temp[-3:])
-            elif (i+4)%7 == 0:
-                data[-1]['cond'].append(int(temp[-1]))
-            elif (i+3)%7 == 0:
-                data[-1]['cond'].append(int(temp[-1]))
-            elif (i+2)%7 == 0:
-                data[-1]['cond'].append(int(temp[-1]))
-            else:
-                pass
+            temp_line = list(line.strip())
+            if 'S' in temp_line:
+                j = temp_line.index('S')
+                start = (i, j)
+                temp_line[j] = 'a'
+            if 'E' in temp_line:
+                j = temp_line.index('E')
+                end = (i, j)
+                temp_line[j] = 'z'
+            temp = [string.ascii_lowercase.index(v) for v in temp_line]
+            data.append(temp)
+    return data, start, end
 
-    return data
+
+def weight_func(n0, n1, attr):
+    return 1 if attr['w'] &lt;= 1 else None
+
+
+def create_graph(data):
+    graph = nx.DiGraph()
+    for i in range(len(data)):
+        for j in range(len(data[0])):
+            if i+1 &lt; len(data):
+                graph.add_edge((i, j), (i+1, j), w=data[i+1][j] - data[i][j])
+                graph.add_edge((i+1, j), (i, j), w=data[i][j] - data[i+1][j])
+            if j+1 &lt; len(data[0]):
+                graph.add_edge((i, j), (i, j+1), w=data[i][j+1] - data[i][j])
+                graph.add_edge((i, j+1), (i, j), w=data[i][j] - data[i][j+1])
+    return graph
 
 
 def part1():
-    data = load_input()
-    rounds = 20
-    worry_factor = m.prod([monkey['cond'][0] for monkey in data])
-    for _ in range(rounds):
-        for monkey in data:
-            for _ in range(len(monkey['items'])):
-                old = monkey['items'].popleft()
-                monkey['count'] += 1
-                worry = eval(monkey['op'])//3
-                if worry % monkey['cond'][0] == 0:
-                    data[monkey['cond'][1]]['items'].append(worry)
-                else:
-                    data[monkey['cond'][2]]['items'].append(worry)
-
-    temp = sorted([monkey['count'] for monkey in data], reverse=True)
-    result = temp[0]*temp[1]
+    data, start, end = load_input()
+    graph = create_graph(data)
+    result = nx.shortest_path_length(graph, source=start, target=end, weight=weight_func)
     print("Result 1: ", result)
 
 
 def part2():
-    data = load_input()
-    rounds = 10000
-    worry_factor = m.prod([monkey['cond'][0] for monkey in data])
+    data, _, end = load_input()
+    starts = list()
+    shortest = list()
+    for i in range(len(data)):
+        for j in range(len(data[0])):
+            if data[i][j] == 0:
+                starts.append((i, j))
 
-    for _ in range(rounds):
-        for monkey in data:
-            for _ in range(len(monkey['items'])):
-                old = monkey['items'].popleft()
-                monkey['count'] += 1
-                worry = eval(monkey['op'])%worry_factor
-                if worry % monkey['cond'][0] == 0:
-                    data[monkey['cond'][1]]['items'].append(worry)
-                else:
-                    data[monkey['cond'][2]]['items'].append(worry)
+    graph = create_graph(data)
 
-    temp = sorted([monkey['count'] for monkey in data], reverse=True)
-    result = temp[0]*temp[1]
+    for start in starts:
+        try:
+            temp = nx.shortest_path_length(graph, source=start, target=end, weight=weight_func)
+            shortest.append(temp)
+        except nx.exception.NetworkXNoPath:
+            pass
+
+    result = min(shortest)
     print("Result 2: ", result)
-
 
 
 def main():
@@ -10972,6 +11078,612 @@ def main():
 
 if __name__ == '__main__':
     main()</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">input</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>abcccccccccccccccccaaccccccccccccaaaaaaaacccccccccccaaaaaccccaaaaaaccaaaaaaaaaaaaaaaaaccccccccccccccccaaacccccaaaaaaaacccaaaccccccccccccccccccccccccccccccccccccccccccccccccccaaaaa
+abccccccccccccccccaaacaacccccccccccaaaacccccccccccccaaaaaacccaaaaaaccaaaaaaaaaaaaaaaaaaaacccccccccaaacaaacccccaaaaaaaaaccaaaaccccccccccccccccccccccccccccccccccccccccccccccccaaaaaa
+abcccccccccccccccccaaaaacccccccccccaaaaaccccccccccccaaaaaaccccaaaacccaaaacccaaaaaaaaaaaaacccccccccaaaaaaaaaacccaaaaaaaaccaaaaccccccccccccccccccccccccccccccccccaaacccccccccccaaaaaa
+abcccccccccccccccaaaaaacccccccccccaaacaaccaaccccccccaaaaaaccccaaaacccaaaccccaaaaaaaaaaaaaccccccccccaaaaaaaaaccaaaaaacccccaaacccccccccccccccccccccccccccccccccccaaaccccccccccccccaaa
+abcccccccccccccccaaaaaaaacccccccccaacccacaaacaacccccccaaccccccaccaccccccccaaaaaaaaaaaaccccccccccccccaaaaaaacccaaaaaaacccccccccccccaacccccccccccccccccccccccccccaaaccccccccccccccaaa
+abcccccccccccccccaacaaaaacccccccccccccccccaaaaacccccccccccccccccccccccccccaaaaaaaaaaaaccccccccccccccaaaaaaccccaaccaaacccccccccccaaaaaaccccccccccccccccccccccccccdccccccccccccccccaa
+abccaacccccccaaacccaaacaccccccccccaaacccaaaaaaccccccccccccccccccccccccccccaaacccaaaaaacaaaaccccccccaaaaaaaccccccccaaacccccccccccaaaaaacccccccccccccccccllllllcccdddddcccccccccccccc
+abaaaacccacccaaccccaacccccccccccccaaacccaaaaaaaacccccccccccccccccaaccccccccacccaaaaccccaaaaccccccccaaacaaaccccccccccccccccccccccaaaaaaccccccccccccccccllllllllldddddddddddccaaccccc
+abaaaaccaaaaaaaacccccccccccccccaaaaaaaacaacaaaaacccccccccccccccccaaacccccccaaacaaccccccaaaacccccccccccccaaccccccccccccccccccccccaaaaaccccccccccccccccclllllllllldddddddddeeaaaccccc
+abaaaccccaaaaaaaaccccccccaaacccaaaaaaaacccaaacccccccccccccccccaaaaaaaaccccccaaaaacccccccaacccccccccccccccccccccccccccccccccccccccaaaaccccaaaccccccccckllppppplllmmmmmmmdeeeeaaccccc
+abaaaacccaaaaaaaaacccccaaaaaaccccaaaaaccccaaccccccccccccccccccaaaaaaaaccccccaaaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccaaaacccccccckklpppppppplmmmmmmmmmeeeeaccccc
+abaaaacccaaaaaaaaacccccaaaaaacccaaaaaaccccccccaacccccccccccccccaaaaaaccccccaaaaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccaaaacccccccckkkppppppppqmmmmmmmmmmeeeaacccc
+abaaaaaccaaaaaaaaccccccaaaaaacccaaaaaaccccccacaaaacccccccccccccaaaaaaccccccaaaaaaaaccccccccaaaaccccccccaaacccccccccccccccccccccccccccccccaaacccccccckkkpppuuuppqqqqqqqqmmmeeeeacccc
+abacccccaaaaaaaccccccccaaaaaccccaccaaaccccccaaaaaacccccacccccccaaaaaaccccccaaaaaacaaaccccccaaaaccccccccaaaacccccccccccccccccccccccccccccccccccccccckkkpppuuuuuuqqqqqqqqqnnneeeccccc
+abcccccccaccaaaccccccccaaaaacccccccccccccccccaaaacccaaaacccccccaacaaacccccccccaaacaaaaaccccaaaaccccccccaaaaccccccccccccccccccccccccccccccccccccccckkkkpppuuuuuuuqvvvvqqqnnneeeccccc
+abcccccccccccaaacaaccccccccccccccccccccccccccaaaacccaaaaaacccccccccccccccccccccccaaaaaaccccaaacccccccccaaaccccccccccccccccccccccccccccccccccccccckkkkrrpuuuxxxuvvvvvvvqqnnneeeccccc
+abcccccccccccccccaacaaaccccccccccccccccccccccaacaacccaaaaacccccccccccccccccccccccaaaaaaccccccccccccccccccccccccccccccccccccccccccccccccccccccccckkkkrrrruuxxxxuvvvvvvvqqnnneeeccccc
+abcccccccccccccccaaaaacccccccccccccccccccccccccccaccaaaaacccccaaccccccccccccccccccaaaaaccccccccccccccccaaaccccccccccccccaaacccccccccccccccccccckkkkrrrruuuxxxxyyyyyvvvqqnnneecccccc
+abcccccccccccccaaaaaacccccccccccaacaacccccccccccaaaaaaaaacccacaaaacaaccaaccccccccaaacaaccccccccccaaccccaaaaaacccaacaacccaaacacccccccccccccccccjjkkrrrruuuuuxxxyyyyyvvqrqnneffcccccc
+abcccccccccccccaaaaaaaacccaaacccaaaaaccccccaacccaaaaaaaaacccaaaaaacaaaaaaccccccccaaacaaacccccccaaaaaacaaaaaaacccaaaaacaaaaaaaaccccccccccccccccjjjrrrtttuuxxxxxyyyyyvvrrnnnfffcccccc
+SbccccccccccccccccaaaaacccaaaaccaaaaaaccccaaaaaacaaaaaaaaacccaaaacccaaaaaccccccccaaaaaaacccccccaaaaaaaaaaaaaaccaaaaaccaaaaaaaaccccccccccccccccjjjrrrtttxxxEzzzzyyyvvrrrnnnfffcccccc
+abccccccccccaaaccaaccaacccaaaaccaaaaaacccccaaaaacaaaaaaaaacccaaaaccaaaaaacccccccccaaaaaaccccccccaaaacaaaaaaacccaaaaaaccaaaaaacccccccccccccccccjjjrrrtttxxxxxyyyyyyvvrrrnnnfffcccccc
+abcccccccccaaaaccaacccccccaaacccaaaaaacccaaaaaaaaaaaaaaaaacccaacacaaaaaaaacccccaaaaaaaacccccccccaaaacccaaaaaaccccaaaacccaaaaacccccccccccccccccjjjrrrtttxxxxxyyyyyyywvrrnnnfffcccccc
+abcccccccccaaaacccccccccccccccccccaaaccccaaaaaaaaaaaaaaaaaacccccccaaaaaaaacccccaaaaaaaaaccccccccaccacccaaaaaaccccacccccaaaaaacccccccccccccccccjjjrrrrttttxxxyyyyyyywwrrroooffcccccc
+abccccccccccaaaccccccccccccccccccccccccccaaaaaaaaaccaaaaaaaccccccccccaaccccccccaaaaaaaaaaccccccccccccccaacccccccccccccccaaccccccccccccccccccccjjjjqqqqttttxxyywwwwwwwwrrooofffccccc
+abcccccccccccccccccccccccccccccccccccccccccaaacacccccaaaaccccccccccccaacccccccccccaaacaaacccccccccccccccccccccccccccccaaacccccccccccccccccccaacjjjjqqqqqttwwwwwwwwwwwrrrooofffccccc
+abcccccccccccccccccccccccccccccccccccccccccaaccccccccccaacccccccccccccccccccccccccaaacccccccccccccccccccccccccccccccccaaacccccccccccccccccaaaaaajjjjqqqqttwwwwwwsswwrrrrooofffccccc
+abcccccaaaaccccccccccccccaacaaccccccccccccccccccccccccccccccccccccccccccccccccccccaacccccccccccccccccccccccccccccccaaaaaaaaccaaaacccccccccaaaaaacjjjiqqqtttwwwwsssssrrrrooofffccccc
+abccccaaaaaccccccccccccccaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaaaaccaaaaacccccccccaaaaacciiiiqqttswwwssssssrrroooogffccccc
+abccccaaaaaacccccccccccccaaaaaacccaaaccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaccaaaaaaccccccccaaaaacccciiiqqqssssssspppooooooogggaccccc
+abccccaaaaaaccccccccaacccaaaaaaccccaacccccccccccccccccccccccccccccccccaaaaccccccccccccccccccccccccccccccccccccccccccaaaaaaccaaaaaaccccccccaaaaaccccciiiqqsssssspppppoooooggggaacccc
+abccccaaaaaccccccaaaaacccaaaaaacaacaaaaaccccccccccccccccccccaacccccccaaaaacccccccccccaaaccccccccccccccccccccccccccccaaaaaacccaaaaacccccccccacccccccciiiqqqpssspppppgggggggggaaacccc
+abccccccaaacccccccaaaaaccccaaaccaaaaaaaacccccccaacccccccaaccaacccccccaaaaaacccccccccaaaacccccccccccaaaaccccccccccccaaccaaacccaaacccccaaacaaaccccccccciiqqppppppphhhggggggggaaaacccc
+abccccccccccccccccaaaaaccccccccccaaaaaccccccccaaacaaccccaaaaaacccccccaaaaaaaccccccccaaaacccccccccccaaaacccccccccaaaaaacccccccccccccccaaaaaaaccccccccciiippppppphhhhggggggcaaacccccc
+abaacccccccccccccaaaaaccccccccccccaaaaaccccccccaaaaacccccaaaaaaacccccaaaaacaaacccccccaaacccccccccccaaaacccccccccaaaaacccccccccccccccccaaaaaacccccccccciiiippphhhhhhcccccccaaacccccc
+abaacccccccccccccccaaacccccccccccaaacaaccccccaaaaaaccccccaaaaaaacccaaccaaacaaaaccaaaccccccccccccccccaaacccccccccaaaaaaacccccccccccccccaaaaaaaacccccccciiihhhhhhhhaaaccccccccccccccc
+abaaccccccccccccccccccccccccccccccaacccccccccaaaaaaaacccaaaaaaccaaaaaacccccaaaacaaaaaccccccccccccccccccccccccccaaaaaaaaccccccccccccccaaaaaaaaaccccccccciihhhhhhcaaaacccccccccccccca
+abaaccccccccccccccccccccccccccccccccaacccccccaacaaaaacccaaaaaaccaaaaacccccccaaaaaaaacccccccccccccccccccccccccccaaaaaaaacccccccccaaacaaaaaaaaaacccccccccccchhhaccccaacccccccccccccca
+abaaccccccccccccccccccccccccccccccccaaaaaaccccccaaccccccccccaaccaaaaaaacccccaaaaaaaccccccccccccccccccccccccaaaccacaaacccccccccccaaaaaaacaaacaaaaaacccccccccaaacccccccccccccccaaaaaa
+abccccccccccccccccccccccccccccccccccaaaaaccccccaaccccccccccccccaaaaaaaacaaaaaaaaaaccccccccccccccccccccccccaaaaaaccaaaccccccccccccaaaaaacaaacaaaaaacccccccccaaaccccccccccccccccaaaaa
+abccccccccccccccccccccccccccccccccaaaaaaaacccccccccccccccccccccaaaaaaaacaaaaaaaaaaaaacccccccccccccccccccccaaaaaacccccccccccccccaaaaaaaaaaaaaaaaaacccccccccccccccccccccccccccccaaaaa</code></pre>
+</div>
+</div>
+<a id="day13" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_13_python"><a class="anchor" href="#_day_13_python"></a><a class="link" href="#_day_13_python">Day 13: python</a></h3>
+<div class="paragraph">
+<p><span class="small">this documentation is autogenerated. Add a <code>README.adoc</code> to your solution to take over the control of this :-)</span></p>
+</div>
+<div class="sect3">
+<h4 id="_python_13"><a class="anchor" href="#_python_13"></a><a class="link" href="#_python_13">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        for line in fd:
+            line = line.strip()
+            if line:
+                data.append(eval(line))
+    return data
+
+
+def check_order(packet1, packet2):
+    ordered = True
+    stop = False
+    if packet1 and not packet2:
+        stop = True
+        ordered = False
+    elif not packet1 and packet2:
+        stop = True
+    elif not packet1 and not packet2:
+        pass
+    else:
+        for item1, item2 in zip(packet1, packet2):
+            if isinstance(item1, list) and isinstance(item2, list):
+                stop, ordered = check_order(item1, item2)
+            elif isinstance(item1, int) and isinstance(item2, list):
+                stop, ordered = check_order([item1], item2)
+            elif isinstance(item1, list) and isinstance(item2, int):
+                stop, ordered = check_order(item1, [item2])
+            else:
+                if item1 &gt; item2:
+                    ordered = False
+                    stop = True
+                elif item1 &lt; item2:
+                    stop = True
+                else:
+                    pass
+
+            if stop:
+                break
+
+        else:
+            if len(packet1) &gt; len(packet2):
+                ordered = False
+                stop = True
+            elif len(packet1) &lt; len(packet2):
+                stop = True
+            else:
+                pass
+
+    return stop, ordered
+
+
+def part1():
+    data = load_input()
+    result = 0
+    for i in range(len(data)//2):
+        _, ordered = check_order(data[2*i], data[2*i+1])
+        if ordered:
+            result += i + 1
+
+    print("Result 1: ", result)
+
+
+def part2():
+    data = load_input()
+    order = [[[2]], [[6]]]
+
+    for i in range(len(data)):
+        for j in range(len(order)):
+            _, ordered = check_order(order[j], data[i])
+            if not ordered:
+                break
+        else:
+            j += 1
+
+        order.insert(j, data[i])
+
+    result = (order.index([[2]]) + 1) * (order.index([[6]]) + 1)
+    print("Result 2: ", result)
+
+
+def main():
+    part1()
+    part2()
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">input</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>[[0,5,[[],[],2,[7,9]]],[[8,8,3,[6,3,8,9,1]],[2,0,10,7,10],4,10,[9,[1,8],4,[4,0,5,10],[4,0,8,8]]],[9,10],[],[0,[[]],4,10]]
+[[],[4,7,3,6,[2,[10],[2,5,10],5,2]],[[1,10,[6,9],3],[6,10,8,[1],[10,7,3]],[[7],[10,9,9,2],1,7],7],[3,7,9,[[4],0]],[[4],[[9],0,9,[]],[7,[],[],[5,7]]]]
+
+[[10,[[10,7,3,0,10],10],[[8,7,7,2,8]],0],[0,7,4],[2,10,[],[8,[7,10,10],1,0],[2,8,6]]]
+[[[7,6,5,[]],[[10,0,4,1,6],[5,9,10,6],[1,5]],[7,[6],[10,5,6,7,1]]],[2,[3,[7],[4],7,[4,4]],[],0,[]],[5,[1,6,6],[8,9,[1,1]],[5]]]
+
+[[[[3,9],5,[5],[0],5],[],[4,[6,2,2],[10],[],7]],[[],0]]
+[[],[[3],6],[10,[[4,1,10],[2,7,6,0],[0,8,9],[7,0,3,4,4],7],[[7],3,[3,2],[],4]],[[[10,2,7,8]]],[10]]
+
+[[10,6,7,0,[1,7]],[[[3,5,9,1,10],[],1,2,[0,9]]],[4,1,[4,4]],[1,2,2,5],[[5,[8],[]],7,[1,3,[4,1],5],[[10,7,9,2,2],[]],[[3,0,10,7],0,[],[0,3,9,7,3]]]]
+[[[],[4,[5],4,[5,5,8,9,1]],[7,10,[8,8,6,2],[],[3,3,6,2]],[3,3]],[],[5,[4,[10,6,6],[]],[[0],[4,7,0],[2,9],[9,4,3,8]]],[[3,[7,0,2,10,3],1,10,10],0,9,[[8,1]],[2]],[8,[[10,2],5,[0],[8,3]],[5,[4,1],[9,8],[0],9]]]
+
+[[8]]
+[[[[6,5,8,3],1,[1,5,5,5],[9,5,0,1],[7,0,0,4]],[[6],10,[3,2]],3,6,[10]],[4,[3,[1],10,[5,5,7,3]],[[6,2,5,0,5],[0],[7,5,4],[4,9]],[]],[],[[[4]],[4,[5,3,6,5,0],[2,6,1,6]],2,[[4,2,8,1],[6,2,7],[7,7,10,7],2],2]]
+
+[[],[],[[[7,9,4,8]],[[5,1]],[7,[8],[9,1,5,4],2,[]],4],[2],[[[2,10],[9,7],[3,6,9,9,7],5,2],8,0]]
+[[],[0,1,6]]
+
+[[[[2,8],7,[]],[[7,6,10,3,2],3],4],[],[[[4,10],4,[1,3,8]],5,4],[[7],7],[]]
+[[[]],[0],[3,[7,[5,3,2,5,6],2,[3,1],10],[8,10,[3,8]],7]]
+
+[[4],[[[7,9,8],3,6],[[],8,[2]]]]
+[[[8,3,[3,5]],0],[3,[[9,2],[2],7,1],10],[[3,[0,6,6],10,[5],[1,7,0]]],[],[6]]
+
+[[6,8],[7,[[],[1,4,3,6],[7,8,9,2,10],8,7],8,9],[6,7,[[10]],[[4,8,9]]],[[[6,3,6,1]],[[8,10,10,0,5],[1,4,4,7,5],1,[0,2,1],5]],[5,5,[[2],10,[],6]]]
+[[[[],4,7,0,7],[[1,2],0,[7,1,4],[6,2],[8,6,2,1]],0]]
+
+[[2,[[5,4,10],3,[9,0,8,7,4],4,6]],[[[8,10,7]],[2,[]],5],[[]],[4,9,[],7],[9,[[6],0,[]],[7,[],2],0]]
+[[[[5,5,0,2,9],6,2,1],[10],[[4],[10,6,6,10],[]]],[],[6,[]],[0,1]]
+
+[[9,6,[3],[1,5,[9,2,4],[4,1,6],[]],[[]]]]
+[[5],[9,[],3,8]]
+
+[[8,[[7],1,8,[2,6,4],8]],[]]
+[[],[],[[0,[],9,[0]],[[3],[4,6],[8,6,5,8,0]],6],[],[]]
+
+[[10,0,[[],5,[4,4,10,9,8]],8],[],[3,[[0,3]]]]
+[[[[0,9,4],[7,3,9,4]],[4,[0,5,7,10,3],0,9]]]
+
+[[[[0,8,8,0,4],[7,10,5,10,6],9,8,10],[[0],[],[0],10]],[9,8,[[8,7,5,5,10]]],[1,[10,4,1,[10,4,10,0,1]]],[[[1,9],9,5],3,1,[[7,6]],[]]]
+[[3,1,[[9,5,8],7],[3]],[[9],7,4,[]]]
+
+[[7,3]]
+[[[[4,2],[3,3],4,7,[1,2]],5],[[6,[2,9],[10,3,6,4,2],[2],3]]]
+
+[[[6,[]],[[4]]],[],[3,[[7,2,1],[],[8,9,9,10],[9],10],9,1]]
+[[[1,7,[7]],10],[[6,8,2,[0,9],2]]]
+
+[[[2],9],[[[2],[5,4,0,9]],[10,3,2,[0,0]],[[1,6,10,0,1],[3,5,6,7],[8],[1]]],[[8],[6,10],8],[9,0]]
+[[]]
+
+[[[],[4,3],6,[[],[9,5,3,9],[9,5],2,3],5],[4,[2,2,9,6,5],2],[[],2,[[],[5,6,6]],[10,[7,2,4,2,9],8]]]
+[[5,[7,[],[0,4,3,10],4,9],10,[[4,8]],10],[[[2,5,5],6,0,[5],[9,3,2,10]],[[5,4,8],[3],[1]]]]
+
+[[5,[[7,2,1,10,0]],[1,[4,0,5]]],[0],[[],10,[]],[10,[[9,3],[0],3],[7,9,3,[]],1]]
+[[[4,2],1,4,7],[[[],9,[3,5,8,7,6]]],[[6,3,4,[8,2,5,2,5],[9,8,3,1,9]],1,[[10,9]],[[1,4,1],1,8,[2],[10,3]],10],[[[],1,1,[]],0,9],[7,[6,[7,2,2,6,0],7,5],[[3,10,10,0],1,[1,8,4],[1,1]],[[7,7,6,2,4],2]]]
+
+[[5,7],[],[6,[4,8]],[8,[3,[10,2,0,5,6],[9,0,7,8,8],[0]]],[2,4,7,[]]]
+[[],[4,[5,0,3,6]],[5],[]]
+
+[[1,1,8],[[[1,10,3],1,[6,6,6],6]]]
+[[[4,10],0,9,[[1],[3,5],[10],4,[7]],1]]
+
+[[[0,5,10,2]],[[]]]
+[[[8]],[[[8,9,0]],10,[[9,7,5,3,6],[9,7,3]]],[6],[2,[[4,7],[6,9,8],[10,0,8,0,0],[9,4,3,10]]]]
+
+[[[],[[],7,[10,1,8,4,0],6,[10,2,2,6]],[[5,7,10],[9,9,5,5,0],6,[6,2],10]],[],[]]
+[[],[7],[[[7,3],6,8,9,[2]],[[7,8,6,2],[],9],3,[[9,0,8,10],9,[1,9,7,0],[6,9,1],8]]]
+
+[[8,[[10,8,5],[],[4,0,6]]]]
+[[3,4,[0,3,7],2],[[2,6,9,4,0],[1,[6,10],10,[4,5,1,9],0],[10]],[7,[[0,2],[3,5,10,1],9,[6,9,0,1]],8,9],[],[[[1,10,8,10,7],[4,9,5,2,1],5],10,4,7]]
+
+[[[[9,9,4,6,8]],3,2,10,6],[[[2,0],6,[9,10,0,1],[1,0,7,7,1]],[9,10,3,[1]]],[4,6,2,[2,2,5,[9],3],4],[[8],10,[9,[],[],[1]],8,[[],3]],[4,4,[10],7]]
+[[[9,[9],[4,0,10],[3,0,4,4]],8,[0,[4,8,0,5],[5,2],[0]],8,1],[6,0],[5,0,3,4],[[[2]],1],[]]
+
+[[[10,3],6,6,10]]
+[[[7]],[],[[0,[0,3,7],[],[5,0,2,6]],[2,[8,9,3,9]],[]]]
+
+[[],[[1,8,[0,10,3,7,2],5]],[[9,[4,7,7,6,10],[4,9,3]]],[[[9,4,4,9]]],[[[9,6,8,1]],2,4,[],5]]
+[[1,[],[10,6],9]]
+
+[[3,1,4,8],[[],[1]],[]]
+[[2,[5,[]],[]],[[2,1,8,6,[4,10,2,7,3]],4,[[9,0,2,3,7],8,10,4],5,[[],[10,9]]],[[4,[9,6,3,9],2,0]],[[[3]],[]]]
+
+[[1,[9],[[],4,[7,9,9],[1,4],[2,6,4]],3,2],[[],6],[[[0,7,3,2],2,2,[5],[3,7,8,3]],10,1],[[[],[],0,[0],[7,4,5]]],[[9,[3,3],[6,8],[10]],2]]
+[[9,7,[],[0],0]]
+
+[[],[[5,5],[9],10,2],[],[[6,4,[5,6,9,1,2],2,8]]]
+[[[[8,3,5,10,1],[3,4]],[9],[[3,10],9,7,[]],6],[2,10,[10,2,0],[0],[1,1,[2,4,0,8],[7,1,6,3],[8,10,8,1,4]]],[[[0,9]],[[7,2,1,3,4],6,[7,5]]],[8,10],[7,6]]
+
+[[],[[[10,8,8,6,2],2,10,[8,6,7,7,3]],9,1,[[3],9,9],[[5,2,9],2,0,[10,1],5]],[[],6,1],[[[3,2,4,7,3],[],9,[9,2,3],3]],[[[]],1,7]]
+[[7,[[7,2,8,9],9],[8,[0,3],[3,5],[5,8]]],[9,[0,3,10,1],[[4,8],4,[3,7,5],[6,2]],[[],6,[5,2]]]]
+
+[[],[0,[[0,0,1,3,8]],6]]
+[[10,6,8,8,[]],[9,[[7,4,8,1,4],6,[7,4,5],1],[[7,3,10,5],2],[[1],0,1,7],[6]],[[7,[4,7,9,6],[9],[6,3,3,3]],[6,[10,0,5,8],10,1,6],7,[9,0,2,1,9]]]
+
+[[1,[[4,1]],7],[],[[6,0,5,[9,10,0,6,0]]],[[6,[],[]],[[9,2],9,7],7],[8,10]]
+[[[6,4,8],[8],0,[5],2],[7,6,7,1],[10,10]]
+
+[[[[10,8,9,6,10],5,4,0,8],[[7,1,5,0,8],[2,5,5,4,2]],[[2,2]]],[[[6,2],1,[],3],[8,3,5,1],[[7],[0,4,2],4,[0,2,6],[1,6,3]]],[6,[3,0,[6,8]]],[[[9],[6],9,[2,3,9]],5,[7,[8]]]]
+[[5,4]]
+
+[[[[],[2,1,4,2],3],[1,9,[8,2,4,10]],[5]],[[1,2,[10],7],10]]
+[[7,[],[[10,5],5,1],[5]],[3,3],[1,7],[[[1],9],1],[9,[[7,2,6,6,0],[]],[],[]]]
+
+[[1],[[],3,[4]],[0,9],[[[10,10,6,8,9],4,3]]]
+[[[10,10,4,3,[7,10,7]]],[[3,10,9,[8,6,10,5],1],[[7,7],1,0],[5,[4,8,7],6,4,5],1,[[3,5,5,8],[5,9]]]]
+
+[[0,4],[[]],[[4,3,1,4],2,[8,2,1],1]]
+[[[0,[4]],[[0,6,0],4,8],[10],5],[],[[4,[10,1,8]],8,[]],[7],[]]
+
+[[[[7,7,3,4],[4,5,0,8],2,[1,6,5,10]],[[2,0,1],10,[2],4],1,2,[10,[7,7,7,2],[]]]]
+[[[10,[8,3,0,5,4],6,3,[4]],2],[[10,6,[],[10]],2,5],[[]],[[],[8]]]
+
+[[[7,5]],[[[7,5,4,1,2],8,9,[7,10,6],10],[[8,3,2],[1,1,5,4,4],2],0,5,6],[],[5,7],[5]]
+[[3,[[4,2],5,10,8],10,[[5,8,8],3,[6]]],[[[4,7,9,3,4],0,[9],4],[[9,9,3]],[10,6,[3,9,10,1]],2],[9,8]]
+
+[[5],[7,10,[7,[7,5,5,10]],[[3,8,9,10],[],[3,6],5,5]]]
+[[[],6,[[],7,5,[6,3,2,10,5]]],[]]
+
+[[[[4],5],[10,4,[6,2,1,3,3]],8,[[]],1]]
+[[5,[]],[[[3,7,7],[2],2]],[6,7,[[6,1,3,5,8],[0,0],2,[10,8]],[9,[2,10,5,0]],4],[0,1,[1,[7,1]],9,[6,1,2]]]
+
+[[8],[[[7,7,6,3]],6,5],[[6,10,2,1],[[],9],[5,[],7,3,[9,4,0,2]],[[10,1,9,1,2],9,8]],[]]
+[[],[[3,[7,1],0,6,[3,8,3,10,4]],9],[6,4],[10,[9,8,[2,6,0],[2,3,0,0]],[[10,7],[9],3],8],[10,[],[8,[3,5,0,9,1]]]]
+
+[[10,3,4,9,3]]
+[[[4,[7,9,9,2,7],[],[],4],3],[1,9],[]]
+
+[[10],[[[0,4,2]],3,8],[7,[0,[2,10,4,3],[5,1,5],2,10],[7,[],1,[],[1,9,7,4,7]]]]
+[[5,[3,[7,6]],[6,7],2],[4,[2,[]],[[6,10,4,10],[5,1,0],10,5,1],[[4,10,0,7,5],4]],[]]
+
+[[[[6],10],1,[[10]],9],[7,4,10,10],[2,0,[8,0]],[8,9],[6,[[10,2,7,0,1],1,[0,5,3,7,2],[6]],4]]
+[[[[],[2,2,6,0],[5,10,0,10,0]],3,[[3,7],3],5],[],[[],3],[7,[[7,4,8],9,2,[2]],[[1,3],[5,3,2],10],[10,3,[10,6,9,3]],[7,[9,6,0]]]]
+
+[[2,[[3,8,10,9,7],[2,5],[],10,0],[1,8,2,[]]],[10,[5,[2,8,2],5,3]]]
+[[],[0,[]],[[1,[],[0,7,0,1,8],[]],[[4,1,8,5],[5,10]]]]
+
+[[[[3,9,9,9,7],3],[0,[6,2,6,4,7],2,[7,9,9,7,8],[0,3,1,5]],[1,[2],[8,5,8,8,10],[7,3,2,10],[2,7,8]],7],[[],7,3,[9,6]],[[2,[0,8]],[1,4,[8,3,0,10]]]]
+[[[]]]
+
+[[8,2,3,1,0],[2,[5,[3,5,0,3],7],3,[1]],[10,[[9,4,0],3,[2,0],6],[[]],10]]
+[[[[9,3,0],[6,9,6,10],2,[],[5,9]],0],[3,5,[],[4,9,[0,0]]]]
+
+[[6,2,[6,[4,0],[4,5,8,7,1]],[[0,0,1],[9,5,3,1],2,[5],[1,5,7,4]],4],[8,[],[[0],[],[4,5]]],[6,[[10]],1,[1,5,1,10,[7,5,8,2,7]],[[7,1,2,1]]],[6,2,7,[6,[4,3]],[[7],10,[3],4]]]
+[[[[3,1,4,10,3],3],8],[3],[1,[5,[5],8,[9,10]],[[]],[4,[1],8,[]],[[],5]]]
+
+[[[10,6],[[1],6,0],[9,2,2],[4,[4,6,10,7,9]],6],[],[[],3,1,4,10],[]]
+[[[10,[4,1,7,7],9]],[[[3],[4],[1,3,0]],8],[[7],[6,[0,6,0],[1,8,5,3],[0]],0,6],[],[9]]
+
+[[1,1,[6,[],6,[2,4,10],[9,10,4,3,7]],7,2]]
+[[[[0,9,2,6],[0,10,1,8,7],[10,10,6,1],5,[9,2,9,1]],[3],5,10],[0,[[3,1,10,8],[],[],[7,9]],[[10,1,2,10]]],[[1,[10]],[],[[2,4,0,1,5],1,4,3],9,[2,[3,7],[],8]]]
+
+[[[6,1,7,7],4,[[6]],[[6],[9,4],[3]]],[[],[[10,0,2],[9,1,10,1,6],1,[1,8,2],[]]],[],[[],9,[6,0,2],[[],3,9,[6],[1,0,6]]],[[2,[6,7,7,6,7],2,[4,0,0,3,2]],[7],[8,[4,10,0,7,2]],0,4]]
+[[4,[[10],2],[]],[[3,[2],[10,0],2],6,2],[[3,[],[],[5,5],6],[0,6],5,[3],[7,[3,8,1,3],6,10]]]
+
+[[],[1,[[],4,[1,10],[5,6,7],[7,8,1,2]]],[[8,1],[0,[]],2,[]]]
+[[[[5,5,5],9,9],[],[0,[4,6,9],9,7],4],[[[],0],8,[1,[0,0,10,9,4],[3,5]]],[[8,1],[[]],[[3,5],3,[4,10],4],[9,[8,0,6,10,7],[3,4],10],7]]
+
+[[3,[[0,0,10,10,0],6,[7,8,5,10,9],[3,5,1],[10,1,9,7]],7,[10,3,[0,5,8]],10]]
+[[],[[],[[10],8,[3,5,2],[10,4,0]]]]
+
+[[1,8,[[],1,7]],[4],[[[2,6,8,10],0,3,5],[[8,6,7],9,[],[4,2,2,1,0]]],[6,10,0,[[8,0,6,4],[9,7]],5]]
+[[2,[3,[5,0,9],7],[[1,4],1,2,[10,8,8,0]],[4,8,2,4]],[9,[],[[3,4,6],[2],[4,6,10,5],0],4]]
+
+[[6,4,[2,[9,5,8,2,1],10,5],[[6,7,8]],2],[],[]]
+[[1,[5]]]
+
+[[],[5],[5,[2,[0]],[[5,0,3],4,8,0],3,1]]
+[[9],[[[8,8,3,5],[1,1,2],10]],[1],[[[]],[[8,6,8,9,8],7],[10,4,10,[1,3,3,7]],4],[]]
+
+[]
+[[[[]],5,[9,[],9,[6,4,1,3]],7],[10,5],[2,9,[[4,1]],6,3],[[6,1,[4,0,10],[3],2],4,[]],[[5],[[2,1,8,7,6],9],[6,6,[10,7,6,5,8],[2,6]],[],7]]
+
+[10,6,2,5]
+[10,6,2,5,4]
+
+[[[],6],[],[],[]]
+[[],[[],[5,2,[9],[]],2]]
+
+[[1,1,1,2],[],[[9,6,2,9]],[],[7,7,1,[8,4],5]]
+[[[7,7,0,4,[2,9,4,7,1]],2,10,[10,[],[5],6],3],[[],[[7],[10,10,4,9,0],[10],1],[],[[10,0,10,9,1],[0,8,2,10],4]],[6],[],[2,5,3]]
+
+[[],[[2,8,[1],[5,2,5,2],[2,9]],[10],[10,6,7,[0,4,8,10,2],[]],[]],[[10,[2,2,0,5],2],[[6,0,3,8,5],[9],[],10],[],[[8,7,10],6,8,3]],[[[5],5,5,[0,3],[10,3]],[1,4,5,[]]],[1,2]]
+[[[[],8,4,8]],[],[]]
+
+[[[[10,4,6],[],1,[]],[[3,4],[7,5,4,2],[],0,[10,10]],[[0],[6],[6,5,2,10,4],3,6],[[8,10,4,3],2,0,[3,4,8]],5],[[[3],7,3,[5,5,4,2]]]]
+[[[7],1,7]]
+
+[[0,6],[[],[[9,8,10,2],[0,9,5]]],[2,[],9,[[],8,[2,4]]],[4,6,0,3,4],[[[3]],0]]
+[[[[6]],5],[[9,[6,10,0,7],[3,8,7,4]],0,[],[[1],[7,4]]],[[[1,5,6],6]]]
+
+[[3],[[[7,7,2,0,7]],[0,4,10,7,[10,0,4,1,6]],[[4,7,9],5],[[6]],7],[[[5],[],[],[1,5,10,6],3]]]
+[[5,[7,3,[9,4,10,7],[1,4,10,4],[]],[9,2,1]],[1,7,[[],[0]],7,0],[],[2,[[5,1,0,7]]]]
+
+[[8],[7,0],[6,5,[[],[],8,[5],1],7,[]]]
+[[8],[],[7]]
+
+[[[],[[6,1,6,9,8],1],[[8,7,8,0],10,[8],8]],[[[]],[[6,6,9,5],[0,2],7,3,[5,9]]],[]]
+[[],[0,[[],[7,5],[3,10,7],7],[[9,4],10],[[5,7,8,7]],[]],[],[8,9,3,6]]
+
+[[[[9,8],6],3,0,[[3,7],[5,1,0,2],10]],[7]]
+[[],[],[6,0,10,[],[2]],[[[1]],[7,3,[10,10]]]]
+
+[[8,[8,10,6,4,10],[],1,[[8,0,1],9]],[0,0,3],[],[[[],[3,6],8,[]],1]]
+[[9,[[6,3,3,7],5,[2,9,5,8,0],[6,7,8,4],10],[3,4,[8,4,1,10,10]]]]
+
+[[2,[[4],[0,8,3,10,4]]]]
+[[[2,[0]],[5,[3,4,1,0],6,[1],1],3,4,9],[6,1,3,6],[7,[10,0,1,[8,10,8,0,6]],9,[[8,4,2],0,6,8,0]],[],[[[6,0,6,8],1]]]
+
+[[6,[[9,10,4,3,9],1],9],[[[9,2],[],[3,2]],[[4,7,8,3,5],0,[5],[10,5,6,0,6],[2,10,3,6,8]],[6,[]],[5,[4,5,9,10],[1,0,1]]],[[[2,1,9,9],[10,6,4,1,8],[],5,[2,10]],8,[[1,1,8],4,[2,4,0]],7]]
+[[10,[1,[2,3,0,6,9],1,[],[8,4,1,6,1]],3],[[[2],[]],[],7],[],[2,6],[10,4,6,6,[[],[9,8]]]]
+
+[[10],[[9,[8,9,5],3,9],7],[[[9,8,10,5],3,6],10,5,10],[5,1]]
+[[2,3,[]],[1,[[2,1],5,3,[7],0],5,[]],[[],[1,4,[]],[6,[1,4,8,3],9,[2,3],8],10,3]]
+
+[[[],[9]],[[[7,2],9,[4,8,6],[0,3,9],[8,8,1,4,1]],7]]
+[[2,[10,6,[5,0,9,5]],10],[[[3,3],6],[[6,8,2,5],[8,6,0,5]],[[1,7],4]],[0,[[3],[]],[[2,6,9,1],9,[4,2,5,0,2],9,[7]],[9,7,6,[2,2,9,5]],6],[[3,4,[6,9]],2,[4],3,[[1,9],[0,2]]]]
+
+[9,0,10,9,1]
+[9,0,10,9]
+
+[[[5],[7,0,9,2],2],[[3,[0],[]]],[6,[]]]
+[[3,[2,[0,4,5,1],[9,0]]],[9,2,[6],[3]]]
+
+[[[9],[0]],[1],[[[4,5]],3,10,5,10],[8,9,0,1],[[2,[10,5,5,2,3],[9,2,1,0,4]],[1,10,7,[10,9,7,4]],1,1]]
+[[0,2],[8,[[9,4,9,2],10,[9,8],4],7,5,6],[6,5]]
+
+[[],[4,[[7,1,3,7]],[]],[],[[[],2,[3],3],[[7,0],6],3,[7,4],[]]]
+[[4,8,6,2],[[[]],6,10,[[4,10,5,0,1],6,6],[]],[1]]
+
+[[[[7,8,0,9,3],[8]],[[6,10],[10],2,0,1]],[],[[1,[3,9,4],0,[]],[[],2],[8,[8],[5,7],[],9],[2,10],7],[3,[2,[3,8,5],3,2],6],[[1,[3],[4,10,3],5,[6,5]],[[]],2,[],4]]
+[[[],[6,6,[10],7],[10,[10,8],5,[10,8,3]],[5,10,4,8]],[3,10,6],[[[2,2],[5,2],[3,0,10,0,4]],[[8,9,2,9,0],1],1,[[10],6,0,8]],[8,[10,6,[1,3,9]],7,8,[3,[6,10],[7,6,4,5,1],[10],3]]]
+
+[[[[5,9],[1,1]],3],[],[6]]
+[[6,[9,7],[[6,0,7,10],[10,6],[4,3,3,7],10,[4,6,4,4,10]]],[1,[[2,0,0],[7,0,10,1,7],[9]],[10],4],[[8,10,9,[6,7,0,2,7],10],[[6]],[],[9],[]]]
+
+[[0,7,[[3],[0,3,6,8],[7,8,4]],[]],[3,[9,5],9,[4,5,[6,8,2],[7,3],7]],[]]
+[[],[[[3],[5,7,10,7],9,[3,9,6,5,7]],[[10],[4,3,10,9,3],[]]],[[[0,5,7,3,2]]]]
+
+[[10,7,0],[],[1,5,7,[],5],[1,4,[0,4,[3],[2]]],[[4],7,7,[9,1],9]]
+[[2,[2,[],[5,7,2,1,6],[8,9],[7,7]],[]],[1,3,[[],[3,9]],[6,2]]]
+
+[[3,3,0,[4]],[],[[7,0,[2,1,5,4,1],7,[0]]],[8,[6,3,4,7],10,[3]]]
+[[[1,[1,8,8,10,0],[5,7,6],[5,1],8],[3,0]],[[7,[],9,6,[9]],4,[[2,3,0],6],[],5],[10,[],[[],10,[5,9,3,2]],[1,3,[],0]],[6,[[2],1,4,3,4],7,2],[1,[[3],10,3],6,9,[[3,8,3,8],2,[4],9,9]]]
+
+[[[8,[3,8],[0,5],[8,8,2,4,7]],[4,[4]]],[1,7,8,2],[[1,7],[[3],3,[8,3],[6,4,2]],3,[[8,3,6,9,1],[4],[6,5,1]],[[3,6,1,5]]]]
+[[4],[]]
+
+[[5,[[0,9],[10,10,10,2,2],[1,5,8,2],[8,4,9,0]],9],[[6,[8,8,5,4,7],8,[],[7,9]],8,[],[[7],7,8,[2,2,0]]],[[[2,4],7],[8,6,[],[9,1]],[],[10],[[6,7,0,5,5],4,7,[5,1,9,10]]],[],[[[1,3,1,0],[7,7]],[6]]]
+[[[[8]],6,[[6],[],9]],[[[1,3],2,4,9,7],[5,[4],0,1],6],[5],[[],1,[],[[8,1,2,10,7],[7,9],9,5,4],1],[]]
+
+[[[],5]]
+[[4,[],9,6],[2,1,[[4,5,10,0,1],10,1]],[],[7,[[2,2]],9,[[3,0,7,5,1],[1,10],2,[]]]]
+
+[[[9,4,[2,2,5,1]],[7,0,[9,2,1,9,6],5,[7,8,0,5]],[[8]]]]
+[[[4,6],[[],[],3]],[],[[[4],9,[9,2,5]],[6,[1,7,6],[9,3,1,2,9]],[[2,3,0],4,0],[2,4,[0]],4],[10,[3,10,6],[1,10,5],9]]
+
+[[[0,8,2],6,[[4,0,4,7],[1],[2,8]],[[3],10,5,4,[8,0,9,4,0]],8]]
+[[[],[],5,[[8,0]],0],[9,6]]
+
+[[[]],[10,4],[10]]
+[[],[[3,[]],[6,[6,6,2,2]]],[[0,9,10,7,[8,4]],6,5,[[1,8,2,2,10],9]],[[[8,7,0],5,3],4]]
+
+[[],[4,[6,[2]],[[3,10],[3,2,0],3],[[],10,[9,8,0,2,9]]]]
+[[[[6,1,0,10],9],[6,[2,4,10,10,10],3,6,[6]],[],7,5],[[],[7,[10],5],[[2,3,2],0],1],[[[],10,5],[[7],[],5,[8,1]],3,10]]
+
+[[9],[4,[3,5],7,4,7],[[],[5,2,[1,4,0]],[6,[1,9,3,3],[]],6,10]]
+[[[[3,2,0,5],4],[7,[3],[6,7,0,5],0]],[9,4,9,2],[[]],[[[2,7]],[10,9,8],8],[]]
+
+[[],[4,[6,10],6,[[],7],[[3,0,5]]]]
+[[[[1,3]]]]
+
+[[],[[[],9],[5,[2,8],[6,7]]]]
+[[8,4]]
+
+[[4,[2,2,[1,8,3,6,5]]],[2]]
+[[5,4,[[7,4,8]],1,0],[10,[],[[1]],[5,[]]]]
+
+[[10],[],[3,1,[[],0,0],0],[[9,6],2,[[9,9,8,2]]]]
+[[10,[4],[[],[5,5],7,[3,1,2,10,0],10],1],[3],[[],9]]
+
+[[[[5,6,8,3]],1,[5],10],[[[2,3,5,3,6],0,10,[2,3,7]],[]]]
+[[[[],[2,1,10],[],[4]],[[6,1,1],10,4]]]
+
+[[8,[9,[2],[0,6,2,3,7]],4]]
+[[[3,[6,5,1,6,10],[1,5,4,1,3]],[7],[],[10,10,4],[[9,4],[7,4],0,2,[2,5,6,7,4]]],[[],[8,4,3,[0,7,6,7,5],6],[[10]],[[1,7,9,5,8],[1,4,5,9,6]]],[6,2,[]],[]]
+
+[[[[2,7],0,[2],[0,0,0,10],[]]],[2,[[2,8,9,3,3],4,4],9,[1],[10,3,[8,7],[9,6],5]],[[[],[9],[6,5,3]]],[[0,[7,3,0],[],[]]]]
+[[],[[4,0,[5,0],[8,9,4],[10,6,9,6,1]],[0,[1,3,10,9],0,5],1]]
+
+[[[10],[[9,1,1,3],8,10,6],[[0,7,6,7],8,[7,10],[10,8,0,2,8],[7,7,10,1]],8,[2,0,[4,9,6],4,[2,5,5]]],[10]]
+[[10,[],5],[3]]
+
+[[[[3,5,7,8,5]]],[[[8],[2,7,8,2],[8,6],[5,9,10,2]]],[[],[[]],10,[[7,5],6,[]],[9,[5,3,8,0],5,5,2]]]
+[[[[9],4]],[5,9,8,[]],[[]]]
+
+[[],[[[4,2,4]]],[4,9,8,[3,0,[3,6,3,1,5]]]]
+[[7,[[1,9,7,5,0]],[]],[1,[6],3,9],[3,2,1,[[2]],8],[[[10,5],[8],10]]]
+
+[[],[8,5,[[]]],[],[[9,0],[],2,9,8]]
+[[2,0,[5,3],6],[[],[10,[0,5,9,9,10],7,[5,8,1,8],[8]]]]
+
+[[[]],[[0,6,[7,8,0],3,[9,6,2,5,2]]]]
+[[],[[],[]],[[[],2]],[1,9,2,8,6]]
+
+[[],[[[9,2,5],[3],3],1],[7,[[]],[7,6,[7]],[[],[8,0,2,9,9],5,7],1],[[2,[7,4,4],3],[[6,9],[1,10,0,7]],[5],10,3],[]]
+[[[],[[0,4,5,4,6],1]]]
+
+[[2,5,6],[[[4,7,4,6]],8,4,4,[[8,4,3],[5,1,8],5,[6,4,0,6,0]]]]
+[[6,[[1,5],0,3,7],[],[]],[],[[[1,3,8,0],[6,2,1,0],9,1]],[0,[[0,9,1,7]],[0,1,[1,6]],7]]
+
+[[[3,[4,2,8,0]],0],[0,[[8,3,5]],[7,7,[],10,[0,2,2,4,6]]],[6,[[6,9,8]],[0,[4,9,6,0,9]],[],6]]
+[[],[6,10,[],[[0,1,5],1],0],[[]]]
+
+[[[[3,10,1,6],[5,0,9,9],[10,10,10]],6,[3,9],8],[[[1,7,2,6],[],9],6,3,[8,9,[5,5],[0,5,9,4,5],[]]],[10],[[2,0],[[0,1,2],[],[10,5,2],4],2,[[6],[],0,[1,5],2]]]
+[[[9,6,[5,8,9]]]]
+
+[[4,[[7,0],1,[8,0],1,7],[],[[2],[1,6],[0,5,3],[0]],[[8,10,5]]]]
+[[3,6,[[],2,1],4,[[1],5,9,[10,0,0,5]]],[[1,[2,1],6,10,1],8,[3,[4,0],4,1],[]]]
+
+[[6,9,1],[],[2,4],[[2,5,[]],[[6,7,10,5],4,9],5]]
+[[[0,3,4,8,[0,9]],8,10],[[[4,0],[8,8,2,9],[],5,1],[5,[0,0,5,9],[5,10],7],8,[4,[3,0,4,7,0],5],[[9]]],[5,1,6,10],[]]
+
+[[6,[1,2,10,[]]],[[],10,1,9,[[9,5,7],3,[4,5,10,5],5,[1]]],[]]
+[[[[10,7],1,1,4],10,6,[7],[10,5,[]]],[1],[[[8,2,5,7],[],[],8],[],[6,4,[],[10,8]]],[9,1]]
+
+[[4,[[],1],[5,[6],0,1,[9,0]],[[7,6,2,1,10],[0,5],[3,4],1,[8,2,4]],[9,3,1,[]]],[]]
+[[[[0],1,[5],7,[4,0,1,7,1]],[10,10,[1,9,9,4,6],9],[[4],6,[0,0,10,0]],4]]
+
+[[0,10,[0,[10,10,6,7,1]],4,[[0],[7,10,5]]],[]]
+[[10,[],6,[10],[10,[2,5,4],3,3,0]],[9]]
+
+[[],[[[7,1,2,9,4]],8,[8,5,7,3,[9,10,4,9,1]],[3,[6],[1],7],10]]
+[[[],[0,8,[3,6]],10,[[10,0],[6,8,5],2,8,[5,10,2,0,5]],10],[[[6,0]],5,8]]
+
+[[7,[[10,0,4],7],[0,[3,7,7,10,3],10,[2,4,2,0,10],6]]]
+[[5,5,9]]
+
+[[3,[10,[10],4,0]],[[[3,7,7],[0],[]],0],[[10,6,9,7],[5,[3,7]],[[7,9,8],0,5],10],[],[0,5,10,8]]
+[[0,[10,1],10],[8],[7,[4,3,5,[2,5,6,3]],[[2,0,10,4],[7],[9,9,6],[1,5]]],[]]
+
+[[],[],[7,[2,9,0]],[]]
+[[[[3,5,0],9],1,7,9],[1,[[9,2],[5,3,0,10],[9],0,[0,8]],[[10,0],7,[4,8],1,0],[[7,7,3]]]]
+
+[[],[],[],[],[[4,1,6,[],10],[[7,2,2,1,1],[],[5],[8,8,7]],1]]
+[[0,[[8,9],[10,0,9],5,5]],[[]]]
+
+[[10,[10,9,[10,0,2,2,2]]],[[1,5,[10,9,7,6]],3]]
+[[0,6],[10,[[4,5,7,0],3],2],[]]
+
+[[[[8,10,3]],[[10,3,10,4,0],5,[1,5],2],3],[6,[5,[3,10,3,4],[1,1,10,0,6],2],10,[],[[10],7,6,2,10]],[[[7,10],4,2,[],[5,0]]]]
+[[],[]]
+
+[[[3,[10,2]],[[2]]],[[[8,5],[0],4,[],[5]],[4,[7,2],[9,1,8,7],[7,7],5],[],[10,[8,7,5,3],3,[],[8,4,2,7,2]],[[1,8,4,5]]]]
+[[0,[3,8,9,8],[1,6,1]],[[],[],[0,[4],5,5,[1,7]]],[3,[[6,1],2],[],[[7,10,4,4],[6,9,9]]]]
+
+[[7,[9,9],7,6]]
+[[1,[]],[[],0],[3,[6],[[6],1,5,3]],[1,[],[[5,4,9,10],5,5],[],[[1]]]]
+
+[[6,0]]
+[[[[2,3],4,[6,4,5,5]],9]]
+
+[[5,10],[10,6,[0,[7,4],[2,3,6]],0]]
+[[3,[3,3,1,[5,2,1,5],[8,6,2]],[[9,10,4],2]],[7,[[5]]],[[]],[6,[],[[10,2,7]],[[9,7,3,6]]],[[[8,7,7,5,5]],5,8,2]]
+
+[[6,9],[3,[1,9,[]],10]]
+[[[]],[3,10,[[2,4,2,1],7,9,3,[0,7,1,7,4]]],[[8,5,[],[0,2,7],9],7,7,[],[[],[9,7,7,2],[10,0,3,2]]],[[],[4,[6],6,[0,7,1,4,3]],2,[[1,6],0,[6]]],[[],1,[4,10,[3,8,9,2,8],5],[0,1,8,[3,4],8],[[10,8,2],1]]]
+
+[[9],[]]
+[[9,[1,7,4]],[[[6,10,3,3,4],8,1,[8,2,2,1,1],2],[[4,9,9,0],[9,1],[7]]]]
+
+[[7,[[0,4,7],[5,1,9,7,6]],5]]
+[[5,1,[[4,7,0,8,4],0],3,[]],[[[2,1],[8,3]]],[[],[],[[4,7],3,4,1,[5,6,6,0]]],[[4,9,10],2,[6,[1,10,9]]]]
+
+[[[4,[8,8,4,2],[2]],[[5,8,4,5,6],[2,4]],2],[[],8,[[6,1,0,9,0]],[2,6,[7,1,10,9,7],6,3]],[[0,6,[6,5]],10,10]]
+[[3,[9,[6,2,1,7],9,5],8,9],[],[],[]]
+
+[[6],[],[7],[[[6,4,0],[10,7,1,2,0],[7,6,7,7],[3,6,10]],8]]
+[[3,4,1],[4,4],[],[[1],5,5,10,[]],[[8,0],[8],[[5,1,10],3],[4],[[10,2,3],3,5]]]
+
+[[3,[1,2,[10,2,4,4],[],5]],[0,[],6],[10,[],[[],[1,4,10]],2]]
+[[1,[5,[7,7,6],[10,8,10],9,[8,8,10]]],[],[[[3],[7]],[9,[4]],7]]
+
+[[8,3,[7,4,8,[7,3,0]],10]]
+[[[8,0],[7],2]]
+
+[[[0],[6,8,9,2,[6]]],[[[2],10,3,[2]],8,2,2,3],[[5,5,[10,10,3,7],[9,1,7,8,7]],[10,1],[[1,10,7],6,[8,5,1,6],5]],[]]
+[[[],2]]
+
+[[],[[4]]]
+[[0,10,4],[[2],0,10],[]]
+
+[[[],[4],[[],7,5],0,[10,8]],[[9,[9,1,5,6,4],6,10,[2,1,9]],4],[[],[]],[6,[[]],0,5]]
+[[7,[1,2,0]]]
+
+[[9],[[[9,3],8,[4,2,7,2,2],2,[10,6,1,0,8]],[3,2],[9],[7]],[[0],[[4,7],[],3,[],3],2,9,[]],[[],9,[2],3]]
+[[3,2,[[7,0,3],[9],[1]],[8]],[],[[[],[10,8,4]],9,[],[]]]
+
+[[4,8,[6,3,[9]]],[[[],3,6,[7,3,3],[5,3,8]],[9,[],5,6,[6,0,2,4,4]],2,8],[]]
+[[10,7,8,7,3],[[[9,8,2,1],[0,5],[9]]],[[[7,3,7,7,3]]],[[7,[],8],[9],[2,[1,4,8],[3,4,2,4,5],[],9],[9,[7]]],[[],5,[9,[10,6,5],[0,2,8]]]]
+
+[[1,[0],1],[]]
+[[[[7,5,2,5,8],[8,10,1,4,6],10,[10,10,5,1],8],[[2,4,8,1],[],3,0,[2,4]],[[2,0],7,7,[4,3,6]],6],[],[[[6],1],[0,[0,9,3],3]],[5,6,7]]
+
+[[[],[],[[4,0,3],[],[3,3],[1,2,5,4,6],[5,8,0]],[7,[5],10,10,1]]]
+[[],[[[1,1,5,3],6],4,8,7],[1,[[7],[]],10,0,[]],[[[],[5,2,2,5,4],8],8,2],[5,[9,[10,5,2,9,8],8],10,10]]
+
+[[3],[[[6,4]],9,1],[6,8]]
+[[],[[[5],[5,3,2,10,7],10,[7,9,1,5],2],[6,8,[6,8,1,0,10]],[[]]],[[],4,[[],[5,2,10,1],0,8],4,10],[[],[3,[0,6,0],[5,1,4,4],3,[3,1,9,2]],[3,2,3,2,[6,6,7,6,5]],[],9]]
+
+[[5,9,3,[],[9,7,[]]]]
+[[[0,9,8,[10,3],[10]],1,[3,[10,3,4,5],[8,4,2,3,6],[9,8,10,5,8]],[8,[5,3,7],[6,2,2],[5,9],[7,9,4]],[10,5,10]],[3],[1,0,[[8,8],[]]],[9,[],[5,8,[5,2,9,2,0],[10,4]],[[9,9,8,4,0],5],[]],[[[],[8,2]],[[9,9,6,6,7],[4],2,[]],[7,9]]]
+
+[[[6,[1],6,[1],9],[7,[6,2,1],[3,1,1,7]],[[9,5,1],5,[1,2,2,8,5],2,2]],[[]],[[9,6,4,0]]]
+[[[],[[2],[1,5],[7,10,0,9,2],8,9]],[4,[8],4,6]]
+
+[[2,6,6],[10,10,4]]
+[[[[1,7],5,0],3,10,3],[1,[7],0,[[9,6,3],[10,0,5,7],[10],[5,10]],3],[10,[]],[5,[6,2,10,7,[1]]]]
+
+[[3,[3,2,[8,6,2,6,10],[0],[]],[]],[5,[[],[8],[8],[8,5,2],[9,8,10,8,9]],7,[0,[7,6,7,2]],9]]
+[[],[4],[[[10],[2,3,4],[7,3,4,0]],3,[10]],[3,[[4],6,10],[3,10,7,[],3]],[5,4,0,[],6]]
+
+[[[[0,7]],[9],[[],[],5,[7,6,8,0]],3]]
+[[3,[[3,5],6,8],7],[[[3,4]],[],[0,[8,3,2,3,3],0,[5,10,3,7],[0,6]],[[2,2,3,10,10],9,[0],[]],[]]]
+
+[[3],[5,7,10,10]]
+[[10],[],[[0,[9,2,9,0],[5],[7,6,2],[7,3,6,4,9]],10,[8],2,7],[[[7,3,2,3,9],[7,5,2,9],[10,10,3,4,8],[2,7,9,8],0],[[10,3,1,1],[0],6]]]
+
+[[[10,7,8]],[[],[1,[8,4,0]],2,7],[],[[[8,9,6]]]]
+[[[]],[3,0]]
+
+[[6,4,[2,9,10],[[5],4,[],7],2]]
+[[],[4,9,3,10],[4],[[[10,7],4,[8,10,4,2]],6,[5,3,5,1,[7,9,4]],[[]],[]]]
+
+[[7,[[4,7],7,[2,8,2]],5,7,[[5,0,7,8,0]]],[[5]],[[0,[3,9]],8,[1,4,2],[[10,1,3,5,0],[4],[],3]],[[[6,4],[4,9,9,4]],[],[]]]
+[[5,[0,[6,8,7,3],2],[9,4,[7],[0,3,7]],3],[3,[[9,6]],[[],[4,7,6,8,0]]],[2,5],[9,2,5]]
+
+[[[[1,3]],8],[5,8,6,[0,[6,6,4],[]],7],[[7],[[],3,7,1],[],[[9,10,6],[5],[6,7,6],[3,3,3,8],[]],[[],7]],[],[7,[8,[1,8,1,0]],[4,1,[2,5],1],[[6,10]]]]
+[[[10,9,[0,10,10,1]],[[9],[10,0,2],4,9]],[[[4,8]],0,[5,[3],4,3,4],3],[],[],[[]]]
+
+[[4,6,[[10,0,2,6],[3,5,8],3],3],[],[],[],[8]]
+[[[],[[],4,10],9],[[3,[],[8,6,9],9,1],1,10,[[1,4,6],[0],2],[[1,7,9,7,0],[3,10],2,[2],[2,9]]]]
+
+[[],[[1,[6,2,10]]],[],[[[7,9,2,8],[5,1,2],9],3,[10]]]
+[[[2]],[10,[10,6,8],8,[8,0,10,2],10]]
+
+[[2,8]]
+[[[[5],[9,9,6],[1,8],[5,4,6,0,2]],[[5,9],[]],[7,[4,2,3,4],6]],[],[1,9,7,[6]]]</code></pre>
 </div>
 </div>
 </div>
