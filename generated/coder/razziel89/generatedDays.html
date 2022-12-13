@@ -265,6 +265,28 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_12_rust">Day 12: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_12_hill_climbing_algorithm">Day 12: Hill Climbing Algorithm</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_10">Oveview</a></li>
+<li><a href="#_solution_11">Solution</a></li>
+<li><a href="#_how_to_run_12">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_day_13_rust">Day 13: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_13_distress_signal">Day 13: Distress Signal</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_11">Oveview</a></li>
+<li><a href="#_solution_12">Solution</a></li>
+<li><a href="#_how_to_run_13">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -3085,6 +3107,757 @@ fn is_prime(val: isize) -&gt; bool {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_11"><a class="anchor" href="#_how_to_run_11"></a><a class="link" href="#_how_to_run_11">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day12" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_12_rust"><a class="anchor" href="#_day_12_rust"></a><a class="link" href="#_day_12_rust">Day 12: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_12_hill_climbing_algorithm"><a class="anchor" href="#_day_12_hill_climbing_algorithm"></a><a class="link" href="#_day_12_hill_climbing_algorithm">Day 12: Hill Climbing Algorithm</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_10"><a class="anchor" href="#_oveview_10"></a><a class="link" href="#_oveview_10">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_11"><a class="anchor" href="#_solution_11"></a><a class="link" href="#_solution_11">Solution</a></h5>
+<div class="paragraph">
+<p>No time to write much.
+This might be the most complex puzzle this year so far.</p>
+</div>
+<div class="paragraph">
+<p>Part 1 can be solved by implementing <code>A*</code> on a directed acyclic graph where each
+step has unit cost.
+Then, have it search for the path from start to finish, making sure to have a
+sane heuristic.</p>
+</div>
+<div class="paragraph">
+<p>With a directed acyclic graph, part 2 can be solved very easily by adding a new,
+virtual node and connecting it to all nodes of height <code>a</code>.
+Then, search for the shortest path from that virtual node to the end and
+subtract 1 from the length of the path (the virtual node).</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::{HashMap, HashSet};
+// Constants.
+
+fn build_graph(map: &amp;HashMap&lt;data::Point, data::Height&gt;) -&gt; HashSet&lt;data::Node&gt; {
+    map.iter()
+        .map(|(&amp;p, &amp;h)| {
+            let neighbours = p
+                .env()
+                .into_iter()
+                .filter_map(|el| match map.get(&amp;el) {
+                    Some(other_h) =&gt; {
+                        if other_h.height() &lt;= h.height() + 1 {
+                            Some(el)
+                        } else {
+                            None
+                        }
+                    }
+                    None =&gt; None,
+                })
+                .collect::&lt;HashSet&lt;_&gt;&gt;();
+            data::Node::new(p, h, neighbours)
+        })
+        .collect::&lt;HashSet&lt;data::Node&gt;&gt;()
+}
+
+fn find_path&lt;'a&gt;(
+    start: &amp;'a data::Node,
+    end: &amp;'a data::Node,
+    graph: &amp;'a HashSet&lt;data::Node&gt;,
+    estimator_fn: fn(&amp;data::Node, &amp;data::Point) -&gt; usize,
+) -&gt; Result&lt;HashMap&lt;&amp;'a data::Node, (Option&lt;data::Point&gt;, usize)&gt;&gt; {
+    let ref_point = end.pos();
+    let estimator = move |node: &amp;data::Node| estimator_fn(node, &amp;ref_point);
+    let get_node = move |node: &amp;data::Point| {
+        graph
+            .get(&amp;node.as_node())
+            .ok_or(Error::msg(format!("cannot get node {:?}", node)))
+    };
+
+    let mut connections = HashMap::&lt;&amp;'a data::Node, (Option&lt;data::Point&gt;, usize)&gt;::new();
+    let mut checkable = HashMap::&lt;&amp;data::Node, (data::Point, usize)&gt;::new();
+
+    // Add starting point to resulting path.
+    connections.insert(&amp;start, (None, 0));
+    // Add neighbours of starting point to list of checkable values.
+    for neigh in start.neighbours() {
+        let neigh_node = get_node(neigh)?;
+        // Estimated costs are the most direct possible connection plus 1, since every step costs
+        // one.
+        checkable.insert(neigh_node, (start.pos(), estimator(neigh_node)));
+        // connections.insert(neigh_node, (Some(start.pos()), 1));
+    }
+
+    // Search until we added the final node to the path or until there is nothing more to check.
+    while !connections.contains_key(&amp;end) &amp;&amp; checkable.len() &gt; 0 {
+        // Get node with minimum _estimated_ cost.
+        let next_best_node = checkable
+            .iter_mut()
+            // Get node with minimum estimated cost.
+            .min_by(|(_node1, (_pre1, cost1)), (_node2, (_pre2, cost2))| cost1.cmp(&amp;cost2))
+            .ok_or(Error::msg("cannot find next node"))?
+            .0
+            .clone();
+        let (_, (predecessor, _old_estimate)) = checkable
+            .remove_entry(next_best_node)
+            .ok_or(Error::msg("cannot find predecessor"))?;
+
+        let cost_of_predecessor = connections
+            .get(&amp;predecessor.as_node())
+            .ok_or(Error::msg("predecessor has not been visited"))?
+            .1;
+
+        // Add point to resulting path.
+        connections.insert(next_best_node, (Some(predecessor), cost_of_predecessor + 1));
+
+        // Add neighbours of point to list of checkable values.
+        for neigh in next_best_node.neighbours() {
+            let neigh_node = get_node(neigh)?;
+            if !connections.contains_key(neigh_node) {
+                let estimate = cost_of_predecessor + estimator(neigh_node);
+                let previous_best = checkable
+                    .get(neigh_node)
+                    .unwrap_or(&amp;(*neigh, std::usize::MAX))
+                    .1;
+                if previous_best &gt; estimate {
+                    checkable.insert(neigh_node, (next_best_node.pos(), estimate));
+                }
+                // connections.insert(neigh_node, Some(start.pos()));
+            }
+        }
+    }
+
+    Ok(connections)
+}
+
+fn extract_shortest_path&lt;'a&gt;(
+    end: &amp;'a data::Node,
+    points: HashMap&lt;&amp;'a data::Node, (Option&lt;data::Point&gt;, usize)&gt;,
+    graph: &amp;'a HashSet&lt;data::Node&gt;,
+) -&gt; Result&lt;Vec&lt;&amp;'a data::Node&gt;&gt; {
+    let mut path = vec![end];
+
+    let mut check_node = end;
+    while let Some((Some(pre), _)) = points.get(check_node) {
+        let node = graph
+            .get(&amp;pre.as_node())
+            .ok_or(Error::msg("cannot find node in graph"))?;
+        path.push(node);
+        check_node = node;
+    }
+
+    Ok(path)
+}
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    eprintln!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let height_map = io::parse_chars_to_data::&lt;data::Height&gt;(file, "vec")?;
+
+    // Create graph. To avoid self-referencing data types, we identify each node only by its
+    // position.
+    let mut graph = build_graph(&amp;height_map);
+
+    // Find start and end nodes. Also adjust heights to use actual values. This is a bit of a pain
+    // in rust...
+    let mut start_node = graph
+        .iter()
+        .find(|&amp;el| el.get_height() == data::Height::Start)
+        .ok_or(Error::msg("cannot find start node"))?
+        .clone();
+    start_node.set_height(data::Height::Normal(0));
+    graph
+        .replace(start_node.clone())
+        .ok_or(Error::msg("cannot replace end node"))?;
+
+    let mut end_node = graph
+        .iter()
+        .find(|&amp;el| el.get_height() == data::Height::End)
+        .ok_or(Error::msg("cannot find end node"))?
+        .clone();
+    end_node.set_height(data::Height::Normal(25));
+    graph
+        .replace(end_node.clone())
+        .ok_or(Error::msg("cannot replace end node"))?;
+
+    let estimator = |node: &amp;data::Node, ref_point: &amp;data::Point| node.infinity_dist(&amp;ref_point);
+
+    let path = find_path(&amp;start_node, &amp;end_node, &amp;graph, estimator)
+        .map(|el| extract_shortest_path(&amp;end_node, el, &amp;graph))??;
+
+    println!("part 1: {}", path.len() - 1);
+
+    // Part 2.
+    // Add an additional node at a position that hadn't yet been part of the graph and connect it
+    // to all nodes of zero elevation.
+    let possible_starts = graph
+        .iter()
+        .filter(|node| node.get_height().height() == 0)
+        .map(|node| node.pos())
+        .collect::&lt;HashSet&lt;_&gt;&gt;();
+
+    let far_away_fake_node = data::Node::new(
+        data::Point { x: -10, y: -10 },
+        data::Height::Normal(0),
+        possible_starts,
+    );
+
+    if !graph.insert(far_away_fake_node) {
+        return Err(Error::msg(
+            "refusing to overwrite existing node for fake nod",
+        ));
+    }
+
+    let path2 = find_path(&amp;start_node, &amp;end_node, &amp;graph, estimator)
+        .map(|el| extract_shortest_path(&amp;end_node, el, &amp;graph))??;
+
+    // We have to ignore the first two steps here because of the real and fake start nodes.
+    println!("part 2: {}", path2.len() - 2);
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1)?;
+    solve(REAL)?;
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
+use std::str::FromStr;
+
+#[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
+pub struct Point {
+    pub x: isize,
+    pub y: isize,
+}
+
+impl Point {
+    pub fn new(x: isize, y: isize) -&gt; Self {
+        Self { x, y }
+    }
+
+    pub fn env(&amp;self) -&gt; Vec&lt;Self&gt; {
+        vec![
+            Self {
+                x: self.x - 1,
+                y: self.y,
+            },
+            Self {
+                x: self.x + 1,
+                y: self.y,
+            },
+            Self {
+                x: self.x,
+                y: self.y - 1,
+            },
+            Self {
+                x: self.x,
+                y: self.y + 1,
+            },
+        ]
+    }
+
+    pub fn as_node(&amp;self) -&gt; Node {
+        Node {
+            p: *self,
+            h: Height::End,
+            neighbours: HashSet::&lt;Point&gt;::new(),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Hash, PartialEq)]
+pub enum Height {
+    Normal(usize),
+    Start,
+    End,
+}
+
+impl Height {
+    pub fn height(&amp;self) -&gt; usize {
+        match self {
+            &amp;Self::End =&gt; 25,
+            &amp;Self::Start =&gt; 0,
+            &amp;Self::Normal(val) =&gt; val,
+        }
+    }
+}
+
+// This one is not pretty but it works and correctly reports errors. More context can always be
+// added if there are unexpected errors.
+impl FromStr for Height {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        if s.len() == 1 {
+            Ok(match s {
+                "S" =&gt; Self::Start,
+                "E" =&gt; Self::End,
+                // The next line can never panic.
+                _ =&gt; Self::Normal(s.chars().next().unwrap() as usize - 'a' as usize),
+            })
+        } else {
+            Err(Error::msg("received several characters or none"))
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Node {
+    p: Point,
+    h: Height,
+    neighbours: HashSet&lt;Point&gt;,
+}
+
+impl Node {
+    pub fn pos(&amp;self) -&gt; Point {
+        self.p
+    }
+
+    pub fn neighbours&lt;'a&gt;(&amp;'a self) -&gt; &amp;'a HashSet&lt;Point&gt; {
+        &amp;self.neighbours
+    }
+
+    pub fn new(p: Point, h: Height, neighbours: HashSet&lt;Point&gt;) -&gt; Self {
+        Self { p, h, neighbours }
+    }
+
+    pub fn get_height(&amp;self) -&gt; Height {
+        self.h
+    }
+
+    pub fn set_height(&amp;mut self, height: Height) {
+        self.h = height;
+    }
+
+    pub fn infinity_dist(&amp;self, other: &amp;Point) -&gt; usize {
+        ((self.p.x - other.x).abs() + (self.p.y - other.y).abs()) as usize
+    }
+}
+
+// We identify a node only by its position and never by its associated height.
+impl Hash for Node {
+    fn hash&lt;H: Hasher&gt;(&amp;self, state: &amp;mut H) {
+        self.p.hash(state)
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&amp;self, other: &amp;Self) -&gt; bool {
+        self.p == other.p
+    }
+}
+impl Eq for Node {}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_12"><a class="anchor" href="#_how_to_run_12"></a><a class="link" href="#_how_to_run_12">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day13" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_13_rust"><a class="anchor" href="#_day_13_rust"></a><a class="link" href="#_day_13_rust">Day 13: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_13_distress_signal"><a class="anchor" href="#_day_13_distress_signal"></a><a class="link" href="#_day_13_distress_signal">Day 13: Distress Signal</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_11"><a class="anchor" href="#_oveview_11"></a><a class="link" href="#_oveview_11">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_12"><a class="anchor" href="#_solution_12"></a><a class="link" href="#_solution_12">Solution</a></h5>
+<div class="paragraph">
+<p>Input parsing was a pain.
+The idea I used is to split each package at the given commas, but to only use
+those commas that are at the correct nesting level.
+Then, the parser is called again for each individual entry.
+Special care has to be taken since there are empty lists, too.</p>
+</div>
+<div class="paragraph">
+<p>This time, I did not try to get around self-referencing data types, which means
+I got to use <code>Box&lt;T&gt;</code> for the first time.
+It was nicer than expected.
+It&#8217;s good to know that Rust will ensure memory safety also for data on the heap.</p>
+</div>
+<div class="paragraph">
+<p>Part 1 was straightforward once the inputs had been parsed.
+Luckily, I had decided to create <code>compare</code> methods for each separate data type
+(<code>Pkg</code> and <code>Elem</code>) that returned a triplet indicating the ordering.
+Thus, in part 2, I could use the very same comparison methods to have Rust sort
+the vector of packges.</p>
+</div>
+<div class="paragraph">
+<p>In order to find out the indices of the divider packages but avoid implementing
+a comparison operation for packages, I sorted a vector of tuples that contained
+a package and a marker.
+Once sorted, I could just retrieve the indices of the markers.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+// Constants.
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    eprintln!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let pairs = io::parse_chunks_to_data::&lt;data::Input&gt;(
+        io::read_lines_from_file(file, 3)?,
+        "package",
+        None,
+        None,
+    )?;
+
+    // Part 1.
+    let ordered_correctly = pairs
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, el)| {
+            if el.is_ordered_correctly() {
+                Some(idx + 1)
+            } else {
+                None
+            }
+        })
+        .sum::&lt;usize&gt;();
+
+    println!("correctly ordered: {}", ordered_correctly);
+
+    // Part 2.
+    // Create divider packages. We wrote a parser so we might as well use it for easy creation of
+    // the divider packages.
+    let div1 = "[[2]]".parse::&lt;data::Pkg&gt;()?;
+    let div2 = "[[6]]".parse::&lt;data::Pkg&gt;()?;
+
+    // A value of "true" means this package is a marker.
+    let mut all_pkgs = vec![(true, &amp;div1), (true, &amp;div2)];
+    all_pkgs.extend(
+        pairs
+            .iter()
+            .map(|el| vec![(false, &amp;el.left), (false, &amp;el.right)].into_iter())
+            .flatten(),
+    );
+
+    // Sort using the comparison method created for part 1.
+    all_pkgs.sort_by(|(_marker1, pkg1), (_marker2, pkg2)| pkg1.compare(pkg2).as_ordering());
+
+    let (key_idx1, _) = all_pkgs
+        .iter()
+        .enumerate()
+        .find(|(_idx, (marker, _pkg))| *marker)
+        .ok_or(Error::msg("cannot find first marker"))?;
+
+    let (key_idx2, _) = all_pkgs
+        .iter()
+        .enumerate()
+        .find(|(idx, (marker, _pkg))| *marker &amp;&amp; *idx != key_idx1)
+        .ok_or(Error::msg("cannot find second marker"))?;
+
+    println!("decoder key is {}", (key_idx1 + 1) * (key_idx2 + 1));
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1)?;
+    solve(REAL)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::cmp::Ordering;
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub struct Input {
+    pub left: Pkg,
+    pub right: Pkg,
+}
+
+#[derive(Debug)]
+pub struct Pkg(Vec&lt;Elem&gt;);
+
+#[derive(Debug)]
+pub enum Elem {
+    Num(isize),
+    Dat(Box&lt;Pkg&gt;),
+}
+
+#[derive(PartialEq)]
+pub enum Cmp {
+    Equal,
+    Correct,
+    Incorrect,
+}
+
+impl Cmp {
+    pub fn as_ordering(&amp;self) -&gt; Ordering {
+        match self {
+            Cmp::Equal =&gt; Ordering::Equal,
+            Cmp::Correct =&gt; Ordering::Less,
+            Cmp::Incorrect =&gt; Ordering::Greater,
+        }
+    }
+}
+
+impl Input {
+    pub fn is_ordered_correctly(&amp;self) -&gt; bool {
+        self.left.compare(&amp;self.right) == Cmp::Correct
+    }
+}
+
+impl Pkg {
+    // This is run on the left value with the right value as argument.
+    pub fn compare(&amp;self, other: &amp;Self) -&gt; Cmp {
+        // The zip operator will end the iteration as soon as one of the two iterators runs out.
+        for (left, right) in self.0.iter().zip(other.0.iter()) {
+            match left.compare(&amp;right) {
+                Cmp::Equal =&gt; {}
+                Cmp::Correct =&gt; return Cmp::Correct,
+                Cmp::Incorrect =&gt; return Cmp::Incorrect,
+            }
+        }
+
+        // If we reach here, all value comparisons turned out equal so far. Thus, perform the
+        // length comparison.
+        if self.0.len() &lt; other.0.len() {
+            Cmp::Correct
+        } else if self.0.len() &gt; other.0.len() {
+            Cmp::Incorrect
+        } else {
+            Cmp::Equal
+        }
+    }
+}
+
+impl Elem {
+    fn compare(&amp;self, other: &amp;Self) -&gt; Cmp {
+        match (self, other) {
+            // If both are numbers, compare the numbers.
+            (&amp;Elem::Num(left), &amp;Elem::Num(right)) =&gt; {
+                if left &lt; right {
+                    Cmp::Correct
+                } else if left &gt; right {
+                    Cmp::Incorrect
+                } else {
+                    Cmp::Equal
+                }
+            }
+            // If both are lists, compare the lists.
+            (&amp;Elem::Dat(ref left), &amp;Elem::Dat(ref right)) =&gt; left.compare(&amp;right),
+            // If one is a number and the other one is a list, wrap the number in the list and
+            // comapre again.
+            (&amp;Elem::Num(left), &amp;Elem::Dat(ref right)) =&gt; Pkg(vec![Elem::Num(left)]).compare(&amp;right),
+            (&amp;Elem::Dat(ref left), &amp;Elem::Num(right)) =&gt; left.compare(&amp;Pkg(vec![Elem::Num(right)])),
+        }
+    }
+}
+
+impl FromStr for Input {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        let mut lines = s.split("\n");
+        let left = lines
+            .next()
+            .ok_or(Error::msg("cannot find left line"))?
+            .parse::&lt;Pkg&gt;()?;
+        let right = lines
+            .next()
+            .ok_or(Error::msg("cannot find right line"))?
+            .parse::&lt;Pkg&gt;()?;
+
+        Ok(Self { left, right })
+    }
+}
+
+// This one is not pretty but it works and correctly reports errors.
+impl FromStr for Pkg {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        let mut nesting_level: usize = 0;
+        let mut chars = String::new();
+
+        if !s.starts_with("[") || !s.ends_with("]") {
+            return Err(Error::msg("string is no real package"));
+        }
+
+        let mut elems_at_level = vec![];
+
+        // Skip the opening bracket and extract all elements at this level of the hierarchy. This
+        // is not pretty but seems to work.
+        for char in s[1..s.len()].chars() {
+            let val = match char {
+                '[' =&gt; {
+                    // Since we skip the very first "[", this indicates the start of a nested list.
+                    chars.push(char);
+                    nesting_level += 1;
+                    None
+                }
+                ']' =&gt; {
+                    if nesting_level == 0 {
+                        // Emit what we found so far. This will be the very last element. We use
+                        // this closing bracket to ensure we do emit the very last value.
+                        let result = chars;
+                        chars = String::new();
+                        Some(result)
+                    } else {
+                        // We found the end of a nested list. Remember the current character.
+                        chars.push(char);
+                        nesting_level -= 1;
+                        None
+                    }
+                }
+                ',' =&gt; {
+                    if nesting_level == 0 {
+                        // Emit one value. This is one element of the list at this level.
+                        let result = chars;
+                        chars = String::new();
+                        Some(result)
+                    } else {
+                        // We are still not at the top nesting level.
+                        chars.push(char);
+                        None
+                    }
+                }
+                _ =&gt; {
+                    // Remember all other characters.
+                    chars.push(char);
+                    None
+                }
+            };
+
+            if let Some(entry) = val {
+                elems_at_level.push(entry);
+            }
+        }
+
+        // Parse all entries at this level of the hierarchy into "Elem"s. Errors are being handled
+        // further down.
+        let maybe_parsed_elems = elems_at_level
+            .into_iter()
+            .map(|el| el.parse::&lt;Elem&gt;())
+            .collect::&lt;Vec&lt;_&gt;&gt;();
+
+        let mut has_err = false;
+        for el in &amp;maybe_parsed_elems {
+            if let Err(err) = el {
+                has_err = true;
+                eprintln!("{:?}", err);
+            }
+        }
+
+        if has_err {
+            Err(Error::msg("cannot parse package"))
+        } else {
+            let parsed_elems = maybe_parsed_elems
+                .into_iter()
+                // This line can never panic.
+                .map(|el| el.unwrap())
+                .collect::&lt;Vec&lt;_&gt;&gt;();
+
+            Ok(Self(parsed_elems))
+        }
+    }
+}
+
+impl FromStr for Elem {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        if s.len() == 0 {
+            // Empty package.
+            Ok(Self::Dat(Box::new(Pkg(vec![]))))
+        } else if s.starts_with("[") {
+            // This is itself a non-empty package.
+            Ok(Self::Dat(Box::new(s.parse::&lt;Pkg&gt;()?)))
+        } else {
+            // Otherwise, this is a number.
+            Ok(Self::Num(s.parse::&lt;isize&gt;()?))
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_13"><a class="anchor" href="#_how_to_run_13"></a><a class="link" href="#_how_to_run_13">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
