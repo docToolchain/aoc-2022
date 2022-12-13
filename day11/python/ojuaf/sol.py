@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from copy import deepcopy
+from collections import deque
 import math as m
 
 
@@ -59,7 +60,6 @@ def part2():
     data = load_input()
     rounds = 10000
     worry_factor = m.prod([monkey['cond'][0] for monkey in data])
-
     for _ in range(rounds):
         for monkey in data:
             for _ in range(len(monkey['items'])):
