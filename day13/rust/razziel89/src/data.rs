@@ -88,8 +88,6 @@ impl Elem {
     }
 }
 
-// This one is not pretty but it works and correctly reports errors. More context can always be
-// added if there are unexpected errors.
 impl FromStr for Input {
     type Err = Error;
 
@@ -108,22 +106,13 @@ impl FromStr for Input {
     }
 }
 
-fn join(input: Vec<char>) -> String {
-    input
-        .into_iter()
-        .map(String::from)
-        .collect::<Vec<_>>()
-        .join("")
-}
-
-// This one is not pretty but it works and correctly reports errors. More context can always be
-// added if there are unexpected errors.
+// This one is not pretty but it works and correctly reports errors.
 impl FromStr for Pkg {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
         let mut nesting_level: usize = 0;
-        let mut chars = vec![];
+        let mut chars = String::new();
 
         if !s.starts_with("[") || !s.ends_with("]") {
             return Err(Error::msg("string is no real package"));
@@ -136,16 +125,18 @@ impl FromStr for Pkg {
         for char in s[1..s.len()].chars() {
             let val = match char {
                 '[' => {
+                    // Since we skip the very first "[", this indicates the start of a nested list.
                     chars.push(char);
                     nesting_level += 1;
                     None
                 }
                 ']' => {
                     if nesting_level == 0 {
-                        // Emit what we found so far. This will be the very last element.
+                        // Emit what we found so far. This will be the very last element. We use
+                        // this closing bracket to ensure we do emit the very last value.
                         let result = chars;
-                        chars = vec![];
-                        Some(join(result))
+                        chars = String::new();
+                        Some(result)
                     } else {
                         // We found the end of a nested list. Remember the current character.
                         chars.push(char);
@@ -157,8 +148,8 @@ impl FromStr for Pkg {
                     if nesting_level == 0 {
                         // Emit one value. This is one element of the list at this level.
                         let result = chars;
-                        chars = vec![];
-                        Some(join(result))
+                        chars = String::new();
+                        Some(result)
                     } else {
                         // We are still not at the top nesting level.
                         chars.push(char);
@@ -166,6 +157,7 @@ impl FromStr for Pkg {
                     }
                 }
                 _ => {
+                    // Remember all other characters.
                     chars.push(char);
                     None
                 }
@@ -176,6 +168,8 @@ impl FromStr for Pkg {
             }
         }
 
+        // Parse all entries at this level of the hierarchy into "Elem"s. Errors are being handled
+        // further down.
         let maybe_parsed_elems = elems_at_level
             .into_iter()
             .map(|el| el.parse::<Elem>())
@@ -188,16 +182,17 @@ impl FromStr for Pkg {
                 eprintln!("{:?}", err);
             }
         }
-        if !has_err {
-            // This line can never panic.
+
+        if has_err {
+            Err(Error::msg("cannot parse package"))
+        } else {
             let parsed_elems = maybe_parsed_elems
                 .into_iter()
+                // This line can never panic.
                 .map(|el| el.unwrap())
                 .collect::<Vec<_>>();
 
             Ok(Self(parsed_elems))
-        } else {
-            Err(Error::msg("cannot parse package"))
         }
     }
 }
