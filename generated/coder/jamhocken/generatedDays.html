@@ -235,6 +235,13 @@
 <li><a href="#_run_script_13">Run script</a></li>
 </ul>
 </li>
+<li><a href="#_day_13_python">Day 13: python</a>
+<ul class="sectlevel3">
+<li><a href="#_what_i_learned_13">What I learned</a></li>
+<li><a href="#_approach_13">Approach</a></li>
+<li><a href="#_run_script_14">Run script</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1564,6 +1571,198 @@ def main():
                 risk = temp_risk
 
     print(risk)
+
+main()</code></pre>
+</div>
+</div>
+<a id="day13" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_13_python"><a class="anchor" href="#_day_13_python"></a><a class="link" href="#_day_13_python">Day 13: python</a></h3>
+<div class="paragraph">
+<p>Day 13 of year 2022
+<a href="https://adventofcode.com/2022/day/13" class="bare">https://adventofcode.com/2022/day/13</a></p>
+</div>
+<div class="sect3">
+<h4 id="_what_i_learned_13"><a class="anchor" href="#_what_i_learned_13"></a><a class="link" href="#_what_i_learned_13">What I learned</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Mostly it was a pain to figure out the right parsing. And I also used bubble sort, which I learned way back in the 80&#8217;s. (It&#8217;s not the best, but it&#8217;s easy to understand).</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_approach_13"><a class="anchor" href="#_approach_13"></a><a class="link" href="#_approach_13">Approach</a></h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I parse through each line using a function called parse_line. If you find a list somewhere as an entry, you find the closing ] and push that string into parse_line. Otherwise, it&#8217;s fairly straightforward. At the end, I have a list of lists that correspond to the strings in the input file.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Star 1</strong><br></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I made a function called compare_signals. For each of the cases, I created the logic. If you are comparing lists instead of digits, you call compare_signals again. We return as soon as we have a True or False. Then I just do the math as defined in the problem statement.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Star 2</strong><br></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>I add the 2 new packets to my list. And then just run bubble sort using my compare_signals function. I used bubble sort because I could 1-1 reuse my function and it&#8217;s also easy to understand. The performance isn&#8217;t an issue with such a sort list.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_run_script_14"><a class="anchor" href="#_run_script_14"></a><a class="link" href="#_run_script_14">Run script</a></h4>
+<div class="paragraph">
+<p>Run the solution with <code>python solution.py</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-python" data-lang="python">def process_input(file_contents):
+    lines_stripped = [line.strip() for line in file_contents]
+
+    signals = list()
+    for line in lines_stripped:
+        if line != '':
+            signal = process_line(line)
+            signals.append(signal)
+
+    return signals
+
+def process_line(line):
+    signal = list()
+    n = 1
+    while line[n] != ']':
+        if line[n].isdigit():
+            m = n
+            while line[n] not in [',',']']:
+                n = n+1
+            signal.append(int(line[m:n]))
+            if line[n] == ",":
+                n = n+1
+        else:
+            m = n
+            n = n+1
+            count = 0
+            while count != 1:
+                if line[n] == "[":
+                    count -= 1
+                elif line[n] == "]":
+                    count += 1
+
+                n = n + 1
+            signal.append(process_line(line[m:n]))
+            if line[n] == ',':
+                n = n+1
+
+    return signal
+
+def compare_signals(signal1,signal2):
+    if not signal1:
+        if not signal2:
+            return
+        else:
+            return True
+
+    for index,item in enumerate(signal1):
+        if type(item) is int:
+            if index == len(signal2):
+                if len(signal1)&gt;len(signal2):
+                    return False
+
+            if type(signal2[index]) is int:
+                if item &gt; signal2[index]:
+                    return False
+                elif item &lt; signal2[index]:
+                    return True
+            else:
+                status = compare_signals([item],signal2[index])
+                if status in [True,False]:
+                    return status
+
+            if index == len(signal1)-1:
+                if len(signal1)&lt;len(signal2):
+                    return True
+        else:
+            if index == len(signal2):
+                if len(signal1)&gt;len(signal2):
+                    return False
+
+            if type(signal2[index]) is int:
+                status = compare_signals(item,[signal2[index]])
+                if status in [True,False]:
+                    return status
+            else:
+                status = compare_signals(item,signal2[index])
+                if status in [True,False]:
+                    return status
+
+            if index == len(signal1)-1:
+                if len(signal1)&lt;len(signal2):
+                    return True
+
+    return
+
+def bubble_sort(array):
+    n = len(array)
+
+    for i in range(n):
+        already_sorted = True
+
+        for j in range(n - i - 1):
+            if not compare_signals(array[j], array[j + 1]):
+                array[j], array[j + 1] = array[j + 1], array[j]
+                already_sorted = False
+
+        if already_sorted:
+
+            break
+
+    return array
+
+def main():
+    with open("input.txt",'r') as input_file:
+        input_lines = input_file.readlines()
+
+    #star 1
+    signals = process_input(input_lines)
+
+    i = 0
+    sum_indices = 0
+    while i &lt; len(signals):
+        if compare_signals(signals[i],signals[i+1]):
+            sum_indices += i//2 +1
+        i = i+2
+
+    print(sum_indices)
+
+    #star 2
+    signals.extend([[[2]],[[6]]])
+
+    new_signals = bubble_sort(signals)
+
+    decoder = 1
+    i = 1
+    for signal in new_signals:
+        if signal in [[[2]],[[6]]]:
+             decoder *= i
+        i = i +1
+
+    print(decoder)
+
 
 main()</code></pre>
 </div>
