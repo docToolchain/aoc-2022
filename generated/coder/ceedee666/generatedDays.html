@@ -276,6 +276,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_13_python">Day 13: python</a>
+<ul class="sectlevel3">
+<li><a href="#_day_13">Day 13</a>
+<ul class="sectlevel4">
+<li><a href="#_main_idea_13">Main idea</a></li>
+<li><a href="#_what_did_i_learn_13">What did I learn</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -838,6 +848,54 @@ that I need to take the hight into account.</p>
 <div class="paragraph">
 <p>Run using:
 <code>$ python day_11.py --help</code></p>
+</div>
+<a id="day13" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_13_python"><a class="anchor" href="#_day_13_python"></a><a class="link" href="#_day_13_python">Day 13: python</a></h3>
+<div class="sect3">
+<h4 id="_day_13"><a class="anchor" href="#_day_13"></a><a class="link" href="#_day_13">Day 13</a></h4>
+<div class="paragraph">
+<p>This solution is written in python.</p>
+</div>
+<div class="paragraph">
+<p>The following libraries are used to implement the solution:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Typer (<a href="https://typer.tiangolo.com/" class="bare">https://typer.tiangolo.com/</a>) to generate a nice command line interface</p>
+</li>
+<li>
+<p>pathlib (<a href="https://docs.python.org/3/library/pathlib.html" class="bare">https://docs.python.org/3/library/pathlib.html</a>)</p>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="_main_idea_13"><a class="anchor" href="#_main_idea_13"></a><a class="link" href="#_main_idea_13">Main idea</a></h5>
+<div class="paragraph">
+<p>The main idea is to implement a comparison function for the lists. This
+function returns <code>-1</code>, <code>0</code> or <code>1</code> if the first list is smaller, equal,
+or larger as the second one. This only became obvious after reading the
+second part. Luckily a small refactoring of the solution for part one was
+enough to create the comparison function.</p>
+</div>
+<div class="paragraph">
+<p>Using the comparison function the second part could be solved by simply
+using <code>sorted</code> together with the comparison function.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_what_did_i_learn_13"><a class="anchor" href="#_what_did_i_learn_13"></a><a class="link" href="#_what_did_i_learn_13">What did I learn</a></h5>
+<div class="paragraph">
+<p>I learned about <code>functools.cmp_to_key</code> today.
+=== How to run</p>
+</div>
+<div class="paragraph">
+<p>Run using:
+<code>$ python day_13.py --help</code></p>
 </div>
 </div>
 </div>
