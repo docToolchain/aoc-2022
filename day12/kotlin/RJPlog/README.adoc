@@ -1,0 +1,35 @@
+==  Day 12: Hill Climbing Algorithm  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/12
+
+Today started with difficulties for me. First I wanted to generate all possible pathes in list of list but failed with different issues. After reading a lot of stuff about optimization algorithms I considered A* for to complicated. That's why I stripped it down to the following "low" A*. A list _distList_ with all possible fields is generated. It is initialized with width*heigth, means the maximum possible length. Then for a given start point all reachable neighbours are evaluated, and for each the minimum distance is stored, either the previous value or the parent place plus one. The list will be iterated and for all values reached (distList != width*heigth) the evaluation of the neighbours is started. 
+
+I guess this is still some kind of brute force, since there is no distinguishing between already finished positions, and there is no priorization of the positions with the lowest distance.
+
+[source, kotlin, numbered]
+....
+include::day2212_1_2.kt[tags=HillClimbing]
+....
+
+=== First Star
+
+How does it work: +
+
+While reading the input file the coordinates for the starting point are evaluated. For the starting point the distance in the distList is set to zero, this is the starting point of the evaluation. After distList does not change anymore, the distance at endpoint is the solution
+
+
+
+=== Second Star
+
+How does it work: +
+
+
+For part two not only for the starting point the distance in the distList is set to zero, but for all values with 'a', they are the starting point of the evaluation. After distList does not change anymore, the distance at endpoint is the solution
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2212_1_2.kt[tags=output]
+....
