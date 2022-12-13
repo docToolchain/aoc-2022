@@ -73,7 +73,7 @@ fn find_path<'a>(
             .ok_or(Error::msg("cannot find next node"))?
             .0
             .clone();
-        let (_, (predecessor, old_estimate)) = checkable
+        let (_, (predecessor, _old_estimate)) = checkable
             .remove_entry(next_best_node)
             .ok_or(Error::msg("cannot find predecessor"))?;
 

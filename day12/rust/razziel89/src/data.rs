@@ -1,5 +1,5 @@
 // tag::data[]
-use anyhow::{Context, Error, Result};
+use anyhow::{Error, Result};
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
