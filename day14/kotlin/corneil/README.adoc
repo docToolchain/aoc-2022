@@ -1,0 +1,184 @@
+== Regolith Reservoir
+
+Today we had to use the input data to represent a cave system and model sand falling into the cave.
+
+In the first part there is a point where the sand falls over the edge and it means all the sand falls down that abyss. So you needed to detect and out of boundary condition.
+
+=== Sample Input
+
+[source,text]
+....
+498,4 -> 498,6 -> 496,6
+503,4 -> 502,4 -> 502,9 -> 494,9
+....
+
+=== Model
+
+The model of the cave is a grid with a map of coordinates and the substance found their, like rock, sand or air.
+
+[source,kotlin]
+....
+open class Grid(
+val cells: MutableMap<Coord, Substance> = mutableMapOf()
+): MutableMap<Coord, Substance> by cells {
+  open val maxX: Int get() = cells.keys.maxOf { it.x }
+  open val minX: Int get() = cells.keys.minOf { it.x }
+  open val maxY: Int get() = cells.keys.maxOf { it.y }
+  open val minY: Int = 0
+  fun countSand() = cells.values.count { it == Substance.SAND }
+  open fun isInGrid(pos: Coord): Boolean = pos.x in minX..maxX
+        && pos.y in minY..maxY
+
+  fun getSubStance(pos: Coord) = getOrDefault(pos, Substance.AIR)
+  fun isAir(pos: Coord) = getSubStance(pos) == Substance.AIR
+  fun isTarget(pos: Coord) = isInGrid(pos) && isAir(pos)
+  fun canDrop(pos: Coord): Pair<Coord, Direction> {
+    if (!isInGrid(pos.left()) || !isInGrid(pos.right())) {
+      return Pair(pos, Direction.ABYSS)
+    }
+    if (isInGrid(pos.bottom())) {
+      if (isTarget(pos.bottom())) {
+        return canDrop(pos.bottom())
+      } else {
+        if (isTarget(pos.bottom().left())) {
+          return canDrop(pos.bottom().left())
+        } else if (isTarget(pos.bottom().right())) {
+          return canDrop(pos.bottom().right())
+        }
+        if (isTarget(pos)) {
+          return Pair(pos, Direction.DOWN)
+        }
+      }
+    }
+    return Pair(pos, Direction.STOP)
+  }
+}
+....
+
+=== Parsing
+
+
+[source,kotlin]
+....
+fun loadStructure(lines: List<String>): Grid {
+  val grid = mutableMapOf<Coord, Substance>()
+  lines.map {
+    it.scanInts()
+      .windowed(2, 2)
+      .map { line -> Coord(line[0], line[1]) }
+  }.forEach { scan ->
+    scan.windowed(2)
+      .forEach { pair ->
+        val prev = pair[0]
+        val curr = pair[1]
+        val diff = curr - prev
+        if (diff.y == 0) {
+          for (x in min(curr.x, prev.x)..max(curr.x, prev.x)) {
+            val pos = Coord(x, curr.y)
+            if (!grid.containsKey(pos)) {
+              grid[pos] = Substance.ROCK
+            }
+          }
+        } else {
+          for (y in min(curr.y, prev.y)..max(curr.y, prev.y)) {
+            val pos = Coord(curr.x, y)
+            if (!grid.containsKey(pos)) {
+              grid[pos] = Substance.ROCK
+            }
+          }
+        }
+      }
+  }
+  return Grid(grid)
+}
+....
+
+=== Processing
+
+
+[source,kotlin]
+....
+fun isStop(direction: Direction) = direction == Direction.STOP
+    || direction == Direction.NONE
+    || direction == Direction.ABYSS
+fun dropSand(grid: Grid, entry: Coord): Pair<Coord, Boolean> {
+  val drop = grid.canDrop(entry)
+  if (drop.second == Direction.ABYSS) {
+    return Pair(drop.first, false)
+  }
+  return Pair(drop.first, !isStop(drop.second))
+}
+
+fun simulateSand(grid: Grid, start: Coord, print: Boolean): Int {
+  do {
+    val result = dropSand(grid, start)
+    if (result.second) {
+      grid[result.first] = Substance.SAND
+    }
+  } while (result.second)
+  return grid.countSand()
+}
+....
+
+=== Part 1
+
+Part 1 involved simulating the sand while determining the boundary.
+
+[source,kotlin]
+....
+fun calcSand(input: List<String>, print: Boolean): Int {
+  val grid = loadStructure(input)
+  val entry = Coord(500, 0)
+  simulateSand(grid, entry, print)
+  return grid.countSand()
+}
+....
+
+=== Part 2
+
+Part 2 provided for an infinite floor and I overloaded the grid to provide for a different boundary condition and the floor.
+
+[source,kotlin]
+....
+class InfiniteGird(
+cells: MutableMap<Coord, Substance>,
+val level: Int
+) : Grid(cells) {
+  override val maxY: Int get() = level
+  override fun get(key: Coord): Substance? {
+    if (key.y == level) {
+      return Substance.ROCK
+    }
+    return super.get(key)
+  }
+  override fun getOrDefault(key: Coord, defaultValue: Substance): Substance {
+    if (key.y == level) {
+      return Substance.ROCK
+    }
+    return super.getOrDefault(key, defaultValue)
+  }
+  override fun isInGrid(pos: Coord): Boolean = pos.y <= level
+}
+
+fun calcInfiniteSand(input: List<String>, print: Boolean): Int {
+  val grid = loadStructure(input)
+  val entry = Coord(500, 0)
+  val infiniteGrid = InfiniteGird(grid.toMutableMap(), grid.maxY + 2)
+  if (print) {
+    grid.print(entry)
+  }
+  infiniteGrid.stretch()
+  val sand = simulateSand(infiniteGrid, entry, print)
+  if (print) {
+    infiniteGrid.print(null)
+  }
+  return sand
+}
+....
+
+=== Full source
+
+[source,kotlin]
+....
+include::src/solution.kt[]
+....
