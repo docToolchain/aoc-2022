@@ -182,11 +182,11 @@ fn solve(file: &str, part1: bool) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    // solve(SAMPLE1, true)?;
+    solve(SAMPLE1, true)?;
     solve(REAL, true)?;
 
-    // solve(SAMPLE1, false)?;
-    // solve(REAL, false)?;
+    solve(SAMPLE1, false)?;
+    solve(REAL, false)?;
 
     Ok(())
 }
