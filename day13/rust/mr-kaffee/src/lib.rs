@@ -196,7 +196,7 @@ pub mod tree {
 
         #[test]
         pub fn test_cmp() {
-            let nodes = PuzzleData::from(CONTENT).nodes;
+            let nodes = PuzzleData::from(crate::tests::CONTENT).nodes;
             let cmp = nodes
                 .iter()
                 .step_by(2)
@@ -221,38 +221,13 @@ pub mod tree {
 
         #[test]
         pub fn test_star_1() {
-            assert_eq!(13, star_1(&PuzzleData::from(CONTENT)))
+            assert_eq!(13, star_1(&PuzzleData::from(crate::tests::CONTENT)))
         }
 
         #[test]
         pub fn test_star_2() {
-            assert_eq!(140, star_2(&PuzzleData::from(CONTENT)))
+            assert_eq!(140, star_2(&PuzzleData::from(crate::tests::CONTENT)))
         }
-
-        const CONTENT: &str = r#"[1,1,3,1,1]
-[1,1,5,1,1]
-
-[[1],[2,3,4]]
-[[1],4]
-
-[9]
-[[8,7,6]]
-
-[[4,4],4,4]
-[[4,4],4,4,4]
-
-[7,7,7,7]
-[7,7,7]
-
-[]
-[3]
-
-[[[]]]
-[[]]
-
-[1,[2,[3,[4,[5,6,7]]]],8,9]
-[1,[2,[3,[4,[5,6,0]]]],8,9]
-"#;
     }
     // end::tests[]
 }
@@ -296,7 +271,7 @@ pub mod iter {
     }
 
     pub mod node {
-        use std::cmp::Ordering;
+        use std::{cmp::Ordering, iter::once};
 
         #[derive(Debug, Clone)]
         pub struct List<'a> {
@@ -304,7 +279,7 @@ pub mod iter {
             pos: usize,
         }
 
-        #[derive(Debug)]
+        #[derive(Debug, Clone)]
         pub enum Node<'a> {
             List(List<'a>),
             Value(usize),
@@ -348,11 +323,17 @@ pub mod iter {
             }
         }
 
+        impl<'a> From<&'a [u8]> for List<'a> {
+            fn from(s: &'a [u8]) -> Self {
+                let data = s.as_ref();
+                let pos = if data[0] == b'[' { 1 } else { 0 };
+                Self { data, pos }
+            }
+        }
+
         impl<'a> From<&'a str> for List<'a> {
             fn from(s: &'a str) -> Self {
-                let data = s.as_bytes();
-                assert_eq!(data[0], b'[');
-                Self { data, pos: 1 }
+                Self::from(s.as_bytes())
             }
         }
 
@@ -361,38 +342,48 @@ pub mod iter {
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.pos >= self.data.len() || self.data[self.pos] == b']' {
+                    // exhausted
                     None
                 } else if self.data[self.pos] == b'[' {
-                    self.pos += 1;
-                    let nxt = Self::Item::List(List {
-                        pos: self.pos,
-                        data: self.data,
-                    });
+                    // parse list
+                    let nxt = Self::Item::List(List::from(&self.data[self.pos..]));
 
-                    let mut level = 1;
-                    while level > 0 {
-                        if self.data[self.pos] == b'[' {
-                            level += 1
-                        } else if self.data[self.pos] == b']' {
-                            level -= 1
-                        }
-                        self.pos += 1;
-                    }
+                    // advance pos to after list
+                    self.pos += 2 + self.data[self.pos + 1..]
+                        .iter()
+                        .scan(1usize, |level, b| {
+                            match b {
+                                b'[' => *level += 1,
+                                b']' => *level -= 1,
+                                _ => (),
+                            };
+                            Some(*level)
+                        })
+                        .position(|level| level == 0)
+                        .unwrap();
+
+                    // skip ',' if applicable
                     if self.pos < self.data.len() && self.data[self.pos] == b',' {
                         self.pos += 1;
                     }
 
+                    // return list
                     Some(nxt)
                 } else {
+                    // parse value
                     let mut v = 0;
-                    while self.data[self.pos] >= b'0' && self.data[self.pos] <= b'9' {
+                    while (b'0'..=b'9').contains(&self.data[self.pos]) {
+                        // parse digit
                         v = 10 * v + (self.data[self.pos] - b'0') as usize;
                         self.pos += 1;
                     }
-                    if self.data[self.pos] == b',' {
+
+                    // skip ',' if applicable
+                    if self.pos < self.data.len() && self.data[self.pos] == b',' {
                         self.pos += 1;
                     }
 
+                    // return value
                     Some(Self::Item::Value(v))
                 }
             }
@@ -402,43 +393,9 @@ pub mod iter {
             fn cmp(&self, other: &Self) -> std::cmp::Ordering {
                 match (self, other) {
                     (Node::Value(lhs), Node::Value(rhs)) => lhs.cmp(rhs),
-                    (Node::List(lhs), Node::List(rhs)) => {
-                        let (mut lhs, mut rhs) = (lhs.clone(), rhs.clone());
-                        let (mut exhausted, mut ord) = (false, Ordering::Equal);
-                        while (false, Ordering::Equal) == (exhausted, ord) {
-                            (exhausted, ord) = match (lhs.next(), rhs.next()) {
-                                (None, None) => (true, Ordering::Equal),
-                                (None, Some(_)) => (true, Ordering::Less),
-                                (Some(_), None) => (true, Ordering::Greater),
-                                (Some(lhs), Some(rhs)) => (false, lhs.cmp(&rhs)),
-                            }
-                        }
-                        ord
-                    }
-                    (Node::List(lhs), rhs) => {
-                        let mut lhs = lhs.clone();
-                        match (lhs.next(), lhs.next()) {
-                            (Some(lhs), Some(_)) => match lhs.cmp(rhs) {
-                                // rhs is exhausted before lhs
-                                Ordering::Less => Ordering::Less,
-                                _ => Ordering::Greater,
-                            },
-                            (Some(lhs), None) => lhs.cmp(rhs),
-                            (None, _) => Ordering::Less,
-                        }
-                    }
-                    (lhs, Node::List(rhs)) => {
-                        let mut rhs = rhs.clone();
-                        match (rhs.next(), rhs.next()) {
-                            (Some(rhs), Some(_)) => match lhs.cmp(&rhs) {
-                                // lhs is exhausted before rhs
-                                Ordering::Greater => Ordering::Greater,
-                                _ => Ordering::Less,
-                            },
-                            (Some(rhs), None) => lhs.cmp(&rhs),
-                            (None, _) => Ordering::Greater,
-                        }
-                    }
+                    (Node::List(lhs), Node::List(rhs)) => lhs.clone().cmp(rhs.clone()),
+                    (Node::List(lhs), rhs) => lhs.clone().cmp(once(rhs.clone())),
+                    (lhs, Node::List(rhs)) => once(lhs.clone()).cmp(rhs.clone()),
                 }
             }
         }
@@ -511,7 +468,7 @@ pub mod iter {
 
         #[test]
         pub fn test_cmp() {
-            let nodes = CONTENT
+            let nodes = crate::tests::CONTENT
                 .lines()
                 .filter(|l| !l.is_empty())
                 .map(List::from)
@@ -542,15 +499,33 @@ pub mod iter {
 
         #[test]
         pub fn test_star_1() {
-            assert_eq!(13, star_1(&PuzzleData::from(CONTENT)))
+            assert_eq!(13, star_1(&PuzzleData::from(crate::tests::CONTENT)))
         }
 
         #[test]
         pub fn test_star_2() {
-            assert_eq!(140, star_2(&PuzzleData::from(CONTENT)))
+            assert_eq!(140, star_2(&PuzzleData::from(crate::tests::CONTENT)))
         }
+    }
+}
+// end::no-heap[]
 
-        const CONTENT: &str = r#"[1,1,3,1,1]
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    #[test]
+    fn test_compare_tree_iter() {
+        let content = include_str!("../input.txt");
+        let mut lines = content.lines().filter(|l| !l.is_empty());
+        while let (Some(a), Some(b)) = (lines.next(), lines.next()) {
+            let c1 = tree::node::Node::from(a).cmp(&tree::node::Node::from(b));
+            let c2 = iter::node::Node::from(a).cmp(&iter::node::Node::from(b));
+            assert_eq!(c1, c2, "Some result for\n  {a}\n  {b}");
+        }
+    }
+
+    pub const CONTENT: &str = r#"[1,1,3,1,1]
 [1,1,5,1,1]
 
 [[1],[2,3,4]]
@@ -574,22 +549,4 @@ pub mod iter {
 [1,[2,[3,[4,[5,6,7]]]],8,9]
 [1,[2,[3,[4,[5,6,0]]]],8,9]
 "#;
-    }
-}
-// end::no-heap[]
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_compare_tree_iter() {
-        let content = include_str!("../input.txt");
-        let mut lines = content.lines().filter(|l| !l.is_empty());
-        while let (Some(a), Some(b)) = (lines.next(), lines.next()) {
-            let c1 = tree::node::Node::from(a).cmp(&tree::node::Node::from(b));
-            let c2 = iter::node::Node::from(a).cmp(&iter::node::Node::from(b));
-            assert_eq!(c1, c2, "Some result for\n  {a}\n  {b}");
-        }
-    }
 }
