@@ -1,0 +1,38 @@
+==  Day 14: Regolith Reservoir  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/14
+
+Puzzle today looks very similar to 2018 day 17. This I have not solved up to now, but in preparation for this year's challenge I tried to and have a first draft, which I now reworked for today, but the solution still is not really a good one, part 2 takes round about 6 minutes.
+
+First the puzzle input has to be processed, therefore I create to lists where all ranges are stored for x and y walls, these can be used afterwards to check if a possible place for a sand corn is already a wall.
+[source, kotlin, numbered]
+....
+include::day2214_1_2.kt[tags=PuzzleInputProzessing]
+....
+
+Having the xRange and yRange set up, a loop starts for x= 500, y= 0 and dependend if there is a wall or already a sand corn position is moved down, left down or right down, or a sand corn is placed. All already placed sand corns are stored in a list fallingSand.
+[source, kotlin, numbered]
+....
+include::day2214_1_2.kt[tags=Reservoir]
+....
+
+=== First Star
+
+How does it work: +
+
+The processing runs until the first new positions exceeds the max y value given by the input, all placed sand corns are counted.
+
+=== Second Star
+
+How does it work: +
+
+During the input prozessing already an additinal range is added, (max y + 2, and x(500)-2*ymax - x(500)+2*ymax. 2 times ymax is not realy needed). Also here also all placed sand corns are counted.
+
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2214_1_2.kt[tags=output]
+....
