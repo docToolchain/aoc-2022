@@ -315,6 +315,7 @@
 <li><a href="#_star_1_11">Star 1</a></li>
 <li><a href="#_star_2_11">Star 2</a></li>
 <li><a href="#_tests_14">Tests</a></li>
+<li><a href="#_alternative_without_using_heap">Alternative without using heap</a></li>
 </ul>
 </li>
 </ul>
@@ -3031,31 +3032,31 @@ abdefghi
 <p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/13">AoC|2022|13</a>.</p>
 </div>
 <div class="paragraph">
-<p>If the input looks like a tree structure, parse it into a tree structure!</p>
+<p>My initial solution was based on "If the input looks like a tree structure, parse it into a tree structure!"</p>
 </div>
 <div class="sect4">
 <h5 id="_input_13"><a class="anchor" href="#_input_13"></a><a class="link" href="#_input_13">Input</a></h5>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">mod input {
-    use crate::node::Node;
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    pub mod input {
+        use super::node::Node;
 
-    pub struct PuzzleData {
-        pub nodes: Vec&lt;Node&gt;,
-    }
+        pub struct PuzzleData {
+            pub nodes: Vec&lt;Node&gt;,
+        }
 
-    impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData {
-        fn from(s: &amp;'a str) -&gt; Self {
-            Self {
-                nodes: s
-                    .lines()
-                    .filter(|l| !l.is_empty())
-                    .map(|l| Node::from(l))
-                    .collect(),
+        impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData {
+            fn from(s: &amp;'a str) -&gt; Self {
+                Self {
+                    nodes: s
+                        .lines()
+                        .filter(|l| !l.is_empty())
+                        .map(|l| Node::from(l))
+                        .collect(),
+                }
             }
         }
-    }
-}</code></pre>
+    }</code></pre>
 </div>
 </div>
 </div>
@@ -3066,100 +3067,100 @@ abdefghi
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">mod node {
-    //! Tree structure for recursive lists from puzzle
-    use std::cmp::Ordering;
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    pub mod node {
+        //! Tree structure for recursive lists from puzzle
+        use std::cmp::Ordering;
 
-    #[derive(Debug, Eq, PartialEq, Clone)]
-    pub enum Node {
-        List(Box&lt;Vec&lt;Node&gt;&gt;),
-        Value(usize),
-    }
+        #[derive(Debug, Eq, PartialEq, Clone)]
+        pub enum Node {
+            List(Box&lt;[Node]&gt;),
+            Value(usize),
+        }
 
-    impl std::fmt::Display for Node {
-        fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
-            match self {
-                Node::List(list) =&gt; {
-                    '['.fmt(f)?;
-                    for n in list.iter().take(1) {
-                        n.fmt(f)?;
+        impl std::fmt::Display for Node {
+            fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
+                match self {
+                    Node::List(list) =&gt; {
+                        '['.fmt(f)?;
+                        for n in list.iter().take(1) {
+                            n.fmt(f)?;
+                        }
+                        for n in list.iter().skip(1) {
+                            ','.fmt(f)?;
+                            n.fmt(f)?;
+                        }
+                        ']'.fmt(f)?;
                     }
-                    for n in list.iter().skip(1) {
-                        ','.fmt(f)?;
-                        n.fmt(f)?;
-                    }
-                    ']'.fmt(f)?;
+                    Node::Value(value) =&gt; value.fmt(f)?,
                 }
-                Node::Value(value) =&gt; value.fmt(f)?,
+
+                Ok(())
             }
-
-            Ok(())
         }
-    }
 
-    impl&lt;T&gt; From&lt;T&gt; for Node
-    where
-        T: AsRef&lt;[u8]&gt;,
-    {
-        fn from(s: T) -&gt; Self {
-            Self::parse(s.as_ref(), 0, "".to_string()).0
+        impl&lt;T&gt; From&lt;T&gt; for Node
+        where
+            T: AsRef&lt;[u8]&gt;,
+        {
+            fn from(s: T) -&gt; Self {
+                Self::parse(s.as_ref(), 0).0
+            }
         }
-    }
 
-    impl Ord for Node {
-        fn cmp(&amp;self, other: &amp;Self) -&gt; Ordering {
-            match (self, other) {
-                (Node::List(lhs), Node::List(rhs)) =&gt; {
-                    for k in 0..lhs.len().min(rhs.len()) {
-                        let o = lhs[k].cmp(&amp;rhs[k]);
-                        if o != Ordering::Equal {
-                            return o;
+        impl Ord for Node {
+            fn cmp(&amp;self, other: &amp;Self) -&gt; Ordering {
+                match (self, other) {
+                    (Node::List(lhs), Node::List(rhs)) =&gt; {
+                        for k in 0..lhs.len().min(rhs.len()) {
+                            let o = lhs[k].cmp(&amp;rhs[k]);
+                            if o != Ordering::Equal {
+                                return o;
+                            }
+                        }
+                        lhs.len().cmp(&amp;rhs.len())
+                    }
+                    (Node::Value(lhs), Node::Value(rhs)) =&gt; lhs.cmp(rhs),
+                    (_, Node::Value(rhs)) =&gt; self.cmp(&amp;Node::List(vec![Node::Value(*rhs)].into())),
+                    (Node::Value(lhs), _) =&gt; Node::List(vec![Node::Value(*lhs)].into()).cmp(other),
+                }
+            }
+        }
+
+        impl PartialOrd for Node {
+            fn partial_cmp(&amp;self, other: &amp;Self) -&gt; Option&lt;Ordering&gt; {
+                Some(self.cmp(other))
+            }
+        }
+
+        impl Node {
+            fn parse(s: &amp;[u8], pos: usize) -&gt; (Self, usize) {
+                if s[pos] == b'[' &amp;&amp; s[pos + 1] == b']' {
+                    // handle empty list separately
+                    (Self::List(vec![].into()), 2)
+                } else if s[pos] == b'[' {
+                    let mut v = Vec::new();
+                    let mut len = 1;
+                    loop {
+                        let (n, l) = Self::parse(s, pos + len);
+                        v.push(n);
+                        len += l + 1;
+                        if s[pos + len - 1] == b']' {
+                            break;
                         }
                     }
-                    lhs.len().cmp(&amp;rhs.len())
-                }
-                (Node::Value(lhs), Node::Value(rhs)) =&gt; lhs.cmp(rhs),
-                (_, Node::Value(rhs)) =&gt; self.cmp(&amp;Node::List(vec![Node::Value(*rhs)].into())),
-                (Node::Value(lhs), _) =&gt; Node::List(vec![Node::Value(*lhs)].into()).cmp(other),
-            }
-        }
-    }
-
-    impl PartialOrd for Node {
-        fn partial_cmp(&amp;self, other: &amp;Self) -&gt; Option&lt;Ordering&gt; {
-            Some(self.cmp(other))
-        }
-    }
-
-    impl Node {
-        fn parse(s: &amp;[u8], pos: usize, prefix: String) -&gt; (Self, usize) {
-            if s[pos] == b'[' &amp;&amp; s[pos + 1] == b']' {
-                // handle empty list separately
-                (Self::List(vec![].into()), 2)
-            } else if s[pos] == b'[' {
-                let mut v = Vec::new();
-                let mut len = 1;
-                loop {
-                    let (n, l) = Self::parse(s, pos + len, format!("| {prefix}"));
-                    v.push(n);
-                    len += l + 1;
-                    if s[pos + len - 1] == b']' {
-                        break;
+                    (Self::List(v.into()), len)
+                } else {
+                    let mut v = 0;
+                    let mut len = 0;
+                    while pos + len &lt; s.len() &amp;&amp; s[pos + len] &gt;= b'0' &amp;&amp; s[pos + len] &lt;= b'9' {
+                        v = v * 10 + (s[pos + len] - b'0') as usize;
+                        len += 1;
                     }
+                    (Self::Value(v), len)
                 }
-                (Self::List(v.into()), len)
-            } else {
-                let mut v = 0;
-                let mut len = 0;
-                while pos + len &lt; s.len() &amp;&amp; s[pos + len] &gt;= b'0' &amp;&amp; s[pos + len] &lt;= b'9' {
-                    v = v * 10 + (s[pos + len] - b'0') as usize;
-                    len += 1;
-                }
-                (Self::Value(v), len)
             }
         }
-    }
-}</code></pre>
+    }</code></pre>
 </div>
 </div>
 </div>
@@ -3170,15 +3171,15 @@ abdefghi
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
-    data.nodes
-        .iter()
-        .step_by(2)
-        .zip(data.nodes.iter().skip(1).step_by(2))
-        .enumerate()
-        .filter(|(_, (a, b))| a.cmp(b) != Ordering::Greater)
-        .fold(0, |s, (k, _)| s + k + 1)
-}</code></pre>
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+        data.nodes
+            .iter()
+            .step_by(2)
+            .zip(data.nodes.iter().skip(1).step_by(2))
+            .enumerate()
+            .filter(|(_, (a, b))| a.cmp(b) != Ordering::Greater)
+            .fold(0, |s, (k, _)| s + k + 1)
+    }</code></pre>
 </div>
 </div>
 </div>
@@ -3189,17 +3190,17 @@ abdefghi
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
-    let mut v = data.nodes.clone();
-    v.push(Node::from("[[2]]"));
-    v.push(Node::from("[[6]]"));
-    v.sort_unstable();
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+        let mut v = data.nodes.clone();
+        v.push(Node::from("[[2]]"));
+        v.push(Node::from("[[6]]"));
+        v.sort_unstable();
 
-    let a = v.iter().position(|n| n == &amp;Node::from("[[2]]")).unwrap();
-    let b = v.iter().position(|n| n == &amp;Node::from("[[6]]")).unwrap();
+        let a = v.iter().position(|n| n == &amp;Node::from("[[2]]")).unwrap();
+        let b = v.iter().position(|n| n == &amp;Node::from("[[6]]")).unwrap();
 
-    (a + 1) * (b + 1)
-}</code></pre>
+        (a + 1) * (b + 1)
+    }</code></pre>
 </div>
 </div>
 </div>
@@ -3207,60 +3208,55 @@ abdefghi
 <h5 id="_tests_14"><a class="anchor" href="#_tests_14"></a><a class="link" href="#_tests_14">Tests</a></h5>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
-mod tests {
-    use super::*;
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::tree::node::Node;
 
-    #[test]
-    pub fn test_parse() {
-        let s = "[1,[2,[3,[4,[5,6,7]]]],8,9]";
-        let n = Node::from(s);
-        println!("{n:?}");
-        assert_eq!(s, n.to_string());
-    }
+        #[test]
+        pub fn test_parse() {
+            let s = "[1,[2,[3,[4,[5,6,7]]]],8,9]";
+            let n = Node::from(s);
+            println!("{n:?}");
+            assert_eq!(s, n.to_string());
+        }
 
-    #[test]
-    pub fn test_cmp() {
-        let nodes = PuzzleData::from(CONTENT).nodes;
-        let cmp = nodes
-            .iter()
-            .step_by(2)
-            .zip(nodes.iter().skip(1).step_by(2))
-            .map(|(a, b)| a.cmp(b))
-            .collect::&lt;Vec&lt;_&gt;&gt;();
-        println!("{cmp:?}");
-        assert_eq!(
-            vec![
-                Ordering::Less,
-                Ordering::Less,
-                Ordering::Greater,
-                Ordering::Less,
-                Ordering::Greater,
-                Ordering::Less,
-                Ordering::Greater,
-                Ordering::Greater
-            ],
-            cmp
-        );
-    }
+        #[test]
+        pub fn test_cmp() {
+            let nodes = PuzzleData::from(CONTENT).nodes;
+            let cmp = nodes
+                .iter()
+                .step_by(2)
+                .zip(nodes.iter().skip(1).step_by(2))
+                .map(|(a, b)| a.cmp(b))
+                .collect::&lt;Vec&lt;_&gt;&gt;();
+            println!("{cmp:?}");
+            assert_eq!(
+                vec![
+                    Ordering::Less,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Greater
+                ],
+                cmp
+            );
+        }
 
-    #[test]
-    pub fn test_cmp_2() {
-        let n = Node::from("[[[]]]");
-        println!("{n:?}");
-    }
+        #[test]
+        pub fn test_star_1() {
+            assert_eq!(13, star_1(&amp;PuzzleData::from(CONTENT)))
+        }
 
-    #[test]
-    pub fn test_star_1() {
-        assert_eq!(13, star_1(&amp;PuzzleData::from(CONTENT)))
-    }
+        #[test]
+        pub fn test_star_2() {
+            assert_eq!(140, star_2(&amp;PuzzleData::from(CONTENT)))
+        }
 
-    #[test]
-    pub fn test_star_2() {
-        assert_eq!(140, star_2(&amp;PuzzleData::from(CONTENT)))
-    }
-
-    const CONTENT: &amp;str = r#"[1,1,3,1,1]
+        const CONTENT: &amp;str = r#"[1,1,3,1,1]
 [1,1,5,1,1]
 
 [[1],[2,3,4]]
@@ -3284,6 +3280,416 @@ mod tests {
 [1,[2,[3,[4,[5,6,7]]]],8,9]
 [1,[2,[3,[4,[5,6,0]]]],8,9]
 "#;
+    }
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::iter::node::{List, Node};
+
+        #[test]
+        pub fn test_next() {
+            let mut list = List::from("[10,[[9,10,0],2]]");
+            assert_eq!(Some("10".into()), list.next().map(|n| n.to_string()));
+            assert_eq!(
+                Some("[[9,10,0],2]".into()),
+                list.next().map(|n| n.to_string())
+            );
+            assert!(list.next().is_none());
+        }
+
+        #[test]
+        pub fn test_cmp() {
+            let nodes = CONTENT
+                .lines()
+                .filter(|l| !l.is_empty())
+                .map(List::from)
+                .map(Node::List)
+                .collect::&lt;Vec&lt;_&gt;&gt;();
+
+            let cmp = nodes
+                .iter()
+                .step_by(2)
+                .zip(nodes.iter().skip(1).step_by(2))
+                .map(|(a, b)| a.cmp(b))
+                .collect::&lt;Vec&lt;_&gt;&gt;();
+            println!("{cmp:?}");
+            assert_eq!(
+                vec![
+                    Ordering::Less,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Greater
+                ],
+                cmp
+            );
+        }
+
+        #[test]
+        pub fn test_star_1() {
+            assert_eq!(13, star_1(&amp;PuzzleData::from(CONTENT)))
+        }
+
+        #[test]
+        pub fn test_star_2() {
+            assert_eq!(140, star_2(&amp;PuzzleData::from(CONTENT)))
+        }
+
+        const CONTENT: &amp;str = r#"[1,1,3,1,1]
+[1,1,5,1,1]
+
+[[1],[2,3,4]]
+[[1],4]
+
+[9]
+[[8,7,6]]
+
+[[4,4],4,4]
+[[4,4],4,4,4]
+
+[7,7,7,7]
+[7,7,7]
+
+[]
+[3]
+
+[[[]]]
+[[]]
+
+[1,[2,[3,[4,[5,6,7]]]],8,9]
+[1,[2,[3,[4,[5,6,0]]]],8,9]
+"#;
+    }</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_alternative_without_using_heap"><a class="anchor" href="#_alternative_without_using_heap"></a><a class="link" href="#_alternative_without_using_heap">Alternative without using heap</a></h5>
+<div class="paragraph">
+<p>Later on, I thought it should be possible to implement a solution that does not require any heap allocations by directly iterating on the input data. I added this in a variant of my solution in <code>mod iter</code>. You can run this variant using <code>cargo run --release --features no-heap</code>. Interestingly it is not really performing any better than the original solution. The advantage for the second part is probably mainly caused by avoiding to sort.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod iter {
+    use self::node::List;
+    use self::{input::PuzzleData, node::Node};
+    use mr_kaffee_aoc::{Puzzle, Star};
+    use std::cmp::Ordering;
+
+    /// the puzzle
+    pub fn puzzle() -&gt; Puzzle&lt;'static, PuzzleData&lt;'static&gt;, usize, usize, usize, usize&gt; {
+        Puzzle {
+            year: 2022,
+            day: 13,
+            input: include_str!("../input.txt"),
+            star1: Some(Star {
+                name: "Star 1",
+                f: &amp;star_1,
+                exp: Some(5_675),
+            }),
+            star2: Some(Star {
+                name: "Star 2",
+                f: &amp;star_2,
+                exp: Some(20_383),
+            }),
+        }
+    }
+
+    pub mod input {
+        pub struct PuzzleData&lt;'a&gt; {
+            pub input: &amp;'a str,
+        }
+
+        impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData&lt;'a&gt; {
+            fn from(input: &amp;'a str) -&gt; Self {
+                Self { input }
+            }
+        }
+    }
+
+    pub mod node {
+        use std::cmp::Ordering;
+
+        #[derive(Debug, Clone)]
+        pub struct List&lt;'a&gt; {
+            data: &amp;'a [u8],
+            pos: usize,
+        }
+
+        #[derive(Debug)]
+        pub enum Node&lt;'a&gt; {
+            List(List&lt;'a&gt;),
+            Value(usize),
+        }
+
+        impl&lt;'a&gt; std::fmt::Display for Node&lt;'a&gt; {
+            fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
+                match self {
+                    Node::List(list) =&gt; list.fmt(f),
+                    Node::Value(value) =&gt; value.fmt(f),
+                }
+            }
+        }
+
+        impl&lt;'a&gt; From&lt;&amp;'a str&gt; for Node&lt;'a&gt; {
+            fn from(s: &amp;'a str) -&gt; Self {
+                if s.starts_with('[') {
+                    Self::List(List::from(s))
+                } else {
+                    Self::Value(s.parse().unwrap())
+                }
+            }
+        }
+
+        impl&lt;'a&gt; std::fmt::Display for List&lt;'a&gt; {
+            fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
+                let mut level = 1;
+                '['.fmt(f)?;
+                for &amp;b in &amp;self.data[self.pos..] {
+                    level = match b {
+                        b'[' =&gt; level + 1,
+                        b']' =&gt; level - 1,
+                        _ =&gt; level,
+                    };
+                    (b as char).fmt(f)?;
+                    if level == 0 {
+                        break;
+                    }
+                }
+                Ok(())
+            }
+        }
+
+        impl&lt;'a&gt; From&lt;&amp;'a str&gt; for List&lt;'a&gt; {
+            fn from(s: &amp;'a str) -&gt; Self {
+                let data = s.as_bytes();
+                assert_eq!(data[0], b'[');
+                Self { data, pos: 1 }
+            }
+        }
+
+        impl&lt;'a&gt; Iterator for List&lt;'a&gt; {
+            type Item = Node&lt;'a&gt;;
+
+            fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; {
+                if self.pos &gt;= self.data.len() || self.data[self.pos] == b']' {
+                    None
+                } else if self.data[self.pos] == b'[' {
+                    self.pos += 1;
+                    let nxt = Self::Item::List(List {
+                        pos: self.pos,
+                        data: self.data,
+                    });
+
+                    let mut level = 1;
+                    while level &gt; 0 {
+                        if self.data[self.pos] == b'[' {
+                            level += 1
+                        } else if self.data[self.pos] == b']' {
+                            level -= 1
+                        }
+                        self.pos += 1;
+                    }
+                    if self.pos &lt; self.data.len() &amp;&amp; self.data[self.pos] == b',' {
+                        self.pos += 1;
+                    }
+
+                    Some(nxt)
+                } else {
+                    let mut v = 0;
+                    while self.data[self.pos] &gt;= b'0' &amp;&amp; self.data[self.pos] &lt;= b'9' {
+                        v = 10 * v + (self.data[self.pos] - b'0') as usize;
+                        self.pos += 1;
+                    }
+                    if self.data[self.pos] == b',' {
+                        self.pos += 1;
+                    }
+
+                    Some(Self::Item::Value(v))
+                }
+            }
+        }
+
+        impl&lt;'a&gt; Ord for Node&lt;'a&gt; {
+            fn cmp(&amp;self, other: &amp;Self) -&gt; std::cmp::Ordering {
+                match (self, other) {
+                    (Node::Value(lhs), Node::Value(rhs)) =&gt; lhs.cmp(rhs),
+                    (Node::List(lhs), Node::List(rhs)) =&gt; {
+                        let (mut lhs, mut rhs) = (lhs.clone(), rhs.clone());
+                        let (mut exhausted, mut ord) = (false, Ordering::Equal);
+                        while (false, Ordering::Equal) == (exhausted, ord) {
+                            (exhausted, ord) = match (lhs.next(), rhs.next()) {
+                                (None, None) =&gt; (true, Ordering::Equal),
+                                (None, Some(_)) =&gt; (true, Ordering::Less),
+                                (Some(_), None) =&gt; (true, Ordering::Greater),
+                                (Some(lhs), Some(rhs)) =&gt; (false, lhs.cmp(&amp;rhs)),
+                            }
+                        }
+                        ord
+                    }
+                    (Node::List(lhs), rhs) =&gt; {
+                        let mut lhs = lhs.clone();
+                        match (lhs.next(), lhs.next()) {
+                            (Some(lhs), Some(_)) =&gt; match lhs.cmp(rhs) {
+                                // rhs is exhausted before lhs
+                                Ordering::Less =&gt; Ordering::Less,
+                                _ =&gt; Ordering::Greater,
+                            },
+                            (Some(lhs), None) =&gt; lhs.cmp(rhs),
+                            (None, _) =&gt; Ordering::Less,
+                        }
+                    }
+                    (lhs, Node::List(rhs)) =&gt; {
+                        let mut rhs = rhs.clone();
+                        match (rhs.next(), rhs.next()) {
+                            (Some(rhs), Some(_)) =&gt; match lhs.cmp(&amp;rhs) {
+                                // lhs is exhausted before rhs
+                                Ordering::Greater =&gt; Ordering::Greater,
+                                _ =&gt; Ordering::Less,
+                            },
+                            (Some(rhs), None) =&gt; lhs.cmp(&amp;rhs),
+                            (None, _) =&gt; Ordering::Greater,
+                        }
+                    }
+                }
+            }
+        }
+
+        impl&lt;'a&gt; PartialOrd for Node&lt;'a&gt; {
+            fn partial_cmp(&amp;self, other: &amp;Self) -&gt; Option&lt;std::cmp::Ordering&gt; {
+                Some(self.cmp(other))
+            }
+        }
+
+        impl&lt;'a&gt; PartialEq for Node&lt;'a&gt; {
+            fn eq(&amp;self, other: &amp;Self) -&gt; bool {
+                self.cmp(other) == Ordering::Equal
+            }
+        }
+
+        impl&lt;'a&gt; Eq for Node&lt;'a&gt; {}
+    }
+
+    pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+        let mut lines = data.input.lines().filter(|l| !l.is_empty());
+        let mut idx = 0;
+        let mut result = 0;
+        while let (Some(a), Some(b)) = (lines.next(), lines.next()) {
+            idx += 1;
+            if Node::from(a).cmp(&amp;Node::from(b)) != Ordering::Greater {
+                result += idx;
+            }
+        }
+
+        result
+    }
+
+    pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+        let n_1 = List::from("[[2]]");
+        let n_2 = List::from("[[6]]");
+
+        let (cnt_1, cnt_2) =
+            data.input
+                .lines()
+                .filter(|l| !l.is_empty())
+                .fold((1, 2), |(cnt_1, cnt_2), l| {
+                    if n_1.clone().cmp(List::from(l)) == Ordering::Greater {
+                        (cnt_1 + 1, cnt_2 + 1)
+                    } else if n_2.clone().cmp(List::from(l)) == Ordering::Greater {
+                        (cnt_1, cnt_2 + 1)
+                    } else {
+                        (cnt_1, cnt_2)
+                    }
+                });
+
+        cnt_1 * cnt_2
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::iter::node::{List, Node};
+
+        #[test]
+        pub fn test_next() {
+            let mut list = List::from("[10,[[9,10,0],2]]");
+            assert_eq!(Some("10".into()), list.next().map(|n| n.to_string()));
+            assert_eq!(
+                Some("[[9,10,0],2]".into()),
+                list.next().map(|n| n.to_string())
+            );
+            assert!(list.next().is_none());
+        }
+
+        #[test]
+        pub fn test_cmp() {
+            let nodes = CONTENT
+                .lines()
+                .filter(|l| !l.is_empty())
+                .map(List::from)
+                .map(Node::List)
+                .collect::&lt;Vec&lt;_&gt;&gt;();
+
+            let cmp = nodes
+                .iter()
+                .step_by(2)
+                .zip(nodes.iter().skip(1).step_by(2))
+                .map(|(a, b)| a.cmp(b))
+                .collect::&lt;Vec&lt;_&gt;&gt;();
+            println!("{cmp:?}");
+            assert_eq!(
+                vec![
+                    Ordering::Less,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Less,
+                    Ordering::Greater,
+                    Ordering::Greater
+                ],
+                cmp
+            );
+        }
+
+        #[test]
+        pub fn test_star_1() {
+            assert_eq!(13, star_1(&amp;PuzzleData::from(CONTENT)))
+        }
+
+        #[test]
+        pub fn test_star_2() {
+            assert_eq!(140, star_2(&amp;PuzzleData::from(CONTENT)))
+        }
+
+        const CONTENT: &amp;str = r#"[1,1,3,1,1]
+[1,1,5,1,1]
+
+[[1],[2,3,4]]
+[[1],4]
+
+[9]
+[[8,7,6]]
+
+[[4,4],4,4]
+[[4,4],4,4,4]
+
+[7,7,7,7]
+[7,7,7]
+
+[]
+[3]
+
+[[[]]]
+[[]]
+
+[1,[2,[3,[4,[5,6,7]]]],8,9]
+[1,[2,[3,[4,[5,6,0]]]],8,9]
+"#;
+    }
 }</code></pre>
 </div>
 </div>
