@@ -252,6 +252,46 @@
 <div class="sect3">
 <h4 id="_python"><a class="anchor" href="#_python"></a><a class="link" href="#_python">python</a></h4>
 <div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>def load_input():
+    data = list()
+    with open('input') as fd:
+        data = list()
+        temp = list()
+        for line in fd:
+            line = line.strip()
+            if line:
+                temp.append(int(line))
+            else:
+                data.append(temp)
+                temp = list()
+    return data
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    calories = list()
+    for values in data:
+        calories.append(sum(values))
+    result = max(calories)
+    print("Result 1: ", result)
+
+    # Task 2
+    calories.sort()
+    result = sum(calories[-3:])
+    print("Result 2: ", result)
+
+    return 0
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
+<div class="listingblock">
 <div class="title">input</div>
 <div class="content">
 <pre class="prettyprint highlight"><code>18313
@@ -2507,46 +2547,6 @@
 7697</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>def load_input():
-    data = list()
-    with open('input') as fd:
-        data = list()
-        temp = list()
-        for line in fd:
-            line = line.strip()
-            if line:
-                temp.append(int(line))
-            else:
-                data.append(temp)
-                temp = list()
-    return data
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    calories = list()
-    for values in data:
-        calories.append(sum(values))
-    result = max(calories)
-    print("Result 1: ", result)
-
-    # Task 2
-    calories.sort()
-    result = sum(calories[-3:])
-    print("Result 2: ", result)
-
-    return 0
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day02" />
 </div>
 </div>
@@ -2557,6 +2557,77 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_2"><a class="anchor" href="#_python_2"></a><a class="link" href="#_python_2">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>SHAPE2POINTS = {
+    'X': 1,
+    'Y': 2,
+    'Z': 3,
+    'A': 1,
+    'B': 2,
+    'C': 3
+}
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        data = list()
+        for line in fd:
+            line = line.strip()
+            data.append(list(map(lambda x: SHAPE2POINTS[x], line.split())))
+    return data
+
+
+def get_result_task1(rd):
+    result = 0
+    if rd[0] == rd[1]:
+        result = 3
+    elif (rd[0] == 1 and rd[1] == 3) or (rd[0] == 2 and rd[1] == 1) or \
+         (rd[0] == 3 and rd[1] == 2):
+        result = 0
+    else:
+        result = 6
+    result += rd[1]
+    return result
+
+
+def get_result_task2(rd):
+    if rd[1] == 2:
+        return rd[0] + 3
+    elif rd[1] == 1:
+        shape = rd[0] - 1 if rd[0] - 1 != 0 else 3
+        return shape
+    else:
+        shape = rd[0] + 1 if rd[0] + 1 != 4 else 1
+        return shape + 6
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    score = 0
+    for rd in data:
+        score += get_result_task1(rd)
+
+    result = score
+    print("Result 1: ", result)
+
+    # Task 2
+    score = 0
+    for rd in data:
+        score += get_result_task2(rd)
+
+    result = score
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -5062,77 +5133,6 @@ A Y
 C Z</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>SHAPE2POINTS = {
-    'X': 1,
-    'Y': 2,
-    'Z': 3,
-    'A': 1,
-    'B': 2,
-    'C': 3
-}
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        data = list()
-        for line in fd:
-            line = line.strip()
-            data.append(list(map(lambda x: SHAPE2POINTS[x], line.split())))
-    return data
-
-
-def get_result_task1(rd):
-    result = 0
-    if rd[0] == rd[1]:
-        result = 3
-    elif (rd[0] == 1 and rd[1] == 3) or (rd[0] == 2 and rd[1] == 1) or \
-         (rd[0] == 3 and rd[1] == 2):
-        result = 0
-    else:
-        result = 6
-    result += rd[1]
-    return result
-
-
-def get_result_task2(rd):
-    if rd[1] == 2:
-        return rd[0] + 3
-    elif rd[1] == 1:
-        shape = rd[0] - 1 if rd[0] - 1 != 0 else 3
-        return shape
-    else:
-        shape = rd[0] + 1 if rd[0] + 1 != 4 else 1
-        return shape + 6
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    score = 0
-    for rd in data:
-        score += get_result_task1(rd)
-
-    result = score
-    print("Result 1: ", result)
-
-    # Task 2
-    score = 0
-    for rd in data:
-        score += get_result_task2(rd)
-
-    result = score
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day03" />
 </div>
 </div>
@@ -5143,6 +5143,57 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_3"><a class="anchor" href="#_python_3"></a><a class="link" href="#_python_3">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>import string
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        data = list()
+        for line in fd:
+            line = line.strip()
+            data.append(line)
+    return data
+
+
+def get_priority(char):
+    return string.ascii_letters.index(char) + 1
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    result = 0
+    for rucksack in data:
+        length = int(len(rucksack)/2)
+        common = set(rucksack[0:length]).intersection(set(rucksack[length:]))
+        result += sum(list(map(lambda x: get_priority(x), common)))
+
+    print("Result 1: ", result)
+
+    # Task 2
+    chars = set()
+    result = 0
+    for i, rucksack in enumerate(data):
+        if i % 3 == 0:
+            chars = set(rucksack)
+        else:
+            chars.intersection_update(rucksack)
+
+        if i % 3 == 2:
+            result += sum(list(map(lambda x: get_priority(x), chars)))
+
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -5448,57 +5499,6 @@ vQfSBdbDbMbQNBJrlhmGnrgrgwZhvm
 SHSCbdbddcVWqqFPCLqR</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>import string
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        data = list()
-        for line in fd:
-            line = line.strip()
-            data.append(line)
-    return data
-
-
-def get_priority(char):
-    return string.ascii_letters.index(char) + 1
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    result = 0
-    for rucksack in data:
-        length = int(len(rucksack)/2)
-        common = set(rucksack[0:length]).intersection(set(rucksack[length:]))
-        result += sum(list(map(lambda x: get_priority(x), common)))
-
-    print("Result 1: ", result)
-
-    # Task 2
-    chars = set()
-    result = 0
-    for i, rucksack in enumerate(data):
-        if i % 3 == 0:
-            chars = set(rucksack)
-        else:
-            chars.intersection_update(rucksack)
-
-        if i % 3 == 2:
-            result += sum(list(map(lambda x: get_priority(x), chars)))
-
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day04" />
 </div>
 </div>
@@ -5509,6 +5509,52 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_4"><a class="anchor" href="#_python_4"></a><a class="link" href="#_python_4">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        data = list()
+        for line in fd:
+            temp = list()
+            for values in line.strip().split(','):
+                temp.append(list(map(lambda x: int(x), values.split('-'))))
+            data.append(temp)
+    return data
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    fully_contains = 0
+    for a, b in data:
+        if a[0] &lt;= b[0] and a[1] &gt;= b[1]:
+            fully_contains += 1
+        elif a[0] &gt;= b[0] and a[1] &lt;= b[1]:
+            fully_contains += 1
+        else:
+            pass
+    result = fully_contains
+    print("Result 1: ", result)
+
+    # Task 2
+    non_overlaps = 0
+    for a, b in data:
+        if a[1] &lt; b[0] or a[0] &gt; b[1]:
+            non_overlaps += 1
+
+    result = len(data) - non_overlaps
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -6514,52 +6560,6 @@ if __name__ == '__main__':
 22-23,22-60</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        data = list()
-        for line in fd:
-            temp = list()
-            for values in line.strip().split(','):
-                temp.append(list(map(lambda x: int(x), values.split('-'))))
-            data.append(temp)
-    return data
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    fully_contains = 0
-    for a, b in data:
-        if a[0] &lt;= b[0] and a[1] &gt;= b[1]:
-            fully_contains += 1
-        elif a[0] &gt;= b[0] and a[1] &lt;= b[1]:
-            fully_contains += 1
-        else:
-            pass
-    result = fully_contains
-    print("Result 1: ", result)
-
-    # Task 2
-    non_overlaps = 0
-    for a, b in data:
-        if a[1] &lt; b[0] or a[0] &gt; b[1]:
-            non_overlaps += 1
-
-    result = len(data) - non_overlaps
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day05" />
 </div>
 </div>
@@ -6570,6 +6570,77 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_5"><a class="anchor" href="#_python_5"></a><a class="link" href="#_python_5">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+import re
+from collections import deque
+
+
+def load_input():
+    number_list = 9
+
+    data = list()
+    commands = list()
+
+    pattern = re.compile('move (\d+) from (\d+) to (\d+)')
+
+    with open('input') as fd:
+        data = [deque() for _ in range(number_list)]
+        section = 0
+        for line in fd:
+            if section == 0:
+                if line[1] == '1':
+                    section = 1
+                    continue
+                for i in range(number_list):
+                    pos = 4*i+1
+                    if pos &lt; len(line):
+                        char = line[pos]
+                        if char != ' ':
+                            data[i].appendleft(char)
+                    else:
+                        break
+            elif section == 1:
+                section = 2
+            else:
+                line = line.strip()
+                match = pattern.search(line)
+                commands.append([int(match.group(1)), int(match.group(2))-1, int(match.group(3))-1])
+
+    return data, commands
+
+
+def main():
+    data, commands = load_input()
+
+    # Task 1
+    for command in commands:
+        for _ in range(command[0]):
+            temp = data[command[1]].pop()
+            data[command[2]].append(temp)
+
+    result = "".join([char[-1] for char in data])
+    print("Result 1: ", result)
+
+    # Task 2
+    data, commands = load_input()
+    for command in commands:
+        temp = deque()
+        for _ in range(command[0]):
+            temp.appendleft(data[command[1]].pop())
+        data[command[2]].extend(temp)
+
+    result = "".join([char[-1] for char in data])
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -7087,77 +7158,6 @@ move 1 from 5 to 2
 move 8 from 4 to 9</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-import re
-from collections import deque
-
-
-def load_input():
-    number_list = 9
-
-    data = list()
-    commands = list()
-
-    pattern = re.compile('move (\d+) from (\d+) to (\d+)')
-
-    with open('input') as fd:
-        data = [deque() for _ in range(number_list)]
-        section = 0
-        for line in fd:
-            if section == 0:
-                if line[1] == '1':
-                    section = 1
-                    continue
-                for i in range(number_list):
-                    pos = 4*i+1
-                    if pos &lt; len(line):
-                        char = line[pos]
-                        if char != ' ':
-                            data[i].appendleft(char)
-                    else:
-                        break
-            elif section == 1:
-                section = 2
-            else:
-                line = line.strip()
-                match = pattern.search(line)
-                commands.append([int(match.group(1)), int(match.group(2))-1, int(match.group(3))-1])
-
-    return data, commands
-
-
-def main():
-    data, commands = load_input()
-
-    # Task 1
-    for command in commands:
-        for _ in range(command[0]):
-            temp = data[command[1]].pop()
-            data[command[2]].append(temp)
-
-    result = "".join([char[-1] for char in data])
-    print("Result 1: ", result)
-
-    # Task 2
-    data, commands = load_input()
-    for command in commands:
-        temp = deque()
-        for _ in range(command[0]):
-            temp.appendleft(data[command[1]].pop())
-        data[command[2]].extend(temp)
-
-    result = "".join([char[-1] for char in data])
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day06" />
 </div>
 </div>
@@ -7168,12 +7168,6 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_6"><a class="anchor" href="#_python_6"></a><a class="link" href="#_python_6">python</a></h4>
-<div class="listingblock">
-<div class="title">input</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>rvnvzvhzzjgjgffclllnhhtltptgptgpttjhttsllmbbphbpbzpbpjjcwjwqwccnrrtvrtrfrwffnqffsggwzzhtzhthqhffmrrzsrrnrtrqqbllhrlrjrvvrvvgdgjgfjjtzznffrfvfggswgssccpcwpccstcsstwssgzssswsgwsgsnsshcsscsffcwcmmhmsmrsrddwhhszsfsjfsfccwssvdssmzzwrzzjfzzvzzfsfsvshschhvlhhvmvpvhhstsdtstgtrrtjjcssgfssnsnfsnscnsslvvqbbhthqtqzqmzmjjfmmbdmmzdmdpmpnnfjnnrwnwbwrrwjrrttfzzlwwfmmnhhqlhqqbnqnqznncmmhfmfftsfszssftstggppfddtztltctqcqjcqcmclcnccdgcggvmvvcsstztbzttsccmgcghcczfzszbzmbmjjggsqgghbhjjhhrrjljmllczlzzqssjfjqfjfmfdfgffczfzwwpfwpwbbftbffplphhfcftctlcclhlnlhnhlhnhqnhhjbjmmtpmmlsmllvhhjghhmzzwpzprrjrzzvrvcvqvssgssnccmgmppfhfwhhczhhprhrffpvvqrqvqccdhdvvvssvdvwdwwzggfvfnvvqvwwzwmzzvttgzzwjjfvvpvffqpqhqrrwccjbjppbzbrbrrphrhgrhhzbbhrrblbjjznnlccsffpcfpcfpfddfwddbffczztzsttzsstddrqdqqchqccrlccfcwwghwhnhbhjbhhzrrgprrftrffqlljlslggzdzvvrgvgcgnnngtnggdcgddhjhchqcqfqwfwjffqppblbddgmdgmddrnddjtdjttgzgpzggwvwjvwwhdwwbvvtftcfttpftpfpzfznnchnhrrdtdbtdbdppsjsgsttptsptssnwntwnnsshqqgnnqnddhjjtqqjhhmghmhmsstrrhmmwvvlssprsrbbswsddbnntmtbmtbmmtmrrffvjffdrffnttbffbccgchghjgjwwshwswdswdsdsrdsdjdvjjgbjbssptpddzbdddqdpdspswssjrjwwcbbvsspnspslpplzlqlccvlvfllntlntnqnrqnqpqlqflfrfsfgsfswwptwwgqggrhghzghhrthtzhzsswhhzffpsffhnnrvnrvvhmmlvvqsslddhcddsllpmpggrhrcrbbmnmjmqmlmpmrrqwqhqrqhrrgrqqsrrpjpdjppzhphthddlzdzhddjvdjdcjcncnvnzzvwzvzgzjggcllvpllgdgqqdvvwnvwvwqqvwvvrbbtqqwhdztqfzzcqrshjzwqnpdsshmpjzwqdptbvfqzmfnbtlgbbsjbqgnblhbbpsfdzvcmpzfwczcnbdndsjzccjcqnrdglwfrvwtnjwpvpvvgwtmnpzhbwnbqwznmdvdrsjnlsfrpcnhlbmlgmrcjbbvhqnvbrmlnfttjllstqnqqnhqrzrhfqjbfbwfhhjzwtwzjmszzhjnjbhrlbnnpfvdmlftjnfsfnvddqfhqqlljrthptvmhbqrdmdcmljwgbrqrjwcrtmvjgqtblnslgbjmdsrrpgfsctrhwlwnszpljhrfnsfpcsgczzltgsztclhgcqljrcmbbpdlztncnrnrmgrttplcnldfqddqhznmcczbmwvsztmwmcqnrzmlmqchnhnhrrhhfntjzqcbnttspptqwvphlbtpfcbhdqzbhsbvhmsqbsdntwpcrnzvmbgqsgttbqhhblfjpmvfcrzhfnzwrzbzgsdfqndzzhfdnrvsnvfbptthjnhgljhrvwwrlbnfpvvjdjchcgbhfrqvszhrhqvtzplwsptvdhqwlzhcjpclmmrlccvgvtgsfpnjhqhrbqglznpdhmsqwwsbmhmlsmmvvghsmplqjchrfctltmnqnddzqjfpljwljbdqjcqdqzwsbcclqsmsmlstvljwwtfmpnhqzqfjghjfchjccqrchsvngvrnwfwttsnvrdlfvwfptsjcpslvvpmjclfcpljqjszptsgsmntzrdjbgrzmgvzddqrlsndjzzqbznqnphbnwfhtjjlwjpsvffrdrbsbttpgrvmqrdndqvlgzcpfbttvqdgvrmtvfclcbcwllthmdzjcflwpnrsqzrjdzbvqgzsqvjjpjjpnjtcjqhcfbjdqndlcwzhcbjtgtlvtdwctdnqcbcgsmrcrmwjntdwbjdbzmshbvlspjfdbvmlrbdzlmlggthvphnrqlrcdsqpsgqcmpgmgdzvdqlmcldvztpsbmpwjgjfhswplwrvwpbwbsgsvlhdvmpzwnnbwjwmshwcnqfqjdpchfjjcbdnslqchhnznpqpnnctznbtccclgjhmnngdjlmqnzpsdptqqcrblmrlnnpgvrfrtmbjnmspfrbwpclhgtbsghndrjfbggsplvcjnhjjbqzsfdpfnvchzjgbhdqgddfgddvzdcrjlntnsmscqwmpptqgbnvtsvpjvmhcfpbfrpzqbpfhlbjrmbmvdvvnvfqsndglvhfrqcsbsbbprscrbfthzcwcdrprqrwjzwrpblfllpwzlhmqvltjgpcjzpzwbltgwsrgrrhzcqfpvhcprdhnzcfphqrwcvtpcbppjwzmmwjhbvwbblnbwvcqzvlfzjhgmlnhlhrbsplfctggfbhbgwpncznvtmdtqqmjsvsnrlqswzvflrfsncgpdcndlwrfrqwqnqtjmsphwsgzhdjpnsdgrbrfhbfdrntwvgvbwnvwnrmdbhqgrglbfwprflnrljrwsgwtpgtmfhvvghtzndvwlzjchhmlwcncmpvrslrglzjcnhfdqhcrljhgbzpssvdnmfwzstmvrztgpsscfswltnbwrrtcnvbswmmjbmnnnvqwjzhprfnvlbvzzdvbwlwchrvqnwwpbnttbhfdvjjvzsznhczjcncmcrmwtrlsvbwpsrcwqdvgcfjsbqnwmjmtcgpnmcbfbcqhzrjbtlpvwzhjqqprbdnbgzfwlprlcspwjwnfftldqzbcgqnjtglvbpqffdvjbpslqcdzwdnmncvcwfshdhsmssttqfrsbnjgmhfqzlgrbpdfqtfdwslsgphfzzgbzjssfbgnwztzmczplqwjmhtlflpvqqqmrvlllhngtfgsvbbnvhzqbcgpmnlsmpwqwgqfjpzplzjhrslwzrsrgjgpppjlnhrnggcdzvspsztnschnqftgffbtvrpzndzpqmtsfmwgnrvpmtgpvnmqfmwgcvlznwqnjnjwpgnqfjwtdhhmztlvlcvrlzmlpmjdvdnzwbfsshfsvbbhqsmphjhqtlnvlsmvwlqvfqpnjnzlgmdvwzzrllmcgwtqdwphhbwmlrqhqrfmdvtqswvsllqvwmfbbpllsbjbvgsmrcgqvfgsnszfrdlcjbtfgcbclhmzlmqlnhmslcmgrcvjjlbpsjjcznzqwmztcgdgbmrlgwzjzzjrpndfrdzztzzgmsrcnwrvqrdcczrbhdpfjwvqsmbrcvllvjrrbrsqnzldltdgzscjrssvdhzhnvltpgfdfcvfbtqmphdzhpzgjhjbwsmdlbqqgcrhjrwhgvfgdllmmlnpsbtvdrrzmltfwgrcsfrrsdbdmjtrwhnlgcrgjgmbzvzvqbflvbrsqcssjgsvpjmlhtcggzwbvddmwwtfdrlltjqcpwnthczzlzdszvtmrmhbpcgstvrsnmbdcmjzsvnncmgmlnrzzhfvmblgptwwwbrmtcczjwcqmvdrsvfjgqqvghnhbntqcdrppfmvdzbcjvztrnpdhmdpmnvsnzzldvdfqbdrwqqqqsmswthwpjwdrflszbspqhpfwztjjcbdsrftdsrsfdltnfztcslmbsghgrtcscrfmptqplwpmtqdzthgfjhbqdnsffrpjmgczmrlfvzcjttwtmtqfbtlqrttvjdwhfgcgcclrlswmzhzbfhjrggnhwtnffnqqcvldlttvvgrbcqbmqzvtflfmdblhdbzphrqtbshvp</code></pre>
-</div>
-</div>
 <div class="listingblock">
 <div class="title">sol.py</div>
 <div class="content">
@@ -7211,6 +7205,12 @@ if __name__ == '__main__':
     main()</code></pre>
 </div>
 </div>
+<div class="listingblock">
+<div class="title">input</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>rvnvzvhzzjgjgffclllnhhtltptgptgpttjhttsllmbbphbpbzpbpjjcwjwqwccnrrtvrtrfrwffnqffsggwzzhtzhthqhffmrrzsrrnrtrqqbllhrlrjrvvrvvgdgjgfjjtzznffrfvfggswgssccpcwpccstcsstwssgzssswsgwsgsnsshcsscsffcwcmmhmsmrsrddwhhszsfsjfsfccwssvdssmzzwrzzjfzzvzzfsfsvshschhvlhhvmvpvhhstsdtstgtrrtjjcssgfssnsnfsnscnsslvvqbbhthqtqzqmzmjjfmmbdmmzdmdpmpnnfjnnrwnwbwrrwjrrttfzzlwwfmmnhhqlhqqbnqnqznncmmhfmfftsfszssftstggppfddtztltctqcqjcqcmclcnccdgcggvmvvcsstztbzttsccmgcghcczfzszbzmbmjjggsqgghbhjjhhrrjljmllczlzzqssjfjqfjfmfdfgffczfzwwpfwpwbbftbffplphhfcftctlcclhlnlhnhlhnhqnhhjbjmmtpmmlsmllvhhjghhmzzwpzprrjrzzvrvcvqvssgssnccmgmppfhfwhhczhhprhrffpvvqrqvqccdhdvvvssvdvwdwwzggfvfnvvqvwwzwmzzvttgzzwjjfvvpvffqpqhqrrwccjbjppbzbrbrrphrhgrhhzbbhrrblbjjznnlccsffpcfpcfpfddfwddbffczztzsttzsstddrqdqqchqccrlccfcwwghwhnhbhjbhhzrrgprrftrffqlljlslggzdzvvrgvgcgnnngtnggdcgddhjhchqcqfqwfwjffqppblbddgmdgmddrnddjtdjttgzgpzggwvwjvwwhdwwbvvtftcfttpftpfpzfznnchnhrrdtdbtdbdppsjsgsttptsptssnwntwnnsshqqgnnqnddhjjtqqjhhmghmhmsstrrhmmwvvlssprsrbbswsddbnntmtbmtbmmtmrrffvjffdrffnttbffbccgchghjgjwwshwswdswdsdsrdsdjdvjjgbjbssptpddzbdddqdpdspswssjrjwwcbbvsspnspslpplzlqlccvlvfllntlntnqnrqnqpqlqflfrfsfgsfswwptwwgqggrhghzghhrthtzhzsswhhzffpsffhnnrvnrvvhmmlvvqsslddhcddsllpmpggrhrcrbbmnmjmqmlmpmrrqwqhqrqhrrgrqqsrrpjpdjppzhphthddlzdzhddjvdjdcjcncnvnzzvwzvzgzjggcllvpllgdgqqdvvwnvwvwqqvwvvrbbtqqwhdztqfzzcqrshjzwqnpdsshmpjzwqdptbvfqzmfnbtlgbbsjbqgnblhbbpsfdzvcmpzfwczcnbdndsjzccjcqnrdglwfrvwtnjwpvpvvgwtmnpzhbwnbqwznmdvdrsjnlsfrpcnhlbmlgmrcjbbvhqnvbrmlnfttjllstqnqqnhqrzrhfqjbfbwfhhjzwtwzjmszzhjnjbhrlbnnpfvdmlftjnfsfnvddqfhqqlljrthptvmhbqrdmdcmljwgbrqrjwcrtmvjgqtblnslgbjmdsrrpgfsctrhwlwnszpljhrfnsfpcsgczzltgsztclhgcqljrcmbbpdlztncnrnrmgrttplcnldfqddqhznmcczbmwvsztmwmcqnrzmlmqchnhnhrrhhfntjzqcbnttspptqwvphlbtpfcbhdqzbhsbvhmsqbsdntwpcrnzvmbgqsgttbqhhblfjpmvfcrzhfnzwrzbzgsdfqndzzhfdnrvsnvfbptthjnhgljhrvwwrlbnfpvvjdjchcgbhfrqvszhrhqvtzplwsptvdhqwlzhcjpclmmrlccvgvtgsfpnjhqhrbqglznpdhmsqwwsbmhmlsmmvvghsmplqjchrfctltmnqnddzqjfpljwljbdqjcqdqzwsbcclqsmsmlstvljwwtfmpnhqzqfjghjfchjccqrchsvngvrnwfwttsnvrdlfvwfptsjcpslvvpmjclfcpljqjszptsgsmntzrdjbgrzmgvzddqrlsndjzzqbznqnphbnwfhtjjlwjpsvffrdrbsbttpgrvmqrdndqvlgzcpfbttvqdgvrmtvfclcbcwllthmdzjcflwpnrsqzrjdzbvqgzsqvjjpjjpnjtcjqhcfbjdqndlcwzhcbjtgtlvtdwctdnqcbcgsmrcrmwjntdwbjdbzmshbvlspjfdbvmlrbdzlmlggthvphnrqlrcdsqpsgqcmpgmgdzvdqlmcldvztpsbmpwjgjfhswplwrvwpbwbsgsvlhdvmpzwnnbwjwmshwcnqfqjdpchfjjcbdnslqchhnznpqpnnctznbtccclgjhmnngdjlmqnzpsdptqqcrblmrlnnpgvrfrtmbjnmspfrbwpclhgtbsghndrjfbggsplvcjnhjjbqzsfdpfnvchzjgbhdqgddfgddvzdcrjlntnsmscqwmpptqgbnvtsvpjvmhcfpbfrpzqbpfhlbjrmbmvdvvnvfqsndglvhfrqcsbsbbprscrbfthzcwcdrprqrwjzwrpblfllpwzlhmqvltjgpcjzpzwbltgwsrgrrhzcqfpvhcprdhnzcfphqrwcvtpcbppjwzmmwjhbvwbblnbwvcqzvlfzjhgmlnhlhrbsplfctggfbhbgwpncznvtmdtqqmjsvsnrlqswzvflrfsncgpdcndlwrfrqwqnqtjmsphwsgzhdjpnsdgrbrfhbfdrntwvgvbwnvwnrmdbhqgrglbfwprflnrljrwsgwtpgtmfhvvghtzndvwlzjchhmlwcncmpvrslrglzjcnhfdqhcrljhgbzpssvdnmfwzstmvrztgpsscfswltnbwrrtcnvbswmmjbmnnnvqwjzhprfnvlbvzzdvbwlwchrvqnwwpbnttbhfdvjjvzsznhczjcncmcrmwtrlsvbwpsrcwqdvgcfjsbqnwmjmtcgpnmcbfbcqhzrjbtlpvwzhjqqprbdnbgzfwlprlcspwjwnfftldqzbcgqnjtglvbpqffdvjbpslqcdzwdnmncvcwfshdhsmssttqfrsbnjgmhfqzlgrbpdfqtfdwslsgphfzzgbzjssfbgnwztzmczplqwjmhtlflpvqqqmrvlllhngtfgsvbbnvhzqbcgpmnlsmpwqwgqfjpzplzjhrslwzrsrgjgpppjlnhrnggcdzvspsztnschnqftgffbtvrpzndzpqmtsfmwgnrvpmtgpvnmqfmwgcvlznwqnjnjwpgnqfjwtdhhmztlvlcvrlzmlpmjdvdnzwbfsshfsvbbhqsmphjhqtlnvlsmvwlqvfqpnjnzlgmdvwzzrllmcgwtqdwphhbwmlrqhqrfmdvtqswvsllqvwmfbbpllsbjbvgsmrcgqvfgsnszfrdlcjbtfgcbclhmzlmqlnhmslcmgrcvjjlbpsjjcznzqwmztcgdgbmrlgwzjzzjrpndfrdzztzzgmsrcnwrvqrdcczrbhdpfjwvqsmbrcvllvjrrbrsqnzldltdgzscjrssvdhzhnvltpgfdfcvfbtqmphdzhpzgjhjbwsmdlbqqgcrhjrwhgvfgdllmmlnpsbtvdrrzmltfwgrcsfrrsdbdmjtrwhnlgcrgjgmbzvzvqbflvbrsqcssjgsvpjmlhtcggzwbvddmwwtfdrlltjqcpwnthczzlzdszvtmrmhbpcgstvrsnmbdcmjzsvnncmgmlnrzzhfvmblgptwwwbrmtcczjwcqmvdrsvfjgqqvghnhbntqcdrppfmvdzbcjvztrnpdhmdpmnvsnzzldvdfqbdrwqqqqsmswthwpjwdrflszbspqhpfwztjjcbdsrftdsrsfdltnfztcslmbsghgrtcscrfmptqplwpmtqdzthgfjhbqdnsffrpjmgczmrlfvzcjttwtmtqfbtlqrttvjdwhfgcgcclrlswmzhzbfhjrggnhwtnffnqqcvldlttvvgrbcqbmqzvtflfmdblhdbzphrqtbshvp</code></pre>
+</div>
+</div>
 <a id="day07" />
 </div>
 </div>
@@ -7221,6 +7221,81 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_7"><a class="anchor" href="#_python_7"></a><a class="link" href="#_python_7">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+import networkx as nx
+
+
+def load_input():
+    data = nx.DiGraph()
+    cur_dir = ''
+    with open('input') as fd:
+        for line in fd:
+            temp = line.strip().split()
+            if temp[0] == '$' and temp[1] == 'cd':
+                if temp[2] == '..':
+                    preds = list(data.predecessors(cur_dir))
+                    cur_dir = preds[0]
+                else:
+                    cur_dir = cur_dir + temp[2]
+                if not cur_dir.endswith('/'):
+                    cur_dir += '/'
+                data.add_node(cur_dir)
+            elif temp[0] == '$' and temp[1] == 'ls':
+                pass
+            elif temp[0] == 'dir':
+                data.add_edge(cur_dir, cur_dir + temp[1] + '/')
+            else:
+                size = int(temp[0])
+                filename = temp[1]
+                data.nodes[cur_dir][filename] = size
+    return data
+
+
+def get_total_size(g, node):
+    total = sum(g.nodes[node].values())
+    for successor in g.successors(node):
+        total += get_total_size(g, successor)
+    g.nodes[node]['total'] = total
+    return total
+
+
+def part1():
+    data = load_input()
+    total = get_total_size(data, '/')
+
+    result = 0
+    for node in data.nodes:
+        total = data.nodes[node]['total']
+        if total &lt;= 100000:
+            result += total
+
+    print("Result 1: ", result)
+
+
+def part2():
+    data = load_input()
+    total = get_total_size(data, '/')
+
+    needed_space = 30000000 - (70000000 - total)
+    temp = [data.nodes[node]['total'] for node in data.nodes if data.nodes[node]['total'] &gt; needed_space]
+    temp.sort()
+    result = temp[0]
+    print("Result 2: ", result)
+
+
+def main():
+    part1()
+    part2()
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -8243,81 +8318,6 @@ $ ls
 221301 nrcg.pqw</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-import networkx as nx
-
-
-def load_input():
-    data = nx.DiGraph()
-    cur_dir = ''
-    with open('input') as fd:
-        for line in fd:
-            temp = line.strip().split()
-            if temp[0] == '$' and temp[1] == 'cd':
-                if temp[2] == '..':
-                    preds = list(data.predecessors(cur_dir))
-                    cur_dir = preds[0]
-                else:
-                    cur_dir = cur_dir + temp[2]
-                if not cur_dir.endswith('/'):
-                    cur_dir += '/'
-                data.add_node(cur_dir)
-            elif temp[0] == '$' and temp[1] == 'ls':
-                pass
-            elif temp[0] == 'dir':
-                data.add_edge(cur_dir, cur_dir + temp[1] + '/')
-            else:
-                size = int(temp[0])
-                filename = temp[1]
-                data.nodes[cur_dir][filename] = size
-    return data
-
-
-def get_total_size(g, node):
-    total = sum(g.nodes[node].values())
-    for successor in g.successors(node):
-        total += get_total_size(g, successor)
-    g.nodes[node]['total'] = total
-    return total
-
-
-def part1():
-    data = load_input()
-    total = get_total_size(data, '/')
-
-    result = 0
-    for node in data.nodes:
-        total = data.nodes[node]['total']
-        if total &lt;= 100000:
-            result += total
-
-    print("Result 1: ", result)
-
-
-def part2():
-    data = load_input()
-    total = get_total_size(data, '/')
-
-    needed_space = 30000000 - (70000000 - total)
-    temp = [data.nodes[node]['total'] for node in data.nodes if data.nodes[node]['total'] &gt; needed_space]
-    temp.sort()
-    result = temp[0]
-    print("Result 2: ", result)
-
-
-def main():
-    part1()
-    part2()
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day08" />
 </div>
 </div>
@@ -8328,6 +8328,90 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_8"><a class="anchor" href="#_python_8"></a><a class="link" href="#_python_8">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+
+import numpy as np
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        for line in fd:
+            line = line.strip()
+            data.append([int(value) for value in line])
+    data = np.array(data)
+    return data
+
+
+def main():
+    data = load_input()
+
+    # Task 1
+    visibles = np.full(data.shape, True, dtype=np.bool_)
+    visibles[1:-1, 1:-1] = False
+
+    inner = data[1:-1, 1:-1]
+    it = np.nditer(inner, flags=['multi_index'])
+    for value in it:
+        i, j = it.multi_index
+        i += 1
+        j += 1
+        for k in range(4):
+            highest = 0
+            if k == 0:
+                highest = max(data[0:i, j])
+            elif k == 1:
+                highest = max(data[i+1:, j])
+            elif k == 2:
+                highest = max(data[i, 0:j])
+            else:
+                highest = max(data[i, j+1:])
+            if highest &lt; value:
+                visibles[i, j] = True
+                break
+
+    result = np.sum(visibles)
+    print("Result 1: ", result)
+
+    # Task2
+    directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    options = visibles.copy()
+
+    options[0, :] = False
+    options[:, 0] = False
+    options[-1, :] = False
+    options[:, -1] = False
+    indexes = np.argwhere(options)
+
+    most_scenic = 0
+
+    for i, j in indexes:
+        temp = 1
+        for d in directions:
+            y = i
+            x = j
+            while True:
+                y += d[0]
+                x += d[1]
+                if x == 0 or x == data.shape[1] - 1 or y == 0 or \
+                   y == data.shape[0] - 1 or data[y, x] &gt;= data[i, j]:
+                    temp *= abs(j-x) + abs(i-y)
+                    break
+
+        most_scenic = most_scenic if most_scenic &gt; temp else temp
+
+    result = most_scenic
+    print("Result 2: ", result)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -8432,90 +8516,6 @@ if __name__ == '__main__':
 012221120210002201233041204141124034134123443133233422423453224352410321301023102020300131022311221</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-
-import numpy as np
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        for line in fd:
-            line = line.strip()
-            data.append([int(value) for value in line])
-    data = np.array(data)
-    return data
-
-
-def main():
-    data = load_input()
-
-    # Task 1
-    visibles = np.full(data.shape, True, dtype=np.bool_)
-    visibles[1:-1, 1:-1] = False
-
-    inner = data[1:-1, 1:-1]
-    it = np.nditer(inner, flags=['multi_index'])
-    for value in it:
-        i, j = it.multi_index
-        i += 1
-        j += 1
-        for k in range(4):
-            highest = 0
-            if k == 0:
-                highest = max(data[0:i, j])
-            elif k == 1:
-                highest = max(data[i+1:, j])
-            elif k == 2:
-                highest = max(data[i, 0:j])
-            else:
-                highest = max(data[i, j+1:])
-            if highest &lt; value:
-                visibles[i, j] = True
-                break
-
-    result = np.sum(visibles)
-    print("Result 1: ", result)
-
-    # Task2
-    directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-    options = visibles.copy()
-
-    options[0, :] = False
-    options[:, 0] = False
-    options[-1, :] = False
-    options[:, -1] = False
-    indexes = np.argwhere(options)
-
-    most_scenic = 0
-
-    for i, j in indexes:
-        temp = 1
-        for d in directions:
-            y = i
-            x = j
-            while True:
-                y += d[0]
-                x += d[1]
-                if x == 0 or x == data.shape[1] - 1 or y == 0 or \
-                   y == data.shape[0] - 1 or data[y, x] &gt;= data[i, j]:
-                    temp *= abs(j-x) + abs(i-y)
-                    break
-
-        most_scenic = most_scenic if most_scenic &gt; temp else temp
-
-    result = most_scenic
-    print("Result 2: ", result)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day09" />
 </div>
 </div>
@@ -8526,6 +8526,77 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_9"><a class="anchor" href="#_python_9"></a><a class="link" href="#_python_9">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+import numpy as np
+
+
+direction = {
+    'R': (0, 1),
+    'L': (0, -1),
+    'D': (-1, 0),
+    'U': (1, 0)
+}
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        for line in fd:
+            a, b = line.strip().split()
+            data.append((a, int(b)))
+    return data
+
+
+def next_pos(pos, d):
+    next_pos = (pos[0] + d[0], pos[1] + d[1])
+    return next_pos
+
+
+def next_tail_pos(head, tail):
+    next_tail_pos = tail
+    diff = [i - j for i, j in zip(head, tail)]
+    if max([abs(v) for v in diff]) &gt; 1:
+        d = [np.sign(i) for i in diff]
+        next_tail_pos = next_pos(tail, d)
+
+    return next_tail_pos
+
+
+def get_tail_pos(pos, value, length):
+    tail_pos = list()
+    for i in range(value[1]):
+        pos[0] = next_pos(pos[0], direction[value[0]])
+        for j in range(length):
+            pos[j+1] = next_tail_pos(pos[j], pos[j+1])
+        tail_pos.append(pos[length])
+    return tail_pos
+
+
+def part_n(number, length):
+    data = load_input()
+    length = length
+    pos = [(0, 0) for _ in range(length+1)]
+    tail_pos = list()
+    for value in data:
+        tail_pos.extend(get_tail_pos(pos, value, length))
+
+    result = len(set(tail_pos))
+    print(f"Result: {number}: {result}")
+
+
+def main():
+    part_n(1, 1)
+    part_n(2, 9)
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -10531,77 +10602,6 @@ D 18
 U 1</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-import numpy as np
-
-
-direction = {
-    'R': (0, 1),
-    'L': (0, -1),
-    'D': (-1, 0),
-    'U': (1, 0)
-}
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        for line in fd:
-            a, b = line.strip().split()
-            data.append((a, int(b)))
-    return data
-
-
-def next_pos(pos, d):
-    next_pos = (pos[0] + d[0], pos[1] + d[1])
-    return next_pos
-
-
-def next_tail_pos(head, tail):
-    next_tail_pos = tail
-    diff = [i - j for i, j in zip(head, tail)]
-    if max([abs(v) for v in diff]) &gt; 1:
-        d = [np.sign(i) for i in diff]
-        next_tail_pos = next_pos(tail, d)
-
-    return next_tail_pos
-
-
-def get_tail_pos(pos, value, length):
-    tail_pos = list()
-    for i in range(value[1]):
-        pos[0] = next_pos(pos[0], direction[value[0]])
-        for j in range(length):
-            pos[j+1] = next_tail_pos(pos[j], pos[j+1])
-        tail_pos.append(pos[length])
-    return tail_pos
-
-
-def part_n(number, length):
-    data = load_input()
-    length = length
-    pos = [(0, 0) for _ in range(length+1)]
-    tail_pos = list()
-    for value in data:
-        tail_pos.extend(get_tail_pos(pos, value, length))
-
-    result = len(set(tail_pos))
-    print(f"Result: {number}: {result}")
-
-
-def main():
-    part_n(1, 1)
-    part_n(2, 9)
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day10" />
 </div>
 </div>
@@ -10612,6 +10612,75 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_10"><a class="anchor" href="#_python_10"></a><a class="link" href="#_python_10">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        for line in fd:
+            line = line.strip().split()
+            if line[0] == 'addx':
+                data.append([line[0], int(line[1])])
+            else:
+                data.append(line)
+    return data
+
+
+def update_pic(pic, value, cycle):
+    if cycle in list(range(value-1, value+2)):
+        pic += '#'
+    else:
+        pic += ' '
+    return pic
+
+
+def part():
+    data = load_input()
+    value = 1
+    cycle = 0
+    limit = 20
+
+    result = 0
+    pic = ''
+
+    next_add = 0
+
+    for cmd in data:
+        value += next_add
+        next_add = 0
+
+        pic = update_pic(pic, value, cycle % 40)
+        cycle += 1
+
+        if cmd[0] == 'addx':
+            pic = update_pic(pic, value, cycle % 40)
+            cycle += 1
+            next_add = cmd[1]
+
+        if cycle &gt;= limit:
+            result += value*limit
+            limit += 40
+
+    print("Result 1: ", result)
+
+    # Task2
+    print("Result2:")
+    for i in range(cycle//40):
+        print(pic[40*i:40*i+40])
+
+
+def main():
+    part()
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -10759,75 +10828,6 @@ noop
 noop</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-
-def load_input():
-    data = list()
-    with open('input') as fd:
-        for line in fd:
-            line = line.strip().split()
-            if line[0] == 'addx':
-                data.append([line[0], int(line[1])])
-            else:
-                data.append(line)
-    return data
-
-
-def update_pic(pic, value, cycle):
-    if cycle in list(range(value-1, value+2)):
-        pic += '#'
-    else:
-        pic += ' '
-    return pic
-
-
-def part():
-    data = load_input()
-    value = 1
-    cycle = 0
-    limit = 20
-
-    result = 0
-    pic = ''
-
-    next_add = 0
-
-    for cmd in data:
-        value += next_add
-        next_add = 0
-
-        pic = update_pic(pic, value, cycle % 40)
-        cycle += 1
-
-        if cmd[0] == 'addx':
-            pic = update_pic(pic, value, cycle % 40)
-            cycle += 1
-            next_add = cmd[1]
-
-        if cycle &gt;= limit:
-            result += value*limit
-            limit += 40
-
-    print("Result 1: ", result)
-
-    # Task2
-    print("Result2:")
-    for i in range(cycle//40):
-        print(pic[40*i:40*i+40])
-
-
-def main():
-    part()
-
-
-if __name__ == '__main__':
-    main()</code></pre>
-</div>
-</div>
 <a id="day11" />
 </div>
 </div>
@@ -10838,66 +10838,6 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_11"><a class="anchor" href="#_python_11"></a><a class="link" href="#_python_11">python</a></h4>
-<div class="listingblock">
-<div class="title">input</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>Monkey 0:
-  Starting items: 97, 81, 57, 57, 91, 61
-  Operation: new = old * 7
-  Test: divisible by 11
-    If true: throw to monkey 5
-    If false: throw to monkey 6
-
-Monkey 1:
-  Starting items: 88, 62, 68, 90
-  Operation: new = old * 17
-  Test: divisible by 19
-    If true: throw to monkey 4
-    If false: throw to monkey 2
-
-Monkey 2:
-  Starting items: 74, 87
-  Operation: new = old + 2
-  Test: divisible by 5
-    If true: throw to monkey 7
-    If false: throw to monkey 4
-
-Monkey 3:
-  Starting items: 53, 81, 60, 87, 90, 99, 75
-  Operation: new = old + 1
-  Test: divisible by 2
-    If true: throw to monkey 2
-    If false: throw to monkey 1
-
-Monkey 4:
-  Starting items: 57
-  Operation: new = old + 6
-  Test: divisible by 13
-    If true: throw to monkey 7
-    If false: throw to monkey 0
-
-Monkey 5:
-  Starting items: 54, 84, 91, 55, 59, 72, 75, 70
-  Operation: new = old * old
-  Test: divisible by 7
-    If true: throw to monkey 6
-    If false: throw to monkey 3
-
-Monkey 6:
-  Starting items: 95, 79, 79, 68, 78
-  Operation: new = old + 3
-  Test: divisible by 3
-    If true: throw to monkey 1
-    If false: throw to monkey 3
-
-Monkey 7:
-  Starting items: 61, 97, 67
-  Operation: new = old + 4
-  Test: divisible by 17
-    If true: throw to monkey 0
-    If false: throw to monkey 5</code></pre>
-</div>
-</div>
 <div class="listingblock">
 <div class="title">sol.py</div>
 <div class="content">
@@ -10989,6 +10929,66 @@ if __name__ == '__main__':
     main()</code></pre>
 </div>
 </div>
+<div class="listingblock">
+<div class="title">input</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>Monkey 0:
+  Starting items: 97, 81, 57, 57, 91, 61
+  Operation: new = old * 7
+  Test: divisible by 11
+    If true: throw to monkey 5
+    If false: throw to monkey 6
+
+Monkey 1:
+  Starting items: 88, 62, 68, 90
+  Operation: new = old * 17
+  Test: divisible by 19
+    If true: throw to monkey 4
+    If false: throw to monkey 2
+
+Monkey 2:
+  Starting items: 74, 87
+  Operation: new = old + 2
+  Test: divisible by 5
+    If true: throw to monkey 7
+    If false: throw to monkey 4
+
+Monkey 3:
+  Starting items: 53, 81, 60, 87, 90, 99, 75
+  Operation: new = old + 1
+  Test: divisible by 2
+    If true: throw to monkey 2
+    If false: throw to monkey 1
+
+Monkey 4:
+  Starting items: 57
+  Operation: new = old + 6
+  Test: divisible by 13
+    If true: throw to monkey 7
+    If false: throw to monkey 0
+
+Monkey 5:
+  Starting items: 54, 84, 91, 55, 59, 72, 75, 70
+  Operation: new = old * old
+  Test: divisible by 7
+    If true: throw to monkey 6
+    If false: throw to monkey 3
+
+Monkey 6:
+  Starting items: 95, 79, 79, 68, 78
+  Operation: new = old + 3
+  Test: divisible by 3
+    If true: throw to monkey 1
+    If false: throw to monkey 3
+
+Monkey 7:
+  Starting items: 61, 97, 67
+  Operation: new = old + 4
+  Test: divisible by 17
+    If true: throw to monkey 0
+    If false: throw to monkey 5</code></pre>
+</div>
+</div>
 <a id="day12" />
 </div>
 </div>
@@ -10999,52 +10999,6 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_12"><a class="anchor" href="#_python_12"></a><a class="link" href="#_python_12">python</a></h4>
-<div class="listingblock">
-<div class="title">input</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>abcccccccccccccccccaaccccccccccccaaaaaaaacccccccccccaaaaaccccaaaaaaccaaaaaaaaaaaaaaaaaccccccccccccccccaaacccccaaaaaaaacccaaaccccccccccccccccccccccccccccccccccccccccccccccccccaaaaa
-abccccccccccccccccaaacaacccccccccccaaaacccccccccccccaaaaaacccaaaaaaccaaaaaaaaaaaaaaaaaaaacccccccccaaacaaacccccaaaaaaaaaccaaaaccccccccccccccccccccccccccccccccccccccccccccccccaaaaaa
-abcccccccccccccccccaaaaacccccccccccaaaaaccccccccccccaaaaaaccccaaaacccaaaacccaaaaaaaaaaaaacccccccccaaaaaaaaaacccaaaaaaaaccaaaaccccccccccccccccccccccccccccccccccaaacccccccccccaaaaaa
-abcccccccccccccccaaaaaacccccccccccaaacaaccaaccccccccaaaaaaccccaaaacccaaaccccaaaaaaaaaaaaaccccccccccaaaaaaaaaccaaaaaacccccaaacccccccccccccccccccccccccccccccccccaaaccccccccccccccaaa
-abcccccccccccccccaaaaaaaacccccccccaacccacaaacaacccccccaaccccccaccaccccccccaaaaaaaaaaaaccccccccccccccaaaaaaacccaaaaaaacccccccccccccaacccccccccccccccccccccccccccaaaccccccccccccccaaa
-abcccccccccccccccaacaaaaacccccccccccccccccaaaaacccccccccccccccccccccccccccaaaaaaaaaaaaccccccccccccccaaaaaaccccaaccaaacccccccccccaaaaaaccccccccccccccccccccccccccdccccccccccccccccaa
-abccaacccccccaaacccaaacaccccccccccaaacccaaaaaaccccccccccccccccccccccccccccaaacccaaaaaacaaaaccccccccaaaaaaaccccccccaaacccccccccccaaaaaacccccccccccccccccllllllcccdddddcccccccccccccc
-abaaaacccacccaaccccaacccccccccccccaaacccaaaaaaaacccccccccccccccccaaccccccccacccaaaaccccaaaaccccccccaaacaaaccccccccccccccccccccccaaaaaaccccccccccccccccllllllllldddddddddddccaaccccc
-abaaaaccaaaaaaaacccccccccccccccaaaaaaaacaacaaaaacccccccccccccccccaaacccccccaaacaaccccccaaaacccccccccccccaaccccccccccccccccccccccaaaaaccccccccccccccccclllllllllldddddddddeeaaaccccc
-abaaaccccaaaaaaaaccccccccaaacccaaaaaaaacccaaacccccccccccccccccaaaaaaaaccccccaaaaacccccccaacccccccccccccccccccccccccccccccccccccccaaaaccccaaaccccccccckllppppplllmmmmmmmdeeeeaaccccc
-abaaaacccaaaaaaaaacccccaaaaaaccccaaaaaccccaaccccccccccccccccccaaaaaaaaccccccaaaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccaaaacccccccckklpppppppplmmmmmmmmmeeeeaccccc
-abaaaacccaaaaaaaaacccccaaaaaacccaaaaaaccccccccaacccccccccccccccaaaaaaccccccaaaaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccaaaacccccccckkkppppppppqmmmmmmmmmmeeeaacccc
-abaaaaaccaaaaaaaaccccccaaaaaacccaaaaaaccccccacaaaacccccccccccccaaaaaaccccccaaaaaaaaccccccccaaaaccccccccaaacccccccccccccccccccccccccccccccaaacccccccckkkpppuuuppqqqqqqqqmmmeeeeacccc
-abacccccaaaaaaaccccccccaaaaaccccaccaaaccccccaaaaaacccccacccccccaaaaaaccccccaaaaaacaaaccccccaaaaccccccccaaaacccccccccccccccccccccccccccccccccccccccckkkpppuuuuuuqqqqqqqqqnnneeeccccc
-abcccccccaccaaaccccccccaaaaacccccccccccccccccaaaacccaaaacccccccaacaaacccccccccaaacaaaaaccccaaaaccccccccaaaaccccccccccccccccccccccccccccccccccccccckkkkpppuuuuuuuqvvvvqqqnnneeeccccc
-abcccccccccccaaacaaccccccccccccccccccccccccccaaaacccaaaaaacccccccccccccccccccccccaaaaaaccccaaacccccccccaaaccccccccccccccccccccccccccccccccccccccckkkkrrpuuuxxxuvvvvvvvqqnnneeeccccc
-abcccccccccccccccaacaaaccccccccccccccccccccccaacaacccaaaaacccccccccccccccccccccccaaaaaaccccccccccccccccccccccccccccccccccccccccccccccccccccccccckkkkrrrruuxxxxuvvvvvvvqqnnneeeccccc
-abcccccccccccccccaaaaacccccccccccccccccccccccccccaccaaaaacccccaaccccccccccccccccccaaaaaccccccccccccccccaaaccccccccccccccaaacccccccccccccccccccckkkkrrrruuuxxxxyyyyyvvvqqnnneecccccc
-abcccccccccccccaaaaaacccccccccccaacaacccccccccccaaaaaaaaacccacaaaacaaccaaccccccccaaacaaccccccccccaaccccaaaaaacccaacaacccaaacacccccccccccccccccjjkkrrrruuuuuxxxyyyyyvvqrqnneffcccccc
-abcccccccccccccaaaaaaaacccaaacccaaaaaccccccaacccaaaaaaaaacccaaaaaacaaaaaaccccccccaaacaaacccccccaaaaaacaaaaaaacccaaaaacaaaaaaaaccccccccccccccccjjjrrrtttuuxxxxxyyyyyvvrrnnnfffcccccc
-SbccccccccccccccccaaaaacccaaaaccaaaaaaccccaaaaaacaaaaaaaaacccaaaacccaaaaaccccccccaaaaaaacccccccaaaaaaaaaaaaaaccaaaaaccaaaaaaaaccccccccccccccccjjjrrrtttxxxEzzzzyyyvvrrrnnnfffcccccc
-abccccccccccaaaccaaccaacccaaaaccaaaaaacccccaaaaacaaaaaaaaacccaaaaccaaaaaacccccccccaaaaaaccccccccaaaacaaaaaaacccaaaaaaccaaaaaacccccccccccccccccjjjrrrtttxxxxxyyyyyyvvrrrnnnfffcccccc
-abcccccccccaaaaccaacccccccaaacccaaaaaacccaaaaaaaaaaaaaaaaacccaacacaaaaaaaacccccaaaaaaaacccccccccaaaacccaaaaaaccccaaaacccaaaaacccccccccccccccccjjjrrrtttxxxxxyyyyyyywvrrnnnfffcccccc
-abcccccccccaaaacccccccccccccccccccaaaccccaaaaaaaaaaaaaaaaaacccccccaaaaaaaacccccaaaaaaaaaccccccccaccacccaaaaaaccccacccccaaaaaacccccccccccccccccjjjrrrrttttxxxyyyyyyywwrrroooffcccccc
-abccccccccccaaaccccccccccccccccccccccccccaaaaaaaaaccaaaaaaaccccccccccaaccccccccaaaaaaaaaaccccccccccccccaacccccccccccccccaaccccccccccccccccccccjjjjqqqqttttxxyywwwwwwwwrrooofffccccc
-abcccccccccccccccccccccccccccccccccccccccccaaacacccccaaaaccccccccccccaacccccccccccaaacaaacccccccccccccccccccccccccccccaaacccccccccccccccccccaacjjjjqqqqqttwwwwwwwwwwwrrrooofffccccc
-abcccccccccccccccccccccccccccccccccccccccccaaccccccccccaacccccccccccccccccccccccccaaacccccccccccccccccccccccccccccccccaaacccccccccccccccccaaaaaajjjjqqqqttwwwwwwsswwrrrrooofffccccc
-abcccccaaaaccccccccccccccaacaaccccccccccccccccccccccccccccccccccccccccccccccccccccaacccccccccccccccccccccccccccccccaaaaaaaaccaaaacccccccccaaaaaacjjjiqqqtttwwwwsssssrrrrooofffccccc
-abccccaaaaaccccccccccccccaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaaaaccaaaaacccccccccaaaaacciiiiqqttswwwssssssrrroooogffccccc
-abccccaaaaaacccccccccccccaaaaaacccaaaccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaccaaaaaaccccccccaaaaacccciiiqqqssssssspppooooooogggaccccc
-abccccaaaaaaccccccccaacccaaaaaaccccaacccccccccccccccccccccccccccccccccaaaaccccccccccccccccccccccccccccccccccccccccccaaaaaaccaaaaaaccccccccaaaaaccccciiiqqsssssspppppoooooggggaacccc
-abccccaaaaaccccccaaaaacccaaaaaacaacaaaaaccccccccccccccccccccaacccccccaaaaacccccccccccaaaccccccccccccccccccccccccccccaaaaaacccaaaaacccccccccacccccccciiiqqqpssspppppgggggggggaaacccc
-abccccccaaacccccccaaaaaccccaaaccaaaaaaaacccccccaacccccccaaccaacccccccaaaaaacccccccccaaaacccccccccccaaaaccccccccccccaaccaaacccaaacccccaaacaaaccccccccciiqqppppppphhhggggggggaaaacccc
-abccccccccccccccccaaaaaccccccccccaaaaaccccccccaaacaaccccaaaaaacccccccaaaaaaaccccccccaaaacccccccccccaaaacccccccccaaaaaacccccccccccccccaaaaaaaccccccccciiippppppphhhhggggggcaaacccccc
-abaacccccccccccccaaaaaccccccccccccaaaaaccccccccaaaaacccccaaaaaaacccccaaaaacaaacccccccaaacccccccccccaaaacccccccccaaaaacccccccccccccccccaaaaaacccccccccciiiippphhhhhhcccccccaaacccccc
-abaacccccccccccccccaaacccccccccccaaacaaccccccaaaaaaccccccaaaaaaacccaaccaaacaaaaccaaaccccccccccccccccaaacccccccccaaaaaaacccccccccccccccaaaaaaaacccccccciiihhhhhhhhaaaccccccccccccccc
-abaaccccccccccccccccccccccccccccccaacccccccccaaaaaaaacccaaaaaaccaaaaaacccccaaaacaaaaaccccccccccccccccccccccccccaaaaaaaaccccccccccccccaaaaaaaaaccccccccciihhhhhhcaaaacccccccccccccca
-abaaccccccccccccccccccccccccccccccccaacccccccaacaaaaacccaaaaaaccaaaaacccccccaaaaaaaacccccccccccccccccccccccccccaaaaaaaacccccccccaaacaaaaaaaaaacccccccccccchhhaccccaacccccccccccccca
-abaaccccccccccccccccccccccccccccccccaaaaaaccccccaaccccccccccaaccaaaaaaacccccaaaaaaaccccccccccccccccccccccccaaaccacaaacccccccccccaaaaaaacaaacaaaaaacccccccccaaacccccccccccccccaaaaaa
-abccccccccccccccccccccccccccccccccccaaaaaccccccaaccccccccccccccaaaaaaaacaaaaaaaaaaccccccccccccccccccccccccaaaaaaccaaaccccccccccccaaaaaacaaacaaaaaacccccccccaaaccccccccccccccccaaaaa
-abccccccccccccccccccccccccccccccccaaaaaaaacccccccccccccccccccccaaaaaaaacaaaaaaaaaaaaacccccccccccccccccccccaaaaaacccccccccccccccaaaaaaaaaaaaaaaaaacccccccccccccccccccccccccccccaaaaa</code></pre>
-</div>
-</div>
 <div class="listingblock">
 <div class="title">sol.py</div>
 <div class="content">
@@ -11131,6 +11085,52 @@ if __name__ == '__main__':
     main()</code></pre>
 </div>
 </div>
+<div class="listingblock">
+<div class="title">input</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>abcccccccccccccccccaaccccccccccccaaaaaaaacccccccccccaaaaaccccaaaaaaccaaaaaaaaaaaaaaaaaccccccccccccccccaaacccccaaaaaaaacccaaaccccccccccccccccccccccccccccccccccccccccccccccccccaaaaa
+abccccccccccccccccaaacaacccccccccccaaaacccccccccccccaaaaaacccaaaaaaccaaaaaaaaaaaaaaaaaaaacccccccccaaacaaacccccaaaaaaaaaccaaaaccccccccccccccccccccccccccccccccccccccccccccccccaaaaaa
+abcccccccccccccccccaaaaacccccccccccaaaaaccccccccccccaaaaaaccccaaaacccaaaacccaaaaaaaaaaaaacccccccccaaaaaaaaaacccaaaaaaaaccaaaaccccccccccccccccccccccccccccccccccaaacccccccccccaaaaaa
+abcccccccccccccccaaaaaacccccccccccaaacaaccaaccccccccaaaaaaccccaaaacccaaaccccaaaaaaaaaaaaaccccccccccaaaaaaaaaccaaaaaacccccaaacccccccccccccccccccccccccccccccccccaaaccccccccccccccaaa
+abcccccccccccccccaaaaaaaacccccccccaacccacaaacaacccccccaaccccccaccaccccccccaaaaaaaaaaaaccccccccccccccaaaaaaacccaaaaaaacccccccccccccaacccccccccccccccccccccccccccaaaccccccccccccccaaa
+abcccccccccccccccaacaaaaacccccccccccccccccaaaaacccccccccccccccccccccccccccaaaaaaaaaaaaccccccccccccccaaaaaaccccaaccaaacccccccccccaaaaaaccccccccccccccccccccccccccdccccccccccccccccaa
+abccaacccccccaaacccaaacaccccccccccaaacccaaaaaaccccccccccccccccccccccccccccaaacccaaaaaacaaaaccccccccaaaaaaaccccccccaaacccccccccccaaaaaacccccccccccccccccllllllcccdddddcccccccccccccc
+abaaaacccacccaaccccaacccccccccccccaaacccaaaaaaaacccccccccccccccccaaccccccccacccaaaaccccaaaaccccccccaaacaaaccccccccccccccccccccccaaaaaaccccccccccccccccllllllllldddddddddddccaaccccc
+abaaaaccaaaaaaaacccccccccccccccaaaaaaaacaacaaaaacccccccccccccccccaaacccccccaaacaaccccccaaaacccccccccccccaaccccccccccccccccccccccaaaaaccccccccccccccccclllllllllldddddddddeeaaaccccc
+abaaaccccaaaaaaaaccccccccaaacccaaaaaaaacccaaacccccccccccccccccaaaaaaaaccccccaaaaacccccccaacccccccccccccccccccccccccccccccccccccccaaaaccccaaaccccccccckllppppplllmmmmmmmdeeeeaaccccc
+abaaaacccaaaaaaaaacccccaaaaaaccccaaaaaccccaaccccccccccccccccccaaaaaaaaccccccaaaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccaaaacccccccckklpppppppplmmmmmmmmmeeeeaccccc
+abaaaacccaaaaaaaaacccccaaaaaacccaaaaaaccccccccaacccccccccccccccaaaaaaccccccaaaaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccaaaacccccccckkkppppppppqmmmmmmmmmmeeeaacccc
+abaaaaaccaaaaaaaaccccccaaaaaacccaaaaaaccccccacaaaacccccccccccccaaaaaaccccccaaaaaaaaccccccccaaaaccccccccaaacccccccccccccccccccccccccccccccaaacccccccckkkpppuuuppqqqqqqqqmmmeeeeacccc
+abacccccaaaaaaaccccccccaaaaaccccaccaaaccccccaaaaaacccccacccccccaaaaaaccccccaaaaaacaaaccccccaaaaccccccccaaaacccccccccccccccccccccccccccccccccccccccckkkpppuuuuuuqqqqqqqqqnnneeeccccc
+abcccccccaccaaaccccccccaaaaacccccccccccccccccaaaacccaaaacccccccaacaaacccccccccaaacaaaaaccccaaaaccccccccaaaaccccccccccccccccccccccccccccccccccccccckkkkpppuuuuuuuqvvvvqqqnnneeeccccc
+abcccccccccccaaacaaccccccccccccccccccccccccccaaaacccaaaaaacccccccccccccccccccccccaaaaaaccccaaacccccccccaaaccccccccccccccccccccccccccccccccccccccckkkkrrpuuuxxxuvvvvvvvqqnnneeeccccc
+abcccccccccccccccaacaaaccccccccccccccccccccccaacaacccaaaaacccccccccccccccccccccccaaaaaaccccccccccccccccccccccccccccccccccccccccccccccccccccccccckkkkrrrruuxxxxuvvvvvvvqqnnneeeccccc
+abcccccccccccccccaaaaacccccccccccccccccccccccccccaccaaaaacccccaaccccccccccccccccccaaaaaccccccccccccccccaaaccccccccccccccaaacccccccccccccccccccckkkkrrrruuuxxxxyyyyyvvvqqnnneecccccc
+abcccccccccccccaaaaaacccccccccccaacaacccccccccccaaaaaaaaacccacaaaacaaccaaccccccccaaacaaccccccccccaaccccaaaaaacccaacaacccaaacacccccccccccccccccjjkkrrrruuuuuxxxyyyyyvvqrqnneffcccccc
+abcccccccccccccaaaaaaaacccaaacccaaaaaccccccaacccaaaaaaaaacccaaaaaacaaaaaaccccccccaaacaaacccccccaaaaaacaaaaaaacccaaaaacaaaaaaaaccccccccccccccccjjjrrrtttuuxxxxxyyyyyvvrrnnnfffcccccc
+SbccccccccccccccccaaaaacccaaaaccaaaaaaccccaaaaaacaaaaaaaaacccaaaacccaaaaaccccccccaaaaaaacccccccaaaaaaaaaaaaaaccaaaaaccaaaaaaaaccccccccccccccccjjjrrrtttxxxEzzzzyyyvvrrrnnnfffcccccc
+abccccccccccaaaccaaccaacccaaaaccaaaaaacccccaaaaacaaaaaaaaacccaaaaccaaaaaacccccccccaaaaaaccccccccaaaacaaaaaaacccaaaaaaccaaaaaacccccccccccccccccjjjrrrtttxxxxxyyyyyyvvrrrnnnfffcccccc
+abcccccccccaaaaccaacccccccaaacccaaaaaacccaaaaaaaaaaaaaaaaacccaacacaaaaaaaacccccaaaaaaaacccccccccaaaacccaaaaaaccccaaaacccaaaaacccccccccccccccccjjjrrrtttxxxxxyyyyyyywvrrnnnfffcccccc
+abcccccccccaaaacccccccccccccccccccaaaccccaaaaaaaaaaaaaaaaaacccccccaaaaaaaacccccaaaaaaaaaccccccccaccacccaaaaaaccccacccccaaaaaacccccccccccccccccjjjrrrrttttxxxyyyyyyywwrrroooffcccccc
+abccccccccccaaaccccccccccccccccccccccccccaaaaaaaaaccaaaaaaaccccccccccaaccccccccaaaaaaaaaaccccccccccccccaacccccccccccccccaaccccccccccccccccccccjjjjqqqqttttxxyywwwwwwwwrrooofffccccc
+abcccccccccccccccccccccccccccccccccccccccccaaacacccccaaaaccccccccccccaacccccccccccaaacaaacccccccccccccccccccccccccccccaaacccccccccccccccccccaacjjjjqqqqqttwwwwwwwwwwwrrrooofffccccc
+abcccccccccccccccccccccccccccccccccccccccccaaccccccccccaacccccccccccccccccccccccccaaacccccccccccccccccccccccccccccccccaaacccccccccccccccccaaaaaajjjjqqqqttwwwwwwsswwrrrrooofffccccc
+abcccccaaaaccccccccccccccaacaaccccccccccccccccccccccccccccccccccccccccccccccccccccaacccccccccccccccccccccccccccccccaaaaaaaaccaaaacccccccccaaaaaacjjjiqqqtttwwwwsssssrrrrooofffccccc
+abccccaaaaaccccccccccccccaaaaacccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaaaaccaaaaacccccccccaaaaacciiiiqqttswwwssssssrrroooogffccccc
+abccccaaaaaacccccccccccccaaaaaacccaaaccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccaaaaaccaaaaaaccccccccaaaaacccciiiqqqssssssspppooooooogggaccccc
+abccccaaaaaaccccccccaacccaaaaaaccccaacccccccccccccccccccccccccccccccccaaaaccccccccccccccccccccccccccccccccccccccccccaaaaaaccaaaaaaccccccccaaaaaccccciiiqqsssssspppppoooooggggaacccc
+abccccaaaaaccccccaaaaacccaaaaaacaacaaaaaccccccccccccccccccccaacccccccaaaaacccccccccccaaaccccccccccccccccccccccccccccaaaaaacccaaaaacccccccccacccccccciiiqqqpssspppppgggggggggaaacccc
+abccccccaaacccccccaaaaaccccaaaccaaaaaaaacccccccaacccccccaaccaacccccccaaaaaacccccccccaaaacccccccccccaaaaccccccccccccaaccaaacccaaacccccaaacaaaccccccccciiqqppppppphhhggggggggaaaacccc
+abccccccccccccccccaaaaaccccccccccaaaaaccccccccaaacaaccccaaaaaacccccccaaaaaaaccccccccaaaacccccccccccaaaacccccccccaaaaaacccccccccccccccaaaaaaaccccccccciiippppppphhhhggggggcaaacccccc
+abaacccccccccccccaaaaaccccccccccccaaaaaccccccccaaaaacccccaaaaaaacccccaaaaacaaacccccccaaacccccccccccaaaacccccccccaaaaacccccccccccccccccaaaaaacccccccccciiiippphhhhhhcccccccaaacccccc
+abaacccccccccccccccaaacccccccccccaaacaaccccccaaaaaaccccccaaaaaaacccaaccaaacaaaaccaaaccccccccccccccccaaacccccccccaaaaaaacccccccccccccccaaaaaaaacccccccciiihhhhhhhhaaaccccccccccccccc
+abaaccccccccccccccccccccccccccccccaacccccccccaaaaaaaacccaaaaaaccaaaaaacccccaaaacaaaaaccccccccccccccccccccccccccaaaaaaaaccccccccccccccaaaaaaaaaccccccccciihhhhhhcaaaacccccccccccccca
+abaaccccccccccccccccccccccccccccccccaacccccccaacaaaaacccaaaaaaccaaaaacccccccaaaaaaaacccccccccccccccccccccccccccaaaaaaaacccccccccaaacaaaaaaaaaacccccccccccchhhaccccaacccccccccccccca
+abaaccccccccccccccccccccccccccccccccaaaaaaccccccaaccccccccccaaccaaaaaaacccccaaaaaaaccccccccccccccccccccccccaaaccacaaacccccccccccaaaaaaacaaacaaaaaacccccccccaaacccccccccccccccaaaaaa
+abccccccccccccccccccccccccccccccccccaaaaaccccccaaccccccccccccccaaaaaaaacaaaaaaaaaaccccccccccccccccccccccccaaaaaaccaaaccccccccccccaaaaaacaaacaaaaaacccccccccaaaccccccccccccccccaaaaa
+abccccccccccccccccccccccccccccccccaaaaaaaacccccccccccccccccccccaaaaaaaacaaaaaaaaaaaaacccccccccccccccccccccaaaaaacccccccccccccccaaaaaaaaaaaaaaaaaacccccccccccccccccccccccccccccaaaaa</code></pre>
+</div>
+</div>
 <a id="day13" />
 </div>
 </div>
@@ -11141,6 +11141,102 @@ if __name__ == '__main__':
 </div>
 <div class="sect3">
 <h4 id="_python_13"><a class="anchor" href="#_python_13"></a><a class="link" href="#_python_13">python</a></h4>
+<div class="listingblock">
+<div class="title">sol.py</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
+
+
+def load_input():
+    data = list()
+    with open('input') as fd:
+        for line in fd:
+            line = line.strip()
+            if line:
+                data.append(eval(line))
+    return data
+
+
+def check_order(packet1, packet2):
+    ordered = True
+    stop = False
+    if packet1 and not packet2:
+        stop = True
+        ordered = False
+    elif not packet1 and packet2:
+        stop = True
+    elif not packet1 and not packet2:
+        pass
+    else:
+        for item1, item2 in zip(packet1, packet2):
+            if isinstance(item1, list) and isinstance(item2, list):
+                stop, ordered = check_order(item1, item2)
+            elif isinstance(item1, int) and isinstance(item2, list):
+                stop, ordered = check_order([item1], item2)
+            elif isinstance(item1, list) and isinstance(item2, int):
+                stop, ordered = check_order(item1, [item2])
+            else:
+                if item1 &gt; item2:
+                    ordered = False
+                    stop = True
+                elif item1 &lt; item2:
+                    stop = True
+                else:
+                    pass
+
+            if stop:
+                break
+
+        else:
+            if len(packet1) &gt; len(packet2):
+                ordered = False
+                stop = True
+            elif len(packet1) &lt; len(packet2):
+                stop = True
+            else:
+                pass
+
+    return stop, ordered
+
+
+def part1():
+    data = load_input()
+    result = 0
+    for i in range(len(data)//2):
+        _, ordered = check_order(data[2*i], data[2*i+1])
+        if ordered:
+            result += i + 1
+
+    print("Result 1: ", result)
+
+
+def part2():
+    data = load_input()
+    order = [[[2]], [[6]]]
+
+    for i in range(len(data)):
+        for j in range(len(order)):
+            _, ordered = check_order(order[j], data[i])
+            if not ordered:
+                break
+        else:
+            j += 1
+
+        order.insert(j, data[i])
+
+    result = (order.index([[2]]) + 1) * (order.index([[6]]) + 1)
+    print("Result 2: ", result)
+
+
+def main():
+    part1()
+    part2()
+
+
+if __name__ == '__main__':
+    main()</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -11595,90 +11691,112 @@ if __name__ == '__main__':
 [[[[5],[9,9,6],[1,8],[5,4,6,0,2]],[[5,9],[]],[7,[4,2,3,4],6]],[],[1,9,7,[6]]]</code></pre>
 </div>
 </div>
+<a id="day14" />
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_14_python"><a class="anchor" href="#_day_14_python"></a><a class="link" href="#_day_14_python">Day 14: python</a></h3>
+<div class="paragraph">
+<p><span class="small">this documentation is autogenerated. Add a <code>README.adoc</code> to your solution to take over the control of this :-)</span></p>
+</div>
+<div class="sect3">
+<h4 id="_python_14"><a class="anchor" href="#_python_14"></a><a class="link" href="#_python_14">python</a></h4>
 <div class="listingblock">
 <div class="title">sol.py</div>
 <div class="content">
 <pre class="prettyprint highlight"><code>#!/usr/bin/env python3
 
+import numpy as np
+
 
 def load_input():
-    data = list()
     with open('input') as fd:
+        data = list()
         for line in fd:
-            line = line.strip()
-            if line:
-                data.append(eval(line))
+            temp = line.strip().split('-&gt;')
+            temp = [tuple([int(j) for j in i.split(',')]) for i in temp]
+            data.append(temp)
     return data
 
 
-def check_order(packet1, packet2):
-    ordered = True
-    stop = False
-    if packet1 and not packet2:
-        stop = True
-        ordered = False
-    elif not packet1 and packet2:
-        stop = True
-    elif not packet1 and not packet2:
-        pass
-    else:
-        for item1, item2 in zip(packet1, packet2):
-            if isinstance(item1, list) and isinstance(item2, list):
-                stop, ordered = check_order(item1, item2)
-            elif isinstance(item1, int) and isinstance(item2, list):
-                stop, ordered = check_order([item1], item2)
-            elif isinstance(item1, list) and isinstance(item2, int):
-                stop, ordered = check_order(item1, [item2])
-            else:
-                if item1 &gt; item2:
-                    ordered = False
-                    stop = True
-                elif item1 &lt; item2:
-                    stop = True
-                else:
-                    pass
+def get_dir(a, b):
+    return tuple([np.sign(j-i) for i, j in zip(a, b)])
 
-            if stop:
-                break
 
-        else:
-            if len(packet1) &gt; len(packet2):
-                ordered = False
-                stop = True
-            elif len(packet1) &lt; len(packet2):
-                stop = True
-            else:
-                pass
+def calc_pos(a, b):
+    return tuple([i+j for i, j in zip(a, b)])
 
-    return stop, ordered
+
+def create_field(data):
+    field = dict()
+    for rocks in data:
+        for i in range(len(rocks)-1):
+            d = get_dir(rocks[i], rocks[i+1])
+            pos = rocks[i]
+            while True:
+                field[pos] = "rock"
+                if pos == rocks[i+1]:
+                    break
+                pos = calc_pos(pos, d)
+    return field
+
+
+def process_sand_part1(field):
+    start = (500, 0)
+    pos = start
+    end = max([key[1] for key in field.keys()])
+
+    while True:
+        next_pos = calc_pos(pos, (0, 1))
+        if next_pos in field:
+            next_pos = calc_pos(pos, (-1, 1))
+        if next_pos in field:
+            next_pos = calc_pos(pos, (1, 1))
+        if next_pos in field:
+            field[pos] = 'sand'
+            next_pos = start
+        if next_pos[1] == end:
+            break
+        pos = next_pos
+
+
+def process_sand_part2(field):
+    start = (500, 0)
+    pos = start
+    end = max([key[1] for key in field.keys()]) + 2
+
+    while True:
+        if start in field:
+            break
+        next_pos = calc_pos(pos, (0, 1))
+        if next_pos in field:
+            next_pos = calc_pos(pos, (-1, 1))
+        if next_pos in field:
+            next_pos = calc_pos(pos, (1, 1))
+        if next_pos in field:
+            field[pos] = 'sand'
+            next_pos = start
+        if next_pos[1] == end:
+            field[pos] = 'sand'
+            next_pos = start
+        pos = next_pos
 
 
 def part1():
     data = load_input()
-    result = 0
-    for i in range(len(data)//2):
-        _, ordered = check_order(data[2*i], data[2*i+1])
-        if ordered:
-            result += i + 1
+    field = create_field(data)
+    process_sand_part1(field)
 
+    result = sum([1 for value in field.values() if value == 'sand'])
     print("Result 1: ", result)
 
 
 def part2():
     data = load_input()
-    order = [[[2]], [[6]]]
+    field = create_field(data)
+    process_sand_part2(field)
 
-    for i in range(len(data)):
-        for j in range(len(order)):
-            _, ordered = check_order(order[j], data[i])
-            if not ordered:
-                break
-        else:
-            j += 1
-
-        order.insert(j, data[i])
-
-    result = (order.index([[2]]) + 1) * (order.index([[6]]) + 1)
+    result = sum([1 for value in field.values() if value == 'sand'])
     print("Result 2: ", result)
 
 
@@ -11691,16 +11809,6 @@ if __name__ == '__main__':
     main()</code></pre>
 </div>
 </div>
-<a id="day14" />
-</div>
-</div>
-<div class="sect2">
-<h3 id="_day_14_python"><a class="anchor" href="#_day_14_python"></a><a class="link" href="#_day_14_python">Day 14: python</a></h3>
-<div class="paragraph">
-<p><span class="small">this documentation is autogenerated. Add a <code>README.adoc</code> to your solution to take over the control of this :-)</span></p>
-</div>
-<div class="sect3">
-<h4 id="_python_14"><a class="anchor" href="#_python_14"></a><a class="link" href="#_python_14">python</a></h4>
 <div class="listingblock">
 <div class="title">input</div>
 <div class="content">
@@ -11846,114 +11954,6 @@ if __name__ == '__main__':
 536,108 -&gt; 541,108
 510,76 -&gt; 510,78 -&gt; 503,78 -&gt; 503,84 -&gt; 521,84 -&gt; 521,78 -&gt; 516,78 -&gt; 516,76
 540,161 -&gt; 545,161</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">sol.py</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>#!/usr/bin/env python3
-
-import numpy as np
-
-
-def load_input():
-    with open('input') as fd:
-        data = list()
-        for line in fd:
-            temp = line.strip().split('-&gt;')
-            temp = [tuple([int(j) for j in i.split(',')]) for i in temp]
-            data.append(temp)
-    return data
-
-
-def get_dir(a, b):
-    return tuple([np.sign(j-i) for i, j in zip(a, b)])
-
-
-def calc_pos(a, b):
-    return tuple([i+j for i, j in zip(a, b)])
-
-
-def create_field(data):
-    field = dict()
-    for rocks in data:
-        for i in range(len(rocks)-1):
-            d = get_dir(rocks[i], rocks[i+1])
-            pos = rocks[i]
-            while True:
-                field[pos] = "rock"
-                if pos == rocks[i+1]:
-                    break
-                pos = calc_pos(pos, d)
-    return field
-
-
-def process_sand_part1(field):
-    start = (500, 0)
-    pos = start
-    end = max([key[1] for key in field.keys()])
-
-    while True:
-        next_pos = calc_pos(pos, (0, 1))
-        if next_pos in field:
-            next_pos = calc_pos(pos, (-1, 1))
-        if next_pos in field:
-            next_pos = calc_pos(pos, (1, 1))
-        if next_pos in field:
-            field[pos] = 'sand'
-            next_pos = start
-        if next_pos[1] == end:
-            break
-        pos = next_pos
-
-
-def process_sand_part2(field):
-    start = (500, 0)
-    pos = start
-    end = max([key[1] for key in field.keys()]) + 2
-
-    while True:
-        if start in field:
-            break
-        next_pos = calc_pos(pos, (0, 1))
-        if next_pos in field:
-            next_pos = calc_pos(pos, (-1, 1))
-        if next_pos in field:
-            next_pos = calc_pos(pos, (1, 1))
-        if next_pos in field:
-            field[pos] = 'sand'
-            next_pos = start
-        if next_pos[1] == end:
-            field[pos] = 'sand'
-            next_pos = start
-        pos = next_pos
-
-
-def part1():
-    data = load_input()
-    field = create_field(data)
-    process_sand_part1(field)
-
-    result = sum([1 for value in field.values() if value == 'sand'])
-    print("Result 1: ", result)
-
-
-def part2():
-    data = load_input()
-    field = create_field(data)
-    process_sand_part2(field)
-
-    result = sum([1 for value in field.values() if value == 'sand'])
-    print("Result 2: ", result)
-
-
-def main():
-    part1()
-    part2()
-
-
-if __name__ == '__main__':
-    main()</code></pre>
 </div>
 </div>
 </div>

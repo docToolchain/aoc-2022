@@ -319,6 +319,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_14_rust">Day 14: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_14_regolith_reservoir">Day 14: Regolith Reservoir</a>
+<ul class="sectlevel4">
+<li><a href="#_input_14">Input</a></li>
+<li><a href="#_star_1_12">Star 1</a></li>
+<li><a href="#_star_2_12">Star 2</a></li>
+<li><a href="#_tests_15">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -3050,7 +3062,7 @@ abdefghi
 <div class="sect4">
 <h5 id="_solution_3"><a class="anchor" href="#_solution_3"></a><a class="link" href="#_solution_3">Solution</a></h5>
 <div class="paragraph">
-<p>The whole work for the solution is in the recursive <code>Node</code> enum modeling the trees represented by the puzzle input with its implementation. Namely recursive parsing in the <code>parse</code> function and comparison in the <code>Ordering</code> trait implementation.</p>
+<p>The whole work for the solution is in the recursive <code>Node</code> enum modeling the trees represented by the puzzle input with its implementation. Namely recursive parsing in the <code>parse</code> function and comparison in the <code>Ord</code> trait implementation.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3272,6 +3284,275 @@ mod tests {
 [1,[2,[3,[4,[5,6,7]]]],8,9]
 [1,[2,[3,[4,[5,6,0]]]],8,9]
 "#;
+}</code></pre>
+</div>
+</div>
+<a id="day14" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_14_rust"><a class="anchor" href="#_day_14_rust"></a><a class="link" href="#_day_14_rust">Day 14: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_14_regolith_reservoir"><a class="anchor" href="#_day_14_regolith_reservoir"></a><a class="link" href="#_day_14_regolith_reservoir">Day 14: Regolith Reservoir</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/14">AoC|2022|14</a>.</p>
+</div>
+<div class="paragraph">
+<p>I was remembered of <a href="https://adventofcode.com/2018/day/17">AoC|2018|17</a> even without the hint in the puzzle.</p>
+</div>
+<div class="paragraph">
+<p>I don&#8217;t think my solution is very elegant, but at the moment, I do not have an idea how to create a nice one &#8230;&#8203;</p>
+</div>
+<div class="sect4">
+<h5 id="_input_14"><a class="anchor" href="#_input_14"></a><a class="link" href="#_input_14">Input</a></h5>
+<div class="paragraph">
+<p>I parse the input in a vec of paths, where each path is vec of points. The structure <code>PuzzleData</code> has methods to compute the bounding box for all points (<code>bbox</code>) and build a 2D grid using the paths specified (<code>grid</code>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        paths: Vec&lt;Vec&lt;(isize, isize)&gt;&gt;,
+    }
+
+    impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData {
+        /// parse the puzzle input
+        fn from(s: &amp;'a str) -&gt; Self {
+            Self {
+                paths: s
+                    .lines()
+                    .map(|l| {
+                        l.split(" -&gt; ")
+                            .map(|c| c.split_once(',').unwrap())
+                            .map(|(x, y)| (x.parse().unwrap(), y.parse().unwrap()))
+                            .collect()
+                    })
+                    .collect(),
+            }
+        }
+    }
+
+    impl&lt;'a&gt; PuzzleData {
+        pub fn bbox(&amp;self) -&gt; (isize, isize, isize, isize) {
+            self.paths.iter().fold((500, 0, 501, 1), |bbox, v| {
+                v.iter().fold(bbox, |(x_mn, y_mn, x_mx, y_mx), (x, y)| {
+                    (x_mn.min(*x), y_mn.min(*y), x_mx.max(x + 1), y_mx.max(y + 1))
+                })
+            })
+        }
+
+        /// get a grid as flat list of chars, the width of the grid, and the point of sand inflow
+        pub fn grid(&amp;self) -&gt; (Vec&lt;char&gt;, usize, (usize, usize)) {
+            let (x_mn, y_mn, x_mx, y_mx) = self.bbox();
+            let width = (x_mx - x_mn) as usize;
+            let height = (y_mx - y_mn) as usize;
+            let mut grid = vec!['.'; width * height];
+
+            for path in &amp;self.paths {
+                for k in 1..path.len() {
+                    let (dx, dy, len) = if path[k].0 &gt; path[k - 1].0 {
+                        assert!(path[k].1 == path[k - 1].1);
+                        (1, 0, path[k].0 - path[k - 1].0)
+                    } else if path[k].0 &lt; path[k - 1].0 {
+                        assert!(path[k].1 == path[k - 1].1);
+                        (-1, 0, path[k - 1].0 - path[k].0)
+                    } else if path[k].1 &gt; path[k - 1].1 {
+                        assert!(path[k].0 == path[k - 1].0);
+                        (0, 1, path[k].1 - path[k - 1].1)
+                    } else if path[k].1 &lt; path[k - 1].1 {
+                        assert!(path[k].0 == path[k - 1].0);
+                        (0, -1, path[k - 1].1 - path[k].1)
+                    } else {
+                        unreachable!()
+                    };
+
+                    let x0 = path[k - 1].0 - x_mn;
+                    let y0 = path[k - 1].1 - y_mn;
+                    for k in 0..len + 1 {
+                        grid[(x0 + dx * k) as usize + (y0 + dy * k) as usize * width] = '#';
+                    }
+                }
+            }
+
+            (grid, width, ((500 - x_mn) as _, (0 - y_mn) as _))
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_12"><a class="anchor" href="#_star_1_12"></a><a class="link" href="#_star_1_12">Star 1</a></h5>
+<div class="paragraph">
+<p>Just let the sand flow in the grid until sand starts flowing off to the big void.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    let (mut grid, width, (x_0, y_0)) = data.grid();
+    let height = grid.len() / width;
+
+    let mut cnt = 0;
+    'inflow: loop {
+        // first candidate is spot directly on top of something solid
+        let mut x = x_0;
+        let mut y = match (y_0..height).find(|y| grid[x + y * width] != '.') {
+            Some(y) =&gt; y - 1,
+            None =&gt; unreachable!("Nothing solid found to start with"),
+        };
+
+        loop {
+            if y == height - 1 {
+                // go to void below
+                break 'inflow;
+            }
+
+            if grid[x + (y + 1) * width] == '.' {
+                // bubble down
+                y += 1;
+            } else if x &gt; 0 &amp;&amp; grid[x - 1 + (y + 1) * width] == '.' {
+                // bubble down-left
+                y += 1;
+                x -= 1;
+            } else if x &lt; width - 1 &amp;&amp; grid[x + 1 + (y + 1) * width] == '.' {
+                // bubble down-right
+                y += 1;
+                x += 1;
+            } else if x == 0 || x == width - 1 {
+                // go to void left/right
+                break 'inflow;
+            } else {
+                grid[x + y * width] = 'o';
+                cnt += 1;
+                break;
+            }
+        }
+    }
+
+    cnt
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_12"><a class="anchor" href="#_star_2_12"></a><a class="link" href="#_star_2_12">Star 2</a></h5>
+<div class="paragraph">
+<p>Create a grid with an additional line added at the bottom and big enough to make sure nothing flows off to the void anymore. The only thing on top to do is to change the condition for exiting the loop.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let (grid_0, width_0, (x_0_0, y_0)) = data.grid();
+    let height_0 = grid_0.len() / width_0;
+
+    // wrap the grid in a bigger grid (append height columns to the left and right and an additional row below)
+    let width = width_0 + 2 * height_0;
+    let height = height_0 + 1;
+    let mut grid = vec!['.'; width * height];
+    for y in 0..height_0 {
+        for x in 0..width_0 {
+            grid[x + height_0 + y * width] = grid_0[x + y * width_0];
+        }
+    }
+    let x_0 = x_0_0 + height_0;
+
+    let mut cnt = 0;
+    loop {
+        // first candidate is spot directly on top of something solid
+        let mut x = x_0;
+        let mut y = match (y_0..height).find(|y| grid[x + y * width] != '.') {
+            Some(y) =&gt; {
+                if y == y_0 {
+                    // No more sand can enter
+                    break;
+                }
+                y - 1
+            }
+            None =&gt; unreachable!("Nothing solid found to start with"),
+        };
+
+        loop {
+            if y == height - 1 {
+                // floor reached
+                grid[x + y * width] = 'o';
+                cnt += 1;
+                break;
+            }
+
+            if grid[x + (y + 1) * width] == '.' {
+                // bubble down
+                y += 1;
+            } else if x &gt; 0 &amp;&amp; grid[x - 1 + (y + 1) * width] == '.' {
+                // bubble down-left
+                y += 1;
+                x -= 1;
+            } else if x &lt; width - 1 &amp;&amp; grid[x + 1 + (y + 1) * width] == '.' {
+                // bubble down-right
+                y += 1;
+                x += 1;
+            } else if x == 0 || x == width - 1 {
+                // the grid should not be too small
+                unreachable!("Grid is too small!");
+            } else {
+                // cannot move any further
+                grid[x + y * width] = 'o';
+                cnt += 1;
+                break;
+            }
+        }
+    }
+
+    cnt
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_15"><a class="anchor" href="#_tests_15"></a><a class="link" href="#_tests_15">Tests</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"498,4 -&gt; 498,6 -&gt; 496,6
+503,4 -&gt; 502,4 -&gt; 502,9 -&gt; 494,9
+"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        println!("{data:?}");
+
+        let bbox = data.bbox();
+        assert_eq!((494, 0, 504, 10), bbox);
+
+        let (grid, width, (x0, y0)) = data.grid();
+        assert_eq!((6, 0), (x0, y0));
+        assert_eq!(10, width);
+        let exp = "............................................#...##....#...#...###...#.........#.........#.#########.";
+        assert_eq!(exp.chars().collect::&lt;Vec&lt;_&gt;&gt;(), grid);
+        for row in 0..grid.len() / width {
+            for col in 0..width {
+                print!("{}", grid[col + row * width]);
+            }
+            println!();
+        }
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(24, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(93, star_2(&amp;data));
+    }
 }</code></pre>
 </div>
 </div>
