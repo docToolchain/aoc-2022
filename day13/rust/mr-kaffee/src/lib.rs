@@ -493,7 +493,6 @@ pub mod iter {
         cnt_1 * cnt_2
     }
 
-    // tag::tests[]
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -576,7 +575,6 @@ pub mod iter {
 [1,[2,[3,[4,[5,6,0]]]],8,9]
 "#;
     }
-    // end::tests[]
 }
 // end::no-heap[]
 
