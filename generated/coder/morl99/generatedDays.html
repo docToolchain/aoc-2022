@@ -192,18 +192,6 @@
 <div class="sect3">
 <h4 id="_go"><a class="anchor" href="#_go"></a><a class="link" href="#_go">go</a></h4>
 <div class="listingblock">
-<div class="title">go.mod</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>module github.com/morl99/aoc-2022
-
-go 1.19
-
-require github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b
-
-require github.com/thoas/go-funk v0.9.2 // indirect</code></pre>
-</div>
-</div>
-<div class="listingblock">
 <div class="title">main.go</div>
 <div class="content">
 <pre class="prettyprint highlight"><code>package main
@@ -282,21 +270,6 @@ func parseInput(input string) [][]int {
 	}
 	return elves
 }</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">go.sum</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b h1:g9SuFmxM/WucQFKTMSP+irxyf5m0RiUJreBDhGI6jSA=
-github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b/go.mod h1:XjvqMUpGd3Xn9Jtzk/4GEBCSoBX0eB2RyriXgne0IdM=
-github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
-github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
-github.com/thoas/go-funk v0.9.2 h1:oKlNYv0AY5nyf9g+/GhMgS/UO2ces0QRdPKwkhY3VCk=
-github.com/thoas/go-funk v0.9.2/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
-gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
-gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -2559,6 +2532,33 @@ gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=</
 5279</code></pre>
 </div>
 </div>
+<div class="listingblock">
+<div class="title">go.mod</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>module github.com/morl99/aoc-2022
+
+go 1.19
+
+require github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b
+
+require github.com/thoas/go-funk v0.9.2 // indirect</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">go.sum</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b h1:g9SuFmxM/WucQFKTMSP+irxyf5m0RiUJreBDhGI6jSA=
+github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b/go.mod h1:XjvqMUpGd3Xn9Jtzk/4GEBCSoBX0eB2RyriXgne0IdM=
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+github.com/thoas/go-funk v0.9.2 h1:oKlNYv0AY5nyf9g+/GhMgS/UO2ces0QRdPKwkhY3VCk=
+github.com/thoas/go-funk v0.9.2/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=</code></pre>
+</div>
+</div>
 <a id="day02" />
 </div>
 </div>
@@ -2569,18 +2569,6 @@ gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=</
 </div>
 <div class="sect3">
 <h4 id="_go_2"><a class="anchor" href="#_go_2"></a><a class="link" href="#_go_2">go</a></h4>
-<div class="listingblock">
-<div class="title">go.mod</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>module github.com/morl99/aoc-2022
-
-go 1.19
-
-require github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b
-
-require github.com/thoas/go-funk v0.9.2</code></pre>
-</div>
-</div>
 <div class="listingblock">
 <div class="title">main.go</div>
 <div class="content">
@@ -2681,21 +2669,6 @@ func parseInput(input string) []Round {
 	}
 	return rounds
 }</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">go.sum</div>
-<div class="content">
-<pre class="prettyprint highlight"><code>github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b h1:g9SuFmxM/WucQFKTMSP+irxyf5m0RiUJreBDhGI6jSA=
-github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b/go.mod h1:XjvqMUpGd3Xn9Jtzk/4GEBCSoBX0eB2RyriXgne0IdM=
-github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
-github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
-github.com/thoas/go-funk v0.9.2 h1:oKlNYv0AY5nyf9g+/GhMgS/UO2ces0QRdPKwkhY3VCk=
-github.com/thoas/go-funk v0.9.2/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
-gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
-gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5201,6 +5174,33 @@ A Z
 A X
 A X
 A Z</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">go.mod</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>module github.com/morl99/aoc-2022
+
+go 1.19
+
+require github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b
+
+require github.com/thoas/go-funk v0.9.2</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">go.sum</div>
+<div class="content">
+<pre class="prettyprint highlight"><code>github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b h1:g9SuFmxM/WucQFKTMSP+irxyf5m0RiUJreBDhGI6jSA=
+github.com/adam-lavrik/go-imath v0.0.0-20210910152346-265a42a96f0b/go.mod h1:XjvqMUpGd3Xn9Jtzk/4GEBCSoBX0eB2RyriXgne0IdM=
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+github.com/thoas/go-funk v0.9.2 h1:oKlNYv0AY5nyf9g+/GhMgS/UO2ces0QRdPKwkhY3VCk=
+github.com/thoas/go-funk v0.9.2/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=</code></pre>
 </div>
 </div>
 </div>
