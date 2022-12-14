@@ -1,0 +1,27 @@
+
+Day 14 of year 2022
+https://adventofcode.com/2022/day/14
+
+== What I learned
+
+. The most challenging was to think about how to parse the file easily.
+
+== Approach
+
+. I use regex to fish out all of the numbers in the lines of the input file. Then I go through them pair-wise and create a set of tuples with all of the occupied spots in the cave. Fortunately, it's not too big. :-)
+
+**Star 1** +
+
+. I just let the sand fall and check if it hits an occupied spot and follow the rules. After I find it's resting spot, i put it into my set containing all of the occupied spots. I do this until a sand falls below my deepest point.
+
+**Star 2** +
+
+. Yoohoo! No major changes necessary. I just add one to my deepest point and exit the loop when (500,0) is occupied. You have to get lucky sometimes.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
