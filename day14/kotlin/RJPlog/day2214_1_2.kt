@@ -24,7 +24,7 @@ fun checkTilesClay(
 
 fun Reservoir(in1: Int): Int {
 
-// end::PuzzleInputProzessing[]	
+// tag::PuzzleInputProzessing[]	
 	var xRange = mutableListOf<Pair<Int, IntRange>>()
 	var yRange = mutableListOf<Pair<Int, IntRange>>()
 	var yMax: Int = 0
