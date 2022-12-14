@@ -1,0 +1,215 @@
+== Distress Signal
+
+Today's puzzle required parsing a data structure with nested elements. My brain fell apart initially.
+
+I decided to try a List<Object> where the entry can be an Int or List<Object>
+Once this worked I refactored to use an abstract class to represent any packet item, packet value and packet list.
+
+Implementing the determination of the order provided some problems until I understood that the packet order is determined once two items aren't equal.
+
+=== Sample Input
+
+[source,text]
+....
+[1,1,3,1,1]
+[1,1,5,1,1]
+
+[[1],[2,3,4]]
+[[1],4]
+
+[9]
+[[8,7,6]]
+
+[[4,4],4,4]
+[[4,4],4,4,4]
+
+[7,7,7,7]
+[7,7,7]
+
+[]
+[3]
+
+[[[]]]
+[[]]
+
+[1,[2,[3,[4,[5,6,7]]]],8,9]
+[1,[2,[3,[4,[5,6,0]]]],8,9]
+....
+
+=== Model
+
+The model for Item, Value and Packet below
+
+[source,kotlin]
+....
+abstract class Item
+data class Value(val value: Int) : Item() {
+  fun compareTo(right: Value): Int {
+    return value.compareTo(right.value)
+  }
+  override fun toString(): String {
+    return value.toString()
+  }
+}
+
+data class Packet(val items: List<Item>) : Item(), List<Item> by items {
+  constructor(value: Item) : this(listOf(value)) {
+  }
+}
+....
+
+=== Parsing
+
+
+[source,kotlin]
+....
+fun parsePacket(input: String): Packet {
+  val value = StringBuilder()
+  var list: MutableList<Item> = mutableListOf()
+
+  fun checkAdd() {
+    if (value.isNotBlank()) {
+      list.add(Value(value.toString().toInt()))
+    }
+    value.clear()
+  }
+  val lists = Stack<List<Item>>()
+  var index = 1 // skip first [
+  while (index < input.lastIndex) {
+    when (val c = input[index]) {
+      ',', ' ' -> checkAdd()
+      '[' -> {
+        lists.push(list)
+        list = mutableListOf()
+      }
+      ']' -> {
+        checkAdd()
+        val v = list
+        list = lists.pop().toMutableList()
+        list.add(Packet(v))
+      }
+      '-' -> value.append('-')
+      '+' -> value.append('+')
+      else -> {
+        if (c.isDigit()) {
+          value.append(c)
+        } else {
+          error("Unexpected $c")
+        }
+      }
+    }
+    index += 1
+  }
+  checkAdd()
+  return Packet(list.toList())
+}
+....
+
+=== Processing
+
+We needed comparison functions for the Packet and one for generic Item.
+The `isOrdered` function couldn't be part of Item because it references Packet and Value.
+
+
+[source,kotlin]
+....
+fun Packet.compareTo(right: Packet): Int {
+  var result = 0
+  for (index in indices) {
+    val item = this[index]
+    val rightItem = right.getOrNull(index)
+    result = when {
+      rightItem == null -> 1
+      item is Value && rightItem is Value -> item.compareTo(rightItem)
+      item is Packet && rightItem is Value -> item.compareTo(Packet(rightItem))
+      item is Packet && rightItem is Packet -> item.compareTo(rightItem)
+      item is Value && rightItem is Packet -> Packet(item).compareTo(rightItem)
+      else -> 1
+    }
+    if (result != 0) {
+      break
+    }
+  }
+  if (result == 0 && size < right.size) {
+    result = -1
+  }
+  return result
+}
+
+fun Item.isOrdered(right: Item?): Int {
+  return when {
+    right == null -> 1
+    this is Value && right is Value -> compareTo(right)
+    this is Packet && right is Packet -> this.compareTo(right)
+    this is Packet && right is Value -> this.compareTo(Packet(right))
+    this is Value && right is Packet -> Packet(this).compareTo(right)
+    else -> 1
+  }
+}
+
+fun isIndexOrdered(index: Int, input: List<String>): Boolean {
+  check(input.size == 2)
+  val (left, right) = input.map { parsePacket(it) }
+  var result = 0
+  for (index in left.indices) {
+    val item = left[index]
+    val rightItem = if (index <= right.lastIndex) right[index]
+        else null
+    result = item.isOrdered(rightItem)
+    if (result != 0) {
+      break
+    }
+  }
+  return result <= 0
+}
+....
+
+=== Part 1
+
+In part 1 we had check every 2 pairs to determine if they are in the right order and then report the sum of the indexes of those pairs.
+
+[source,kotlin]
+....
+fun calcSolution1(input: List<List<String>>): Int {
+  return input.mapIndexedNotNull { index, inputs ->
+    if (isIndexOrdered(index, inputs)) index + 1 else null
+  }.sum()
+}
+....
+
+=== Part 2
+
+In part 2 we had to treat all the packets as one list and add 2 more with the values:
+
+[source,text]
+....
+"[[2]]"
+"[[6]]"
+....
+
+Then we had to sort the packets using the ordering rules from part 1.
+We need to find the indexes of the 2 additional packets and print the product.
+
+[source,kotlin]
+....
+fun calcSolution2(input: List<String>): Int {
+  val extra1 = "[[2]]"
+  val extra2 = "[[6]]"
+  val packets = input.filter { it.isNotBlank() }.toMutableList()
+  packets.add(extra1)
+  packets.add(extra2)
+  val sorted = packets.map { it to parsePacket(it) }
+    .sortedWith { o1, o2 -> o1.second.compareTo(o2.second) }
+    .map { it.first }
+  val index1 = sorted.indexOf(extra1) + 1
+  val index2 = sorted.indexOf(extra2) + 1
+  return index1 * index2
+}
+....
+
+=== Full source
+
+[source,kotlin]
+....
+include::src/solution.kt[]
+....
