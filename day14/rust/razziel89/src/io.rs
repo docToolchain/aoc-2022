@@ -1,7 +1,5 @@
 // tag::io[]
-use crate::data;
 use anyhow::{Context, Error, Result};
-use std::collections::HashMap;
 use std::str::FromStr;
 
 pub fn read_lines_from_file(path: &str, chunk_size: usize) -> Result<Vec<String>> {

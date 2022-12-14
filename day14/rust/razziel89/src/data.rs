@@ -1,7 +1,6 @@
 // tag::data[]
 use anyhow::{Error, Result};
-use std::collections::HashSet;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::str::FromStr;
 
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
@@ -16,10 +15,6 @@ pub struct Rocks {
 }
 
 impl Point {
-    pub fn new(x: isize, y: isize) -> Self {
-        Self { x, y }
-    }
-
     fn dist(&self, other: &Self) -> Self {
         Self {
             x: other.x - self.x,
@@ -38,13 +33,6 @@ impl Point {
             other.x == 0
                 && self.y.clamp(-1, 1) == other.y.clamp(-1, 1)
                 && self.y.abs() >= other.y.abs()
-        }
-    }
-
-    pub fn up(&self) -> Self {
-        Self {
-            x: self.x,
-            y: self.y - 1,
         }
     }
 

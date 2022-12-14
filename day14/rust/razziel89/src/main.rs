@@ -10,7 +10,7 @@ mod io;
 
 // tag::main[]
 use anyhow::{Error, Result};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 // Constants.
 const SOURCE: data::Point = data::Point { x: 500, y: 0 };
 
@@ -39,8 +39,6 @@ fn render(
     let empty = HashSet::<data::Point>::new();
     let min_y = if fov.1 - 4 <= -2 { fov.1 - 2 } else { -2 };
 
-    println!("{:?}", fov);
-
     for y in min_y..fov.3 + 4 {
         for x in fov.0 - dist..fov.2 + dist {
             let p = data::Point { x, y };
@@ -65,6 +63,10 @@ fn render(
     image
 }
 
+fn is_env(var: &str, val: &str, def: &str) -> bool {
+    std::env::var(var).unwrap_or(def.to_string()) == val
+}
+
 fn solve(file: &str, part1: bool) -> Result<()> {
     println!("PROCESSING {}", file);
 
@@ -76,7 +78,7 @@ fn solve(file: &str, part1: bool) -> Result<()> {
         None,
     )?;
 
-    // Coordinates for rendering.
+    // Coordinates for rendering. This is just lazy copy-pasting.
     let min_x_rocks = rocks
         .iter()
         .map(|el| el.edges.iter())
@@ -114,14 +116,17 @@ fn solve(file: &str, part1: bool) -> Result<()> {
 
     let blocked_y = if part1 { None } else { Some(max_y) };
 
-    let do_render = std::env::var("RENDER").unwrap_or("0".to_string()) == "1";
+    let do_render = is_env("RENDER", "1", "0");
 
     // If this condition is no longer fulfilled, a piece of sand has exceeded our world and will
     // fall to infinity.
     loop {
         // Spawn new sand.
         if do_render {
-            println!("{}", render(&rocks, &sands, render_coords));
+            // Clear screen and print view.
+            println!("\x1bc{}", render(&rocks, &sands, render_coords));
+            // Only continue after the user confirmed.
+            std::io::stdin().lines().next();
         }
         let mut sand = SOURCE;
         let mut has_settled = false;
@@ -182,11 +187,20 @@ fn solve(file: &str, part1: bool) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    solve(SAMPLE1, true)?;
-    solve(REAL, true)?;
+    // Run all by default or if a specific one was chosen. Useful for rendering just one.
+    if is_env("RUN", "0", "0") {
+        solve(SAMPLE1, true)?;
+    }
+    if is_env("RUN", "1", "1") {
+        solve(REAL, true)?;
+    }
 
-    solve(SAMPLE1, false)?;
-    solve(REAL, false)?;
+    if is_env("RUN", "2", "2") {
+        solve(SAMPLE1, false)?;
+    }
+    if is_env("RUN", "3", "3") {
+        solve(REAL, false)?;
+    }
 
     Ok(())
 }
