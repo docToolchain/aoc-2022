@@ -1,0 +1,27 @@
+== Day 14
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea ist to use a `dict` to represent the cave. `(x,y)` coordinates
+are mapped to `"R"` for rocks and `"S"` for sand.
+Using this represenatiton it is easy to check if a certain position `(x,y)` is already
+in occupied by either a rock or a sand.
+
+Initially I missed the end condition that a grain of sand could fall into the void,
+i.e. `y` in creases beyond the maximum `y` of any rock.
+
+=== What did I learn
+
+How to use comprehensions to create `dict`s.
+
+=== How to run
+
+Run using:
+`$ python day_14.py --help`
