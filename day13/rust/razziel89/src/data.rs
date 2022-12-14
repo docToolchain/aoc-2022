@@ -18,66 +18,34 @@ pub enum Elem {
     Dat(Box<Pkg>),
 }
 
-#[derive(PartialEq)]
-pub enum Cmp {
-    Equal,
-    Correct,
-    Incorrect,
-}
-
-impl Cmp {
-    pub fn as_ordering(&self) -> Ordering {
-        match self {
-            Cmp::Equal => Ordering::Equal,
-            Cmp::Correct => Ordering::Less,
-            Cmp::Incorrect => Ordering::Greater,
-        }
-    }
-}
-
 impl Input {
     pub fn is_ordered_correctly(&self) -> bool {
-        self.left.compare(&self.right) == Cmp::Correct
+        self.left.compare(&self.right) == Ordering::Less
     }
 }
 
 impl Pkg {
     // This is run on the left value with the right value as argument.
-    pub fn compare(&self, other: &Self) -> Cmp {
+    pub fn compare(&self, other: &Self) -> Ordering {
         // The zip operator will end the iteration as soon as one of the two iterators runs out.
         for (left, right) in self.0.iter().zip(other.0.iter()) {
             match left.compare(&right) {
-                Cmp::Equal => {}
-                Cmp::Correct => return Cmp::Correct,
-                Cmp::Incorrect => return Cmp::Incorrect,
+                Ordering::Equal => {}
+                ord @ Ordering::Less | ord @ Ordering::Greater => return ord,
             }
         }
 
         // If we reach here, all value comparisons turned out equal so far. Thus, perform the
         // length comparison.
-        if self.0.len() < other.0.len() {
-            Cmp::Correct
-        } else if self.0.len() > other.0.len() {
-            Cmp::Incorrect
-        } else {
-            Cmp::Equal
-        }
+        self.0.len().cmp(&other.0.len())
     }
 }
 
 impl Elem {
-    fn compare(&self, other: &Self) -> Cmp {
+    fn compare(&self, other: &Self) -> Ordering {
         match (self, other) {
             // If both are numbers, compare the numbers.
-            (&Elem::Num(left), &Elem::Num(right)) => {
-                if left < right {
-                    Cmp::Correct
-                } else if left > right {
-                    Cmp::Incorrect
-                } else {
-                    Cmp::Equal
-                }
-            }
+            (&Elem::Num(left), &Elem::Num(right)) => left.cmp(&right),
             // If both are lists, compare the lists.
             (&Elem::Dat(ref left), &Elem::Dat(ref right)) => left.compare(&right),
             // If one is a number and the other one is a list, wrap the number in the list and
@@ -213,5 +181,4 @@ impl FromStr for Elem {
         }
     }
 }
-
 // end::data[]

@@ -1,0 +1,64 @@
+== Day 14: Regolith Reservoir ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+Today's puzzle was rather straightforward.
+Just follow each grain of sand on its way down.
+I tracked positions of sand that settled via a `HashSet` to be able to check
+whether a position has been occupied very easily.
+For the rocks, I went a different route, though.
+Expecting some twist in part 2 that would increase the size of the playing field
+a lot, I did not fill the positions of rocks into an occupation map.
+Instead, I remembered them as one-dimensional ranges and checked whether a point
+was on that range.
+I have no clue whether that provides better performance than using a set.
+
+Today, I learned that the difference between a `cargo run` and a `cargo run
+--release` in terms of runtime can be a factor of 55!
+
+I also wrote a stepwise visualiser.
+To use it, set the env var `RENDER` to `1` and select the part of the puzzle you
+want to run with the env var `RUN`.
+Set the env var `RUN` to 0, 1, 2, or 3 for the sample part 1, the real puzzle
+part 1, the sample part 2, or the real puzzle part 2.
+After printing the final resting place of one grain of sand, you have to hit
+return to resume.
+To get a nicely rendered view, pipe the output of `yes` into the executable.
+Warning: This will tax your CPU quite significantly.
+Only run in release more for `RUN==3`.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute the command
+`cargo run --release` to run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
