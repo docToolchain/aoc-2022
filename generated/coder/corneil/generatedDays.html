@@ -294,6 +294,36 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_13_kotlin">Day 13: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_distress_signal">Distress Signal</a>
+<ul class="sectlevel4">
+<li><a href="#_sample_input">Sample Input</a></li>
+<li><a href="#_model_5">Model</a></li>
+<li><a href="#_parsing_9">Parsing</a></li>
+<li><a href="#_processing_3">Processing</a></li>
+<li><a href="#_part_1_9">Part 1</a></li>
+<li><a href="#_part_2_10">Part 2</a></li>
+<li><a href="#_full_source_11">Full source</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_day_14_kotlin">Day 14: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_regolith_reservoir">Regolith Reservoir</a>
+<ul class="sectlevel4">
+<li><a href="#_sample_input_2">Sample Input</a></li>
+<li><a href="#_model_6">Model</a></li>
+<li><a href="#_parsing_10">Parsing</a></li>
+<li><a href="#_processing_4">Processing</a></li>
+<li><a href="#_part_1_10">Part 1</a></li>
+<li><a href="#_part_2_11">Part 2</a></li>
+<li><a href="#_full_source_12">Full source</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -3086,6 +3116,878 @@ abdefghi"""
     check(result == 332)
   }
   println("Day - 12")
+  part1()
+  part2()
+}</code></pre>
+</div>
+</div>
+<a id="day13" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_13_kotlin"><a class="anchor" href="#_day_13_kotlin"></a><a class="link" href="#_day_13_kotlin">Day 13: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_distress_signal"><a class="anchor" href="#_distress_signal"></a><a class="link" href="#_distress_signal">Distress Signal</a></h4>
+<div class="paragraph">
+<p>Today&#8217;s puzzle required parsing a data structure with nested elements. My brain fell apart initially.</p>
+</div>
+<div class="paragraph">
+<p>I decided to try a List&lt;Object&gt; where the entry can be an Int or List&lt;Object&gt;
+Once this worked I refactored to use an abstract class to represent any packet item, packet value and packet list.</p>
+</div>
+<div class="paragraph">
+<p>Implementing the determination of the order provided some problems until I understood that the packet order is determined once two items aren&#8217;t equal.</p>
+</div>
+<div class="sect4">
+<h5 id="_sample_input"><a class="anchor" href="#_sample_input"></a><a class="link" href="#_sample_input">Sample Input</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-text" data-lang="text">[1,1,3,1,1]
+[1,1,5,1,1]
+
+[[1],[2,3,4]]
+[[1],4]
+
+[9]
+[[8,7,6]]
+
+[[4,4],4,4]
+[[4,4],4,4,4]
+
+[7,7,7,7]
+[7,7,7]
+
+[]
+[3]
+
+[[[]]]
+[[]]
+
+[1,[2,[3,[4,[5,6,7]]]],8,9]
+[1,[2,[3,[4,[5,6,0]]]],8,9]</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_model_5"><a class="anchor" href="#_model_5"></a><a class="link" href="#_model_5">Model</a></h5>
+<div class="paragraph">
+<p>The model for Item, Value and Packet below</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">abstract class Item
+data class Value(val value: Int) : Item() {
+  fun compareTo(right: Value): Int {
+    return value.compareTo(right.value)
+  }
+  override fun toString(): String {
+    return value.toString()
+  }
+}
+
+data class Packet(val items: List&lt;Item&gt;) : Item(), List&lt;Item&gt; by items {
+  constructor(value: Item) : this(listOf(value)) {
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_parsing_9"><a class="anchor" href="#_parsing_9"></a><a class="link" href="#_parsing_9">Parsing</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun parsePacket(input: String): Packet {
+  val value = StringBuilder()
+  var list: MutableList&lt;Item&gt; = mutableListOf()
+
+  fun checkAdd() {
+    if (value.isNotBlank()) {
+      list.add(Value(value.toString().toInt()))
+    }
+    value.clear()
+  }
+  val lists = Stack&lt;List&lt;Item&gt;&gt;()
+  var index = 1 // skip first [
+  while (index &lt; input.lastIndex) {
+    when (val c = input[index]) {
+      ',', ' ' -&gt; checkAdd()
+      '[' -&gt; {
+        lists.push(list)
+        list = mutableListOf()
+      }
+      ']' -&gt; {
+        checkAdd()
+        val v = list
+        list = lists.pop().toMutableList()
+        list.add(Packet(v))
+      }
+      '-' -&gt; value.append('-')
+      '+' -&gt; value.append('+')
+      else -&gt; {
+        if (c.isDigit()) {
+          value.append(c)
+        } else {
+          error("Unexpected $c")
+        }
+      }
+    }
+    index += 1
+  }
+  checkAdd()
+  return Packet(list.toList())
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_processing_3"><a class="anchor" href="#_processing_3"></a><a class="link" href="#_processing_3">Processing</a></h5>
+<div class="paragraph">
+<p>We needed comparison functions for the Packet and one for generic Item.
+The <code>isOrdered</code> function couldn&#8217;t be part of Item because it references Packet and Value.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun Packet.compareTo(right: Packet): Int {
+  var result = 0
+  for (index in indices) {
+    val item = this[index]
+    val rightItem = right.getOrNull(index)
+    result = when {
+      rightItem == null -&gt; 1
+      item is Value &amp;&amp; rightItem is Value -&gt; item.compareTo(rightItem)
+      item is Packet &amp;&amp; rightItem is Value -&gt; item.compareTo(Packet(rightItem))
+      item is Packet &amp;&amp; rightItem is Packet -&gt; item.compareTo(rightItem)
+      item is Value &amp;&amp; rightItem is Packet -&gt; Packet(item).compareTo(rightItem)
+      else -&gt; 1
+    }
+    if (result != 0) {
+      break
+    }
+  }
+  if (result == 0 &amp;&amp; size &lt; right.size) {
+    result = -1
+  }
+  return result
+}
+
+fun Item.isOrdered(right: Item?): Int {
+  return when {
+    right == null -&gt; 1
+    this is Value &amp;&amp; right is Value -&gt; compareTo(right)
+    this is Packet &amp;&amp; right is Packet -&gt; this.compareTo(right)
+    this is Packet &amp;&amp; right is Value -&gt; this.compareTo(Packet(right))
+    this is Value &amp;&amp; right is Packet -&gt; Packet(this).compareTo(right)
+    else -&gt; 1
+  }
+}
+
+fun isIndexOrdered(index: Int, input: List&lt;String&gt;): Boolean {
+  check(input.size == 2)
+  val (left, right) = input.map { parsePacket(it) }
+  var result = 0
+  for (index in left.indices) {
+    val item = left[index]
+    val rightItem = if (index &lt;= right.lastIndex) right[index]
+        else null
+    result = item.isOrdered(rightItem)
+    if (result != 0) {
+      break
+    }
+  }
+  return result &lt;= 0
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_1_9"><a class="anchor" href="#_part_1_9"></a><a class="link" href="#_part_1_9">Part 1</a></h5>
+<div class="paragraph">
+<p>In part 1 we had check every 2 pairs to determine if they are in the right order and then report the sum of the indexes of those pairs.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcSolution1(input: List&lt;List&lt;String&gt;&gt;): Int {
+  return input.mapIndexedNotNull { index, inputs -&gt;
+    if (isIndexOrdered(index, inputs)) index + 1 else null
+  }.sum()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_2_10"><a class="anchor" href="#_part_2_10"></a><a class="link" href="#_part_2_10">Part 2</a></h5>
+<div class="paragraph">
+<p>In part 2 we had to treat all the packets as one list and add 2 more with the values:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-text" data-lang="text">"[[2]]"
+"[[6]]"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then we had to sort the packets using the ordering rules from part 1.
+We need to find the indexes of the 2 additional packets and print the product.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcSolution2(input: List&lt;String&gt;): Int {
+  val extra1 = "[[2]]"
+  val extra2 = "[[6]]"
+  val packets = input.filter { it.isNotBlank() }.toMutableList()
+  packets.add(extra1)
+  packets.add(extra2)
+  val sorted = packets.map { it to parsePacket(it) }
+    .sortedWith { o1, o2 -&gt; o1.second.compareTo(o2.second) }
+    .map { it.first }
+  val index1 = sorted.indexOf(extra1) + 1
+  val index2 = sorted.indexOf(extra2) + 1
+  return index1 * index2
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_full_source_11"><a class="anchor" href="#_full_source_11"></a><a class="link" href="#_full_source_11">Full source</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">package day13
+
+import utils.groupLines
+import utils.readFile
+import utils.readLines
+import utils.separator
+import java.util.*
+
+fun main() {
+  val test = readLines(
+    """[1,1,3,1,1]
+       [1,1,5,1,1]
+
+       [[1],[2,3,4]]
+       [[1],4]
+
+       [9]
+       [[8,7,6]]
+
+       [[4,4],4,4]
+       [[4,4],4,4,4]
+
+       [7,7,7,7]
+       [7,7,7]
+
+       []
+       [3]
+
+       [[[]]]
+       [[]]
+
+       [1,[2,[3,[4,[5,6,7]]]],8,9]
+       [1,[2,[3,[4,[5,6,0]]]],8,9]
+       """.trimIndent()
+  )
+  val input = readFile("day13")
+
+  abstract class Item
+  data class Value(val value: Int) : Item() {
+    fun compareTo(right: Value): Int {
+      return value.compareTo(right.value)
+    }
+
+    override fun toString(): String {
+      return value.toString()
+    }
+  }
+
+  data class Packet(val items: List&lt;Item&gt;) : Item(), List&lt;Item&gt; by items {
+    constructor(value: Item) : this(listOf(value)) {}
+  }
+
+  fun parsePacket(input: String): Packet {
+    val value = StringBuilder()
+    var list: MutableList&lt;Item&gt; = mutableListOf()
+
+    fun checkAdd() {
+      if (value.isNotBlank()) {
+        list.add(Value(value.toString().toInt()))
+      }
+      value.clear()
+    }
+
+    val lists = Stack&lt;List&lt;Item&gt;&gt;()
+    var index = 1 // skip first [
+    while (index &lt; input.lastIndex) {
+      when (val c = input[index]) {
+        ',', ' ' -&gt; checkAdd()
+        '[' -&gt; {
+          lists.push(list)
+          list = mutableListOf()
+        }
+
+        ']' -&gt; {
+          checkAdd()
+          val v = list
+          list = lists.pop().toMutableList()
+          list.add(Packet(v))
+        }
+
+        '-' -&gt; value.append('-')
+        '+' -&gt; value.append('+')
+        else -&gt; {
+          if (c.isDigit()) {
+            value.append(c)
+          } else {
+            error("Unexpected $c")
+          }
+        }
+      }
+      index += 1
+    }
+    checkAdd()
+    return Packet(list.toList())
+  }
+
+
+  fun Packet.compareTo(right: Packet): Int {
+    var result = 0
+    for (index in indices) {
+      val item = this[index]
+      val rightItem = right.getOrNull(index)
+      result = when {
+        rightItem == null -&gt; 1
+        item is Value &amp;&amp; rightItem is Value -&gt; item.compareTo(rightItem)
+        item is Packet &amp;&amp; rightItem is Value -&gt; item.compareTo(Packet(rightItem))
+        item is Packet &amp;&amp; rightItem is Packet -&gt; item.compareTo(rightItem)
+        item is Value &amp;&amp; rightItem is Packet -&gt; Packet(item).compareTo(rightItem)
+        else -&gt; 1
+      }
+      if (result != 0) {
+        break
+      }
+    }
+    if (result == 0 &amp;&amp; size &lt; right.size) {
+      result = -1
+    }
+    return result
+  }
+
+  fun Item.isOrdered(right: Item?): Int {
+    return when {
+      right == null -&gt; 1
+      this is Value &amp;&amp; right is Value -&gt; compareTo(right)
+      this is Packet &amp;&amp; right is Packet -&gt; this.compareTo(right)
+      this is Packet &amp;&amp; right is Value -&gt; this.compareTo(Packet(right))
+      this is Value &amp;&amp; right is Packet -&gt; Packet(this).compareTo(right)
+      else -&gt; 1
+    }
+  }
+
+  fun isIndexOrdered(index: Int, input: List&lt;String&gt;): Boolean {
+    check(input.size == 2)
+    val (left, right) = input.map { parsePacket(it) }
+    var result = 0
+    for (index in left.indices) {
+      val item = left[index]
+      val rightItem = if (index &lt;= right.lastIndex)
+        right[index] else null
+      result = item.isOrdered(rightItem)
+      if (result != 0) {
+        break
+      }
+    }
+    val ordered = result &lt;= 0
+    if (result == 0) {
+      println("Pair $index: was the same")
+    } else if (result &lt; 0) {
+      println("Pair $index: left was lower")
+    }
+    return ordered
+  }
+
+  fun calcSolution1(input: List&lt;List&lt;String&gt;&gt;): Int {
+    return input.mapIndexedNotNull { index, inputs -&gt;
+      if (isIndexOrdered(index, inputs)) index + 1 else null
+    }.sum()
+  }
+
+  fun calcSolution2(input: List&lt;String&gt;): Int {
+    val extra1 = "[[2]]"
+    val extra2 = "[[6]]"
+    val packets = input.filter { it.isNotBlank() }.toMutableList()
+    packets.add(extra1)
+    packets.add(extra2)
+    val sorted = packets.map { it to parsePacket(it) }
+      .sortedWith { o1, o2 -&gt; o1.second.compareTo(o2.second) }
+      .map { it.first }
+    val index1 = sorted.indexOf(extra1) + 1
+    val index2 = sorted.indexOf(extra2) + 1
+    return index1 * index2
+  }
+
+  fun part1() {
+    val testResult = calcSolution1(groupLines(test))
+    println("Part 1 Test Answer = $testResult")
+    check(testResult == 13)
+    separator()
+    val result = calcSolution1(groupLines(input))
+    println("Part 1 Answer = $result")
+    check(result == 4643)
+  }
+
+  fun part2() {
+    val testResult = calcSolution2(test)
+    println("Part 2 Test Answer = $testResult")
+    check(testResult == 140)
+    separator()
+    val result = calcSolution2(input)
+    println("Part 2 Answer = $result")
+    check(result == 21614)
+  }
+  println("Day - 13")
+  part1()
+  separator()
+  part2()
+}</code></pre>
+</div>
+</div>
+<a id="day14" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_14_kotlin"><a class="anchor" href="#_day_14_kotlin"></a><a class="link" href="#_day_14_kotlin">Day 14: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_regolith_reservoir"><a class="anchor" href="#_regolith_reservoir"></a><a class="link" href="#_regolith_reservoir">Regolith Reservoir</a></h4>
+<div class="paragraph">
+<p>Today we had to use the input data to represent a cave system and model sand falling into the cave.</p>
+</div>
+<div class="paragraph">
+<p>In the first part there is a point where the sand falls over the edge and it means all the sand falls down that abyss. So you needed to detect and out of boundary condition.</p>
+</div>
+<div class="sect4">
+<h5 id="_sample_input_2"><a class="anchor" href="#_sample_input_2"></a><a class="link" href="#_sample_input_2">Sample Input</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-text" data-lang="text">498,4 -&gt; 498,6 -&gt; 496,6
+503,4 -&gt; 502,4 -&gt; 502,9 -&gt; 494,9</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_model_6"><a class="anchor" href="#_model_6"></a><a class="link" href="#_model_6">Model</a></h5>
+<div class="paragraph">
+<p>The model of the cave is a grid with a map of coordinates and the substance found their, like rock, sand or air.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">open class Grid(
+val cells: MutableMap&lt;Coord, Substance&gt; = mutableMapOf()
+): MutableMap&lt;Coord, Substance&gt; by cells {
+  open val maxX: Int get() = cells.keys.maxOf { it.x }
+  open val minX: Int get() = cells.keys.minOf { it.x }
+  open val maxY: Int get() = cells.keys.maxOf { it.y }
+  open val minY: Int = 0
+  fun countSand() = cells.values.count { it == Substance.SAND }
+  open fun isInGrid(pos: Coord): Boolean = pos.x in minX..maxX
+        &amp;&amp; pos.y in minY..maxY
+
+  fun getSubStance(pos: Coord) = getOrDefault(pos, Substance.AIR)
+  fun isAir(pos: Coord) = getSubStance(pos) == Substance.AIR
+  fun isTarget(pos: Coord) = isInGrid(pos) &amp;&amp; isAir(pos)
+  fun canDrop(pos: Coord): Pair&lt;Coord, Direction&gt; {
+    if (!isInGrid(pos.left()) || !isInGrid(pos.right())) {
+      return Pair(pos, Direction.ABYSS)
+    }
+    if (isInGrid(pos.bottom())) {
+      if (isTarget(pos.bottom())) {
+        return canDrop(pos.bottom())
+      } else {
+        if (isTarget(pos.bottom().left())) {
+          return canDrop(pos.bottom().left())
+        } else if (isTarget(pos.bottom().right())) {
+          return canDrop(pos.bottom().right())
+        }
+        if (isTarget(pos)) {
+          return Pair(pos, Direction.DOWN)
+        }
+      }
+    }
+    return Pair(pos, Direction.STOP)
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_parsing_10"><a class="anchor" href="#_parsing_10"></a><a class="link" href="#_parsing_10">Parsing</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun loadStructure(lines: List&lt;String&gt;): Grid {
+  val grid = mutableMapOf&lt;Coord, Substance&gt;()
+  lines.map {
+    it.scanInts()
+      .windowed(2, 2)
+      .map { line -&gt; Coord(line[0], line[1]) }
+  }.forEach { scan -&gt;
+    scan.windowed(2)
+      .forEach { pair -&gt;
+        val prev = pair[0]
+        val curr = pair[1]
+        val diff = curr - prev
+        if (diff.y == 0) {
+          for (x in min(curr.x, prev.x)..max(curr.x, prev.x)) {
+            val pos = Coord(x, curr.y)
+            if (!grid.containsKey(pos)) {
+              grid[pos] = Substance.ROCK
+            }
+          }
+        } else {
+          for (y in min(curr.y, prev.y)..max(curr.y, prev.y)) {
+            val pos = Coord(curr.x, y)
+            if (!grid.containsKey(pos)) {
+              grid[pos] = Substance.ROCK
+            }
+          }
+        }
+      }
+  }
+  return Grid(grid)
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_processing_4"><a class="anchor" href="#_processing_4"></a><a class="link" href="#_processing_4">Processing</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun isStop(direction: Direction) = direction == Direction.STOP
+    || direction == Direction.NONE
+    || direction == Direction.ABYSS
+fun dropSand(grid: Grid, entry: Coord): Pair&lt;Coord, Boolean&gt; {
+  val drop = grid.canDrop(entry)
+  if (drop.second == Direction.ABYSS) {
+    return Pair(drop.first, false)
+  }
+  return Pair(drop.first, !isStop(drop.second))
+}
+
+fun simulateSand(grid: Grid, start: Coord, print: Boolean): Int {
+  do {
+    val result = dropSand(grid, start)
+    if (result.second) {
+      grid[result.first] = Substance.SAND
+    }
+  } while (result.second)
+  return grid.countSand()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_1_10"><a class="anchor" href="#_part_1_10"></a><a class="link" href="#_part_1_10">Part 1</a></h5>
+<div class="paragraph">
+<p>Part 1 involved simulating the sand while determining the boundary.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">fun calcSand(input: List&lt;String&gt;, print: Boolean): Int {
+  val grid = loadStructure(input)
+  val entry = Coord(500, 0)
+  simulateSand(grid, entry, print)
+  return grid.countSand()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_part_2_11"><a class="anchor" href="#_part_2_11"></a><a class="link" href="#_part_2_11">Part 2</a></h5>
+<div class="paragraph">
+<p>Part 2 provided for an infinite floor and I overloaded the grid to provide for a different boundary condition and the floor.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">class InfiniteGird(
+cells: MutableMap&lt;Coord, Substance&gt;,
+val level: Int
+) : Grid(cells) {
+  override val maxY: Int get() = level
+  override fun get(key: Coord): Substance? {
+    if (key.y == level) {
+      return Substance.ROCK
+    }
+    return super.get(key)
+  }
+  override fun getOrDefault(key: Coord, defaultValue: Substance): Substance {
+    if (key.y == level) {
+      return Substance.ROCK
+    }
+    return super.getOrDefault(key, defaultValue)
+  }
+  override fun isInGrid(pos: Coord): Boolean = pos.y &lt;= level
+}
+
+fun calcInfiniteSand(input: List&lt;String&gt;, print: Boolean): Int {
+  val grid = loadStructure(input)
+  val entry = Coord(500, 0)
+  val infiniteGrid = InfiniteGird(grid.toMutableMap(), grid.maxY + 2)
+  if (print) {
+    grid.print(entry)
+  }
+  infiniteGrid.stretch()
+  val sand = simulateSand(infiniteGrid, entry, print)
+  if (print) {
+    infiniteGrid.print(null)
+  }
+  return sand
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_full_source_12"><a class="anchor" href="#_full_source_12"></a><a class="link" href="#_full_source_12">Full source</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-kotlin" data-lang="kotlin">package day14
+
+import main.utils.measureAndPrint
+import main.utils.scanInts
+import utils.Coord
+import utils.readFile
+import utils.readLines
+import utils.separator
+import kotlin.math.max
+import kotlin.math.min
+
+enum class Substance(val c: Char) {
+  AIR('.'),
+  ROCK('#'),
+  SAND('o')
+}
+
+enum class Direction {
+  STOP,
+  NONE,
+  DOWN,
+  LEFT,
+  RIGHT,
+  ABYSS
+}
+
+object Depth {
+  private val depth = ThreadLocal.withInitial { 0 }
+  var maxDepth = 0
+  fun enter() {
+    depth.set(depth.get() + 1)
+    maxDepth = max(maxDepth, depth.get())
+  }
+
+  fun exit() {
+    depth.set(depth.get() - 1)
+  }
+}
+
+fun main() {
+
+  val test = readLines(
+    """498,4 -&gt; 498,6 -&gt; 496,6
+503,4 -&gt; 502,4 -&gt; 502,9 -&gt; 494,9"""
+  )
+  val input = readFile("day14")
+
+  open class Grid(val cells: MutableMap&lt;Coord, Substance&gt; = mutableMapOf()) : MutableMap&lt;Coord, Substance&gt; by cells {
+    open val maxX: Int get() = cells.keys.maxOf { it.x }
+    open val minX: Int get() = cells.keys.minOf { it.x }
+    open val maxY: Int get() = cells.keys.maxOf { it.y }
+    open val minY: Int = 0
+    open fun stretch() {}
+    fun countSand() = cells.values.count { it == Substance.SAND }
+    open fun isInGrid(pos: Coord): Boolean = pos.x in minX..maxX
+        &amp;&amp; pos.y in minY..maxY
+
+    fun getSubStance(pos: Coord) = getOrDefault(pos, Substance.AIR)
+    fun isAir(pos: Coord) = getSubStance(pos) == Substance.AIR
+    fun isTarget(pos: Coord) = isInGrid(pos) &amp;&amp; isAir(pos)
+    fun canDrop(pos: Coord): Pair&lt;Coord, Direction&gt; {
+      Depth.enter()
+      try {
+        if (!isInGrid(pos.left()) || !isInGrid(pos.right())) {
+          return Pair(pos, Direction.ABYSS)
+        }
+        if (isInGrid(pos.bottom())) {
+          if (isTarget(pos.bottom())) {
+            return canDrop(pos.bottom())
+          } else {
+            if (isTarget(pos.bottom().left())) {
+              return canDrop(pos.bottom().left())
+            } else if (isTarget(pos.bottom().right())) {
+              return canDrop(pos.bottom().right())
+            }
+            if (isTarget(pos)) {
+              return Pair(pos, Direction.DOWN)
+            }
+          }
+        }
+        return Pair(pos, Direction.STOP)
+      } finally {
+        Depth.exit()
+      }
+    }
+
+    fun print(entry: Coord?) {
+      val zX = maxX
+      val aX = minX
+      val zY = maxY
+      val aY = minY
+      for (y in aY..zY) {
+        for (x in aX..zX) {
+          val pos = Coord(x, y)
+          if (entry != null &amp;&amp; pos == entry) {
+            print('+')
+          } else {
+            print(getOrDefault(pos, Substance.AIR).c)
+          }
+        }
+        println()
+      }
+    }
+  }
+
+  class InfiniteGird(cells: MutableMap&lt;Coord, Substance&gt;, val level: Int) : Grid(cells) {
+    override val maxY: Int get() = level
+    override fun get(key: Coord): Substance? {
+      if (key.y == level) {
+        return Substance.ROCK
+      }
+      return super.get(key)
+    }
+
+    override fun getOrDefault(key: Coord, defaultValue: Substance): Substance {
+      if (key.y == level) {
+        return Substance.ROCK
+      }
+      return super.getOrDefault(key, defaultValue)
+    }
+
+    override fun isInGrid(pos: Coord): Boolean = pos.y &lt;= level
+    override fun stretch() {
+      val zX = (cells.keys.filter { it.y &lt; level }.maxOfOrNull { it.x } ?: maxX) + 1
+      val aX = (cells.keys.filter { it.y &lt; level }.minOfOrNull { it.x } ?: minX) - 1
+      for (x in aX..zX) {
+        val pos = Coord(x, level)
+        if (!containsKey(pos)) {
+          cells[pos] = Substance.ROCK
+        }
+      }
+    }
+  }
+
+  fun loadStructure(lines: List&lt;String&gt;): Grid {
+    val grid = mutableMapOf&lt;Coord, Substance&gt;()
+    val scans = lines.map {
+      it.scanInts()
+        .windowed(2, 2)
+        .map { line -&gt; Coord(line[0], line[1]) }
+    }
+    scans.forEach { scan -&gt;
+      scan.windowed(2)
+        .forEach { pair -&gt;
+          check(pair.size == 2)
+          val prev = pair[0]
+          val curr = pair[1]
+          val diff = curr - prev
+          check((diff.x == 0 &amp;&amp; diff.y != 0) || (diff.x != 0 &amp;&amp; diff.y == 0)) { "Expected one 0 in $diff" }
+          if (diff.y == 0) {
+            for (x in min(curr.x, prev.x)..max(curr.x, prev.x)) {
+              val pos = Coord(x, curr.y)
+              if (!grid.containsKey(pos)) {
+                grid[pos] = Substance.ROCK
+              }
+            }
+          } else {
+            for (y in min(curr.y, prev.y)..max(curr.y, prev.y)) {
+              val pos = Coord(curr.x, y)
+              if (!grid.containsKey(pos)) {
+                grid[pos] = Substance.ROCK
+              }
+            }
+          }
+        }
+    }
+    return Grid(grid)
+  }
+
+  fun isStop(direction: Direction) = direction == Direction.STOP
+      || direction == Direction.NONE
+      || direction == Direction.ABYSS
+
+  fun dropSand(grid: Grid, entry: Coord): Pair&lt;Coord, Boolean&gt; {
+    val drop = grid.canDrop(entry)
+    if (drop.second == Direction.ABYSS) {
+      return Pair(drop.first, false)
+    }
+    return Pair(drop.first, !isStop(drop.second))
+  }
+
+  fun simulateSand(grid: Grid, start: Coord, print: Boolean): Int {
+    do {
+      val result = dropSand(grid, start)
+      if (result.second) {
+        grid[result.first] = Substance.SAND
+      }
+    } while (result.second)
+    return grid.countSand()
+  }
+
+  fun calcSand(input: List&lt;String&gt;, print: Boolean): Int {
+    val grid = loadStructure(input)
+    val entry = Coord(500, 0)
+    if(print) {
+      grid.print(entry)
+    }
+    simulateSand(grid, entry, print)
+    if(print) {
+      grid.print(entry)
+    }
+    return grid.countSand()
+  }
+
+  fun calcInfiniteSand(input: List&lt;String&gt;, print: Boolean): Int {
+    val grid = loadStructure(input)
+    val entry = Coord(500, 0)
+    val infiniteGrid = InfiniteGird(grid.toMutableMap(), grid.maxY + 2)
+    if (print) {
+      grid.print(entry)
+    }
+    infiniteGrid.stretch()
+    val sand = simulateSand(infiniteGrid, entry, print)
+    if (print) {
+      infiniteGrid.print(null)
+    }
+    return sand
+  }
+
+  fun part1() {
+    val testResult = calcSand(test, false)
+    println("Part 1 Test Answer = $testResult")
+    check(testResult == 24) { "Expected 24 not $testResult" }
+    val result = measureAndPrint("Test 1 Time: ") {
+      calcSand(input, false)
+    }
+    println("Part 1 Answer = $result")
+  }
+
+  fun part2() {
+    val testResult = calcInfiniteSand(test, false)
+    println("Part 2 Test Answer = $testResult")
+    check(testResult == 93) { "Expected 93 not $testResult" }
+    val result = measureAndPrint("Test 2 Time: ") {
+      calcInfiniteSand(input, false)
+    }
+    println("Part 2 Answer = $result")
+    check(result == 22499) { "Expected 22499 not $result" }
+  }
+  println("Day - 14")
   part1()
   part2()
 }</code></pre>
