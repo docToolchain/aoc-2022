@@ -2,7 +2,7 @@
 
 https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/13[AoC|2022|13].
 
-If the input looks like a tree structure, parse it into a tree structure!
+My initial solution was based on "If the input looks like a tree structure, parse it into a tree structure!"
 
 === Input ===
 
@@ -44,4 +44,13 @@ include::src/lib.rs[tags=star_2]
 [source,rust,numbered]
 ----
 include::src/lib.rs[tags=tests]
+----
+
+=== Alternative without using heap ===
+
+Later on, I thought it should be possible to implement a solution that does not require any heap allocations by directly iterating on the input data. I added this in a variant of my solution in `mod iter`. You can run this variant using `cargo run --release --features no-heap`. Interestingly it is not really performing any better than the original solution. The advantage for the second part is probably mainly caused by avoiding to sort.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=no-heap]
 ----
