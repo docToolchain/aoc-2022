@@ -1,0 +1,28 @@
+== Day 13
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+The main idea is to implement a comparison function for the lists. This
+function returns `-1`, `0` or `1` if the first list is smaller, equal,
+or larger as the second one. This only became obvious after reading the
+second part. Luckily a small refactoring of the solution for part one was
+enough to create the comparison function.
+
+Using the comparison function the second part could be solved by simply
+using `sorted` together with the comparison function.
+
+
+=== What did I learn
+
+I learned about `functools.cmp_to_key` today.
+=== How to run
+
+Run using:
+`$ python day_13.py --help`

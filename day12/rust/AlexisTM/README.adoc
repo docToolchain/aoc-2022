@@ -1,0 +1,15 @@
+== Day 12 ==
+
+It is sadly incomplete ;)
+
+`Solution 1`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=solution_part1]
+----
+
+`Solution 2`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=solution_part2]
+----

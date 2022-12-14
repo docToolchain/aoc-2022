@@ -1,0 +1,56 @@
+== Day 13: Distress Signal ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/13[AoC|2022|13].
+
+My initial solution was based on "If the input looks like a tree structure, parse it into a tree structure!"
+
+=== Input ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Solution ===
+
+The whole work for the solution is in the recursive `Node` enum modeling the trees represented by the puzzle input with its implementation. Namely recursive parsing in the `parse` function and comparison in the `Ord` trait implementation.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=node]
+----
+
+
+=== Star 1 ===
+
+Do the pairwise comparisons.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Find the position of the divider packets after sorting.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Alternative without using heap ===
+
+Later on, I thought it should be possible to implement a solution that does not require any heap allocations by directly iterating on the input data. I added this in a variant of my solution in `mod iter`. You can run this variant using `cargo run --release --features no-heap`. Interestingly it is not really performing any better than the original solution. The advantage for the second part is probably mainly caused by avoiding to sort.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=no-heap]
+----

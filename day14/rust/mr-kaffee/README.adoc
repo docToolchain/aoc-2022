@@ -1,0 +1,41 @@
+== Day 14: Regolith Reservoir ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/14[AoC|2022|14].
+
+I was remembered of https://adventofcode.com/2018/day/17[AoC|2018|17] even without the hint in the puzzle.
+
+I don't think my solution is very elegant, but at the moment, I do not have an idea how to create a nice one ...
+
+=== Input ===
+
+I parse the input in a vec of paths, where each path is vec of points. The structure `PuzzleData` has methods to compute the bounding box for all points (`bbox`) and build a 2D grid using the paths specified (`grid`).
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+Just let the sand flow in the grid until sand starts flowing off to the big void.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Create a grid with an additional line added at the bottom and big enough to make sure nothing flows off to the void anymore. The only thing on top to do is to change the condition for exiting the loop.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
