@@ -41,6 +41,13 @@ impl Point {
         }
     }
 
+    pub fn up(&self) -> Self {
+        Self {
+            x: self.x,
+            y: self.y - 1,
+        }
+    }
+
     pub fn down(&self) -> Self {
         Self {
             x: self.x,
