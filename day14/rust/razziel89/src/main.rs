@@ -29,26 +29,34 @@ fn is_blocked(
     }
 }
 
-fn render(rocks: &Vec<data::Rocks>, sands: &HashSet<data::Point>) -> String {
+fn render(
+    rocks: &Vec<data::Rocks>,
+    sands: &HashSet<data::Point>,
+    fov: (isize, isize, isize, isize),
+) -> String {
+    let dist = 10;
     let mut image = String::new();
     let empty = HashSet::<data::Point>::new();
+    let min_y = if fov.1 - 4 <= -2 { fov.1 - 2 } else { -2 };
 
-    for y in -3..13 {
-        for x in 487..514 {
+    println!("{:?}", fov);
+
+    for y in min_y..fov.3 + 4 {
+        for x in fov.0 - dist..fov.2 + dist {
             let p = data::Point { x, y };
             // This point is a rock.
             let char = if p == SOURCE {
                 'S'
-            } else if p.y == 11 {
+            } else if p.y == fov.3 + 2 {
                 '#'
             } else if is_blocked(&p, rocks, &empty, None) {
                 '#'
             // This point is sand.
             } else if is_blocked(&p, rocks, sands, None) {
-                'o'
+                '.'
             // This point is free.
             } else {
-                '.'
+                ' '
             };
             image.push(char);
         }
@@ -58,7 +66,7 @@ fn render(rocks: &Vec<data::Rocks>, sands: &HashSet<data::Point>) -> String {
 }
 
 fn solve(file: &str, part1: bool) -> Result<()> {
-    eprintln!("PROCESSING {}", file);
+    println!("PROCESSING {}", file);
 
     // Read file and convert into data.
     let rocks = io::parse_chunks_to_data::<data::Rocks>(
@@ -68,13 +76,36 @@ fn solve(file: &str, part1: bool) -> Result<()> {
         None,
     )?;
 
+    // Coordinates for rendering.
+    let min_x_rocks = rocks
+        .iter()
+        .map(|el| el.edges.iter())
+        .flatten()
+        .map(|el| el.x)
+        .min()
+        .ok_or(Error::msg("cannot find xmin"))?;
+    let min_y_rocks = rocks
+        .iter()
+        .map(|el| el.edges.iter())
+        .flatten()
+        .map(|el| el.y)
+        .min()
+        .ok_or(Error::msg("cannot find ymin"))?;
+    let max_x_rocks = rocks
+        .iter()
+        .map(|el| el.edges.iter())
+        .flatten()
+        .map(|el| el.x)
+        .max()
+        .ok_or(Error::msg("cannot find xmax"))?;
     let max_y_rocks = rocks
         .iter()
         .map(|el| el.edges.iter())
         .flatten()
         .map(|el| el.y)
         .max()
-        .ok_or(Error::msg("cannot find highest point"))?;
+        .ok_or(Error::msg("cannot find ymax"))?;
+    let render_coords = (min_x_rocks, min_y_rocks, max_x_rocks, max_y_rocks);
     let mut highest_y = SOURCE.y;
 
     let max_y = if part1 { max_y_rocks } else { max_y_rocks + 2 };
@@ -83,11 +114,15 @@ fn solve(file: &str, part1: bool) -> Result<()> {
 
     let blocked_y = if part1 { None } else { Some(max_y) };
 
+    let do_render = std::env::var("RENDER").unwrap_or("0".to_string()) == "1";
+
     // If this condition is no longer fulfilled, a piece of sand has exceeded our world and will
     // fall to infinity.
     loop {
         // Spawn new sand.
-        // println!("{}", render(&rocks, &sands));
+        if do_render {
+            println!("{}", render(&rocks, &sands, render_coords));
+        }
         let mut sand = SOURCE;
         let mut has_settled = false;
         while !has_settled && sand.y <= max_y {
@@ -147,11 +182,11 @@ fn solve(file: &str, part1: bool) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    solve(SAMPLE1, true)?;
+    // solve(SAMPLE1, true)?;
     solve(REAL, true)?;
 
-    solve(SAMPLE1, false)?;
-    solve(REAL, false)?;
+    // solve(SAMPLE1, false)?;
+    // solve(REAL, false)?;
 
     Ok(())
 }
