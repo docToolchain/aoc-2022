@@ -287,6 +287,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_14_rust">Day 14: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_14_regolith_reservoir">Day 14: Regolith Reservoir</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_12">Oveview</a></li>
+<li><a href="#_solution_13">Solution</a></li>
+<li><a href="#_how_to_run_14">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -3604,21 +3615,16 @@ fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
     );
 
     // Sort using the comparison method created for part 1.
-    all_pkgs.sort_by(|(_marker1, pkg1), (_marker2, pkg2)| pkg1.compare(pkg2).as_ordering());
+    all_pkgs.sort_by(|(_marker1, pkg1), (_marker2, pkg2)| pkg1.compare(pkg2));
 
-    let (key_idx1, _) = all_pkgs
+    let decoder_key = all_pkgs
         .iter()
         .enumerate()
-        .find(|(_idx, (marker, _pkg))| *marker)
-        .ok_or(Error::msg("cannot find first marker"))?;
+        .filter(|(_idx, (marker, _pkg))| *marker)
+        .map(|(idx, (_marker, _pkg))| idx + 1)
+        .product::&lt;usize&gt;();
 
-    let (key_idx2, _) = all_pkgs
-        .iter()
-        .enumerate()
-        .find(|(idx, (marker, _pkg))| *marker &amp;&amp; *idx != key_idx1)
-        .ok_or(Error::msg("cannot find second marker"))?;
-
-    println!("decoder key is {}", (key_idx1 + 1) * (key_idx2 + 1));
+    println!("decoder key is {}", decoder_key);
 
     Ok(())
 }
@@ -3655,66 +3661,34 @@ pub enum Elem {
     Dat(Box&lt;Pkg&gt;),
 }
 
-#[derive(PartialEq)]
-pub enum Cmp {
-    Equal,
-    Correct,
-    Incorrect,
-}
-
-impl Cmp {
-    pub fn as_ordering(&amp;self) -&gt; Ordering {
-        match self {
-            Cmp::Equal =&gt; Ordering::Equal,
-            Cmp::Correct =&gt; Ordering::Less,
-            Cmp::Incorrect =&gt; Ordering::Greater,
-        }
-    }
-}
-
 impl Input {
     pub fn is_ordered_correctly(&amp;self) -&gt; bool {
-        self.left.compare(&amp;self.right) == Cmp::Correct
+        self.left.compare(&amp;self.right) == Ordering::Less
     }
 }
 
 impl Pkg {
     // This is run on the left value with the right value as argument.
-    pub fn compare(&amp;self, other: &amp;Self) -&gt; Cmp {
+    pub fn compare(&amp;self, other: &amp;Self) -&gt; Ordering {
         // The zip operator will end the iteration as soon as one of the two iterators runs out.
         for (left, right) in self.0.iter().zip(other.0.iter()) {
             match left.compare(&amp;right) {
-                Cmp::Equal =&gt; {}
-                Cmp::Correct =&gt; return Cmp::Correct,
-                Cmp::Incorrect =&gt; return Cmp::Incorrect,
+                Ordering::Equal =&gt; {}
+                ord @ Ordering::Less | ord @ Ordering::Greater =&gt; return ord,
             }
         }
 
         // If we reach here, all value comparisons turned out equal so far. Thus, perform the
         // length comparison.
-        if self.0.len() &lt; other.0.len() {
-            Cmp::Correct
-        } else if self.0.len() &gt; other.0.len() {
-            Cmp::Incorrect
-        } else {
-            Cmp::Equal
-        }
+        self.0.len().cmp(&amp;other.0.len())
     }
 }
 
 impl Elem {
-    fn compare(&amp;self, other: &amp;Self) -&gt; Cmp {
+    fn compare(&amp;self, other: &amp;Self) -&gt; Ordering {
         match (self, other) {
             // If both are numbers, compare the numbers.
-            (&amp;Elem::Num(left), &amp;Elem::Num(right)) =&gt; {
-                if left &lt; right {
-                    Cmp::Correct
-                } else if left &gt; right {
-                    Cmp::Incorrect
-                } else {
-                    Cmp::Equal
-                }
-            }
+            (&amp;Elem::Num(left), &amp;Elem::Num(right)) =&gt; left.cmp(&amp;right),
             // If both are lists, compare the lists.
             (&amp;Elem::Dat(ref left), &amp;Elem::Dat(ref right)) =&gt; left.compare(&amp;right),
             // If one is a number and the other one is a list, wrap the number in the list and
@@ -3862,6 +3836,406 @@ impl FromStr for Elem {
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
 run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day14" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_14_rust"><a class="anchor" href="#_day_14_rust"></a><a class="link" href="#_day_14_rust">Day 14: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_14_regolith_reservoir"><a class="anchor" href="#_day_14_regolith_reservoir"></a><a class="link" href="#_day_14_regolith_reservoir">Day 14: Regolith Reservoir</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_12"><a class="anchor" href="#_oveview_12"></a><a class="link" href="#_oveview_12">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_13"><a class="anchor" href="#_solution_13"></a><a class="link" href="#_solution_13">Solution</a></h5>
+<div class="paragraph">
+<p>Today&#8217;s puzzle was rather straightforward.
+Just follow each grain of sand on its way down.
+I tracked positions of sand that settled via a <code>HashSet</code> to be able to check
+whether a position has been occupied very easily.
+For the rocks, I went a different route, though.
+Expecting some twist in part 2 that would increase the size of the playing field
+a lot, I did not fill the positions of rocks into an occupation map.
+Instead, I remembered them as one-dimensional ranges and checked whether a point
+was on that range.
+I have no clue whether that provides better performance than using a set.</p>
+</div>
+<div class="paragraph">
+<p>Today, I learned that the difference between a <code>cargo run</code> and a <code>cargo run
+--release</code> in terms of runtime can be a factor of 55!</p>
+</div>
+<div class="paragraph">
+<p>I also wrote a stepwise visualiser.
+To use it, set the env var <code>RENDER</code> to <code>1</code> and select the part of the puzzle you
+want to run with the env var <code>RUN</code>.
+Set the env var <code>RUN</code> to 0, 1, 2, or 3 for the sample part 1, the real puzzle
+part 1, the sample part 2, or the real puzzle part 2.
+After printing the final resting place of one grain of sand, you have to hit
+return to resume.
+To get a nicely rendered view, pipe the output of <code>yes</code> into the executable.
+Warning: This will tax your CPU quite significantly.
+Only run in release more for <code>RUN==3</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::HashSet;
+// Constants.
+const SOURCE: data::Point = data::Point { x: 500, y: 0 };
+
+fn is_blocked(
+    p: &amp;data::Point,
+    rocks: &amp;Vec&lt;data::Rocks&gt;,
+    sands: &amp;HashSet&lt;data::Point&gt;,
+    max_y: Option&lt;isize&gt;,
+) -&gt; bool {
+    if let Some(_) = sands.get(p) {
+        true
+    } else if let Some(bottom) = max_y &amp;&amp; p.y &gt;= bottom {
+        true
+    } else {
+        rocks.iter().any(|el| el.contains(*p))
+    }
+}
+
+fn render(
+    rocks: &amp;Vec&lt;data::Rocks&gt;,
+    sands: &amp;HashSet&lt;data::Point&gt;,
+    fov: (isize, isize, isize, isize),
+) -&gt; String {
+    let dist = 10;
+    let mut image = String::new();
+    let empty = HashSet::&lt;data::Point&gt;::new();
+    let min_y = if fov.1 - 4 &lt;= -2 { fov.1 - 2 } else { -2 };
+
+    for y in min_y..fov.3 + 4 {
+        for x in fov.0 - dist..fov.2 + dist {
+            let p = data::Point { x, y };
+            // This point is a rock.
+            let char = if p == SOURCE {
+                'S'
+            } else if p.y == fov.3 + 2 {
+                '#'
+            } else if is_blocked(&amp;p, rocks, &amp;empty, None) {
+                '#'
+            // This point is sand.
+            } else if is_blocked(&amp;p, rocks, sands, None) {
+                '.'
+            // This point is free.
+            } else {
+                ' '
+            };
+            image.push(char);
+        }
+        image.push('\n');
+    }
+    image
+}
+
+fn is_env(var: &amp;str, val: &amp;str, def: &amp;str) -&gt; bool {
+    std::env::var(var).unwrap_or(def.to_string()) == val
+}
+
+fn solve(file: &amp;str, part1: bool) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let rocks = io::parse_chunks_to_data::&lt;data::Rocks&gt;(
+        io::read_lines_from_file(file, 1)?,
+        "rocks",
+        None,
+        None,
+    )?;
+
+    // Coordinates for rendering. This is just lazy copy-pasting.
+    let min_x_rocks = rocks
+        .iter()
+        .map(|el| el.edges.iter())
+        .flatten()
+        .map(|el| el.x)
+        .min()
+        .ok_or(Error::msg("cannot find xmin"))?;
+    let min_y_rocks = rocks
+        .iter()
+        .map(|el| el.edges.iter())
+        .flatten()
+        .map(|el| el.y)
+        .min()
+        .ok_or(Error::msg("cannot find ymin"))?;
+    let max_x_rocks = rocks
+        .iter()
+        .map(|el| el.edges.iter())
+        .flatten()
+        .map(|el| el.x)
+        .max()
+        .ok_or(Error::msg("cannot find xmax"))?;
+    let max_y_rocks = rocks
+        .iter()
+        .map(|el| el.edges.iter())
+        .flatten()
+        .map(|el| el.y)
+        .max()
+        .ok_or(Error::msg("cannot find ymax"))?;
+    let render_coords = (min_x_rocks, min_y_rocks, max_x_rocks, max_y_rocks);
+    let mut highest_y = SOURCE.y;
+
+    let max_y = if part1 { max_y_rocks } else { max_y_rocks + 2 };
+
+    let mut sands = HashSet::&lt;data::Point&gt;::new();
+
+    let blocked_y = if part1 { None } else { Some(max_y) };
+
+    let do_render = is_env("RENDER", "1", "0");
+
+    // If this condition is no longer fulfilled, a piece of sand has exceeded our world and will
+    // fall to infinity.
+    loop {
+        // Spawn new sand.
+        if do_render {
+            // Clear screen and print view.
+            println!("\x1bc{}", render(&amp;rocks, &amp;sands, render_coords));
+            // Only continue after the user confirmed.
+            std::io::stdin().lines().next();
+        }
+        let mut sand = SOURCE;
+        let mut has_settled = false;
+        while !has_settled &amp;&amp; sand.y &lt;= max_y {
+            // Find the highest point that contains either sand or is a rock.
+            let mut next = sand.down();
+            while !is_blocked(&amp;next, &amp;rocks, &amp;sands, blocked_y) &amp;&amp; sand.y &lt;= max_y {
+                sand = next;
+                next = sand.down()
+            }
+            // If we reach here, that piece of sand has hit an occupied tile on its way down.
+            // We don't check again whether we exceeded our world because that will be checked the
+            // nxt time we reach the top of the while loop.
+            //
+            // Check down to the left first.
+            next = sand.left_down();
+            if !is_blocked(&amp;next, &amp;rocks, &amp;sands, blocked_y) {
+                sand = next;
+                continue;
+            }
+            // Check down to the right next.
+            next = sand.right_down();
+            if !is_blocked(&amp;next, &amp;rocks, &amp;sands, blocked_y) {
+                sand = next;
+                continue;
+            }
+            has_settled = true;
+            sands.insert(sand);
+        }
+        if sand.y &gt; highest_y {
+            highest_y = sand.y;
+        }
+        if part1 {
+            if highest_y &gt;= max_y {
+                break;
+            }
+        } else {
+            // Break if the source has been blocked.
+            if let Some(_) = sands.get(&amp;SOURCE) {
+                break;
+            }
+        }
+    }
+
+    let mut sorted = Vec::&lt;data::Point&gt;::from_iter(sands.into_iter());
+    sorted.sort_by(|el1, el2| {
+        let x_cmp = el1.x.cmp(&amp;el2.x);
+        if x_cmp == std::cmp::Ordering::Equal {
+            el1.y.cmp(&amp;el2.y)
+        } else {
+            x_cmp
+        }
+    });
+
+    println!("amount of sand is {:?}", sorted.len());
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    // Run all by default or if a specific one was chosen. Useful for rendering just one.
+    if is_env("RUN", "0", "0") {
+        solve(SAMPLE1, true)?;
+    }
+    if is_env("RUN", "1", "1") {
+        solve(REAL, true)?;
+    }
+
+    if is_env("RUN", "2", "2") {
+        solve(SAMPLE1, false)?;
+    }
+    if is_env("RUN", "3", "3") {
+        solve(REAL, false)?;
+    }
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::hash::Hash;
+use std::str::FromStr;
+
+#[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
+pub struct Point {
+    pub x: isize,
+    pub y: isize,
+}
+
+#[derive(Debug)]
+pub struct Rocks {
+    pub edges: Vec&lt;Point&gt;,
+}
+
+impl Point {
+    fn dist(&amp;self, other: &amp;Self) -&gt; Self {
+        Self {
+            x: other.x - self.x,
+            y: other.y - self.y,
+        }
+    }
+
+    fn contains(&amp;self, other: &amp;Self) -&gt; bool {
+        if other.x == 0 &amp;&amp; other.y == 0 {
+            true
+        } else if self.x != 0 {
+            other.y == 0
+                &amp;&amp; self.x.clamp(-1, 1) == other.x.clamp(-1, 1)
+                &amp;&amp; self.x.abs() &gt;= other.x.abs()
+        } else {
+            other.x == 0
+                &amp;&amp; self.y.clamp(-1, 1) == other.y.clamp(-1, 1)
+                &amp;&amp; self.y.abs() &gt;= other.y.abs()
+        }
+    }
+
+    pub fn down(&amp;self) -&gt; Self {
+        Self {
+            x: self.x,
+            y: self.y + 1,
+        }
+    }
+
+    pub fn left_down(&amp;self) -&gt; Self {
+        Self {
+            x: self.x - 1,
+            y: self.y + 1,
+        }
+    }
+
+    pub fn right_down(&amp;self) -&gt; Self {
+        Self {
+            x: self.x + 1,
+            y: self.y + 1,
+        }
+    }
+}
+
+impl Rocks {
+    pub fn contains(&amp;self, p: Point) -&gt; bool {
+        for (left, right) in self.edges.iter().zip(self.edges.iter().skip(1)) {
+            let edge_diff = right.dist(left);
+            let point_diff = p.dist(left);
+            if edge_diff.contains(&amp;point_diff) {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+impl FromStr for Point {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s.split(",").collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+            [x, y] =&gt; Ok(Self {
+                x: x.parse()?,
+                y: y.parse()?,
+            }),
+            _ =&gt; Err(Error::msg("cannot parse point")),
+        }
+    }
+}
+
+impl FromStr for Rocks {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        let maybe_edges = s
+            .split(" -&gt; ")
+            .map(|el| el.parse::&lt;Point&gt;())
+            .collect::&lt;Vec&lt;_&gt;&gt;();
+
+        let mut has_err = false;
+        for edge in &amp;maybe_edges {
+            if let Err(err) = edge {
+                eprintln!("{:?}", err);
+                has_err = true;
+            }
+        }
+
+        if has_err {
+            Err(Error::msg("cannot parse as edges"))
+        } else {
+            let edges = maybe_edges
+                .into_iter()
+                .map(|el| el.unwrap())
+                .collect::&lt;Vec&lt;_&gt;&gt;();
+
+            // Check whether edges go diagonally.
+            for (left, right) in edges.iter().zip(edges.iter().skip(1)) {
+                let edge_diff = right.dist(left);
+                if edge_diff.x != 0 &amp;&amp; edge_diff.y != 0 {
+                    return Err(Error::msg("found an edge that isn't straight"));
+                }
+            }
+
+            Ok(Self { edges })
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_14"><a class="anchor" href="#_how_to_run_14"></a><a class="link" href="#_how_to_run_14">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute the command
+<code>cargo run --release</code> to run the solution.
 The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
 </div>
 </div>
