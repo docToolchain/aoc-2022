@@ -1,0 +1,33 @@
+
+Day 15 of year 2022
+https://adventofcode.com/2022/day/15
+
+== What I learned
+
+. If you do it brute force, it's actually kind of straightforward.
+
+== Approach
+
+. I go through each line of the input, fish out the 4 numbers and put them into a list of lists.
+
+**Star 1** +
+
+. I create a dictionary with the positions of the beacons and sensors. I add up the sensors on the horizontal line already since they can't also be beacons.
+
+. I go through each sensor and count up the positions on the specified horizontal line that can't contain beacons. I also put them into a dictionary to make sure I don't count them twice.
+
+**Star 2** +
+
+. I create a new dictionary with the sensor coordinates as the keys and the distance to the beacon as the value.
+
+. Then I go around the outer perimeter of the diamond defined by the distance from each sensor. Essentially 1 space further than the last spot that can't have a beacon. I then check for each spot on the perimeter whether it is within the distance to any sensor; if so, it can't contain a beacon. If it is not in the distance of any sensor, that's the spot we are looking for.
+
+. My code is not super efficient (at least I don't think so). But, it got to the answer in a couple of minutes on my 5 year old low-end business laptop.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
