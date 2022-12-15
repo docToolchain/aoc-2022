@@ -298,6 +298,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_15_rust">Day 15: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_15_beacon_exclusion_zone">Day 15: Beacon Exclusion Zone</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_13">Oveview</a></li>
+<li><a href="#_solution_14">Solution</a></li>
+<li><a href="#_how_to_run_15">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -4232,6 +4243,229 @@ impl FromStr for Rocks {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_14"><a class="anchor" href="#_how_to_run_14"></a><a class="link" href="#_how_to_run_14">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute the command
+<code>cargo run --release</code> to run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day15" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_15_rust"><a class="anchor" href="#_day_15_rust"></a><a class="link" href="#_day_15_rust">Day 15: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_15_beacon_exclusion_zone"><a class="anchor" href="#_day_15_beacon_exclusion_zone"></a><a class="link" href="#_day_15_beacon_exclusion_zone">Day 15: Beacon Exclusion Zone</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_13"><a class="anchor" href="#_oveview_13"></a><a class="link" href="#_oveview_13">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_14"><a class="anchor" href="#_solution_14"></a><a class="link" href="#_solution_14">Solution</a></h5>
+<div class="paragraph">
+<p>Literally no time today.
+Part 1 was easy enough, I simply gave each exclusion zone a function that
+provided all points within it at a certain y-coordinate, fed all of them into a
+set, and then checked how many elements it had.
+Not very pretty but worked well enough.</p>
+</div>
+<div class="paragraph">
+<p>Part 2 was more complicated, but I had no time, so I brute forced it.
+Assuming that the actual solution won&#8217;t be anywhere it can be found easily, i.e.
+close to any of the edges in x or y direction, or even the centre, I split the
+x-coordinates in 4 separate parts.
+Then, I wrote a script that launches 4 separate instances of the code, each
+starting 25% displaced from the previous one in x direction with 100% being the
+4 million mark.
+The third process got luckly at 78.0025% after my computer heated up my flat for
+several hours.</p>
+</div>
+<div class="paragraph">
+<p>WARNING, expect a very long runtime.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::HashSet;
+// Constants.
+const MULT: isize = 1_000_000;
+
+fn env(var: &amp;str, def: &amp;str) -&gt; String {
+    std::env::var(var).unwrap_or(def.to_string())
+}
+
+fn solve(file: &amp;str, y: isize, max: isize) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {} WITH Y {}", file, y);
+
+    // Read file and convert into data.
+    let exclusion_zones = io::parse_chunks_to_data::&lt;data::Diamond&gt;(
+        io::read_lines_from_file(file, 1)?,
+        "diamonds",
+        None,
+        None,
+    )?;
+
+    let beacons = exclusion_zones
+        .iter()
+        .map(|el| (el.bx, el.by))
+        .collect::&lt;HashSet&lt;_&gt;&gt;();
+    let sensors = exclusion_zones
+        .iter()
+        .map(|el| (el.x, el.y))
+        .collect::&lt;HashSet&lt;_&gt;&gt;();
+    let objects = &amp;beacons | &amp;sensors;
+    println!("{:?}", objects);
+
+    // Part 1.
+    let count = exclusion_zones
+        .iter()
+        .map(|el| el.xs_at_y(&amp;y))
+        .flatten()
+        // This is a lazy filter to detect clashes with existing objects but I didn't want to put
+        // too much effort into part 1.
+        .filter(|el| !objects.contains(&amp;(*el, y)))
+        .collect::&lt;HashSet&lt;_&gt;&gt;()
+        .len();
+
+    println!("{:?} {}", exclusion_zones, count);
+
+    // Part 2. This is a brute force solution.
+    // Default to including everything.
+    let min_x = env("MIN", "-1").parse::&lt;isize&gt;()? * MULT;
+    let max_x = env("MAX", "5").parse::&lt;isize&gt;()? * MULT;
+
+    for x in 0..max + 1 {
+        if x &lt; min_x || x &gt; max_x {
+            continue;
+        }
+        for y in 0..max + 1 {
+            if !exclusion_zones.iter().any(|el| el.contains(&amp;x, &amp;y)) {
+                // We found it!
+                println!("distress beacon found at {} {}", x, y);
+                return Ok(());
+            }
+        }
+        if x % 100 == 0 {
+            println!("{}%", x as f64 / max as f64 * 100.0);
+        }
+    }
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1, 10, 20)?;
+    solve(REAL, 2_000_000, 4_000_000)?;
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::hash::Hash;
+use std::str::FromStr;
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub struct Diamond {
+    pub x: isize,
+    pub y: isize,
+    pub bx: isize,
+    pub by: isize,
+    pub dist: isize,
+}
+
+impl FromStr for Diamond {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+            ["Sensor", "at", sensor_x, sensor_y, "closest", "beacon", "is", "at", beacon_x, beacon_y] =&gt;
+            {
+                if !sensor_x.starts_with("x=") || !sensor_y.starts_with("y=") {
+                    return Err(Error::msg("malformed sensor coordinates"));
+                }
+                if !beacon_x.starts_with("x=") || !beacon_y.starts_with("y=") {
+                    return Err(Error::msg("malformed beacon coordinates"));
+                }
+                let conv = |val: &amp;str| {
+                    val.trim_start_matches("x=")
+                        .trim_start_matches("y=")
+                        .trim_end_matches(",")
+                        .trim_end_matches(":")
+                        .parse::&lt;isize&gt;()
+                };
+                let x = conv(sensor_x)?;
+                let y = conv(sensor_y)?;
+                let bx = conv(beacon_x)?;
+                let by = conv(beacon_y)?;
+                let dist = (bx - x).abs() + (by - y).abs();
+                if dist &gt; 0 {
+                    Ok(Self { x, y, bx, by, dist })
+                } else {
+                    Err(Error::msg("negative distance encountered"))
+                }
+            }
+            _ =&gt; Err(Error::msg("cannot parse point")),
+        }
+    }
+}
+
+impl Diamond {
+    pub fn xs_at_y(&amp;self, y: &amp;isize) -&gt; std::ops::Range&lt;isize&gt; {
+        let dist = (y - self.y).abs();
+        let remaining = self.dist - dist;
+        if dist &lt;= self.dist {
+            self.x - remaining..self.x + remaining + 1
+        } else {
+            0..0
+        }
+    }
+
+    // This has turned out to be more efficient than always computing the full manhattan ditance.
+    pub fn contains(&amp;self, x: &amp;isize, y: &amp;isize) -&gt; bool {
+        let dx = (x - self.x).abs();
+        if dx &gt; self.dist {
+            false
+        } else {
+            let dy = (y - self.y).abs();
+            if dy &gt; self.dist {
+                false
+            } else {
+                dx + dy &lt;= self.dist
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_15"><a class="anchor" href="#_how_to_run_15"></a><a class="link" href="#_how_to_run_15">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute the command
