@@ -45,6 +45,8 @@ Otherwise, we check whether x_min of the next range in line is greater than the
 current x_max.
 If so, we've found the empty spot.
 If not, we increase our currently known x_max to the x_max of that range.
+Once the known x_max reached 4,000,000, we know that this line doesn't contain
+the beacon.
 Rinse repeat for every y until the distress beacon has been found.
 
 `main.rs`
