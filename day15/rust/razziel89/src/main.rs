@@ -12,13 +12,55 @@ mod io;
 use anyhow::{Error, Result};
 use std::collections::HashSet;
 // Constants.
-const MULT: isize = 1_000_000;
 
-fn env(var: &str, def: &str) -> String {
-    std::env::var(var).unwrap_or(def.to_string())
+fn find_missing_x(
+    diamonds: &Vec<data::Diamond>,
+    outer_min: isize,
+    outer_max: isize,
+    y: isize,
+) -> Option<(isize, isize)> {
+    // Extract all ranges at the given y-coordinate first.
+    let mut ranges = diamonds
+        .iter()
+        .map(|el| el.xrange_at_y(&y).clamp(outer_min, outer_max))
+        .filter(|el| el != &data::NULL_RANGE)
+        .collect::<Vec<_>>();
+
+    // Then, we sort by left coordinate first and by right coordinate second. That makes finding
+    // the missing x spot trivial.
+    ranges.sort_by(|range1, range2| {
+        let left_cmp = range1.left.cmp(&range2.left);
+        if left_cmp == std::cmp::Ordering::Equal {
+            range1.right.cmp(&range2.right)
+        } else {
+            left_cmp
+        }
+    });
+
+    let mut max = ranges[0].right;
+    if ranges[0].left != outer_min {
+        // Wouldn't that be nice.
+        Some((outer_min, y))
+    } else {
+        for range in ranges[1..].into_iter() {
+            // We can never find a left coordinate that is smaller than what we already have.
+            if range.left > max {
+                // Yeah, found it!
+                return Some((max, y));
+            } else if range.right > max {
+                max = range.right;
+            } else if range.right <= max {
+                // Don't do anything here.
+            } else {
+                unreachable!("there are no more conditions");
+            }
+        }
+
+        None
+    }
 }
 
-fn solve(file: &str, y: isize, max: isize) -> Result<()> {
+fn solve(file: &str, y: isize, (min, max): (isize, isize)) -> Result<()> {
     println!("PROCESSING {} WITH Y {}", file, y);
 
     // Read file and convert into data.
@@ -28,6 +70,7 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
         None,
         None,
     )?;
+    println!("number of diamons is {}", exclusion_zones.len());
 
     let beacons = exclusion_zones
         .iter()
@@ -38,7 +81,6 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
         .map(|el| (el.x, el.y))
         .collect::<HashSet<_>>();
     let objects = &beacons | &sensors;
-    println!("{:?}", objects);
 
     // Part 1.
     let count = exclusion_zones
@@ -51,35 +93,23 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
         .collect::<HashSet<_>>()
         .len();
 
-    println!("{:?} {}", exclusion_zones, count);
+    println!("number of points along {} is {}", y, count);
 
-    // Part 2. This is a brute force solution.
-    // Default to including everything.
-    let min_x = env("MIN", "-1").parse::<isize>()? * MULT;
-    let max_x = env("MAX", "5").parse::<isize>()? * MULT;
+    // Part 2.
+    // There is guaranteed to be exactly one point.
+    let missing = (min..max + 1).find_map(|y| find_missing_x(&exclusion_zones, min, max + 1, y));
 
-    for x in 0..max + 1 {
-        if x < min_x || x > max_x {
-            continue;
-        }
-        for y in 0..max + 1 {
-            if !exclusion_zones.iter().any(|el| el.contains(&x, &y)) {
-                // We found it!
-                println!("distress beacon found at {} {}", x, y);
-                return Ok(());
-            }
-        }
-        if x % 100 == 0 {
-            println!("{}%", x as f64 / max as f64 * 100.0);
-        }
+    if let Some((x, y)) = missing {
+        println!("tuning frequency is {}", x * max + y);
+        Ok(())
+    } else {
+        Err(Error::msg("there is no distress beacon"))
     }
-
-    Ok(())
 }
 
 fn main() -> Result<()> {
-    solve(SAMPLE1, 10, 20)?;
-    solve(REAL, 2_000_000, 4_000_000)?;
+    solve(SAMPLE1, 10, (0, 20))?;
+    solve(REAL, 2_000_000, (0, 4_000_000))?;
     Ok(())
 }
 // end::main[]
