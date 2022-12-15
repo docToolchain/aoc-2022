@@ -1,0 +1,43 @@
+== Day 15: Beacon Exclusion Zone ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/15[AoC|2022|15].
+
+This one was a challenge for me. Part one is solved with brute force (maybe something to re-think another day).
+
+For part 2, brute force was not a real option.
+
+=== Input ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+Brute force ...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+The idea is that the position of the distress beacon must be just outside the range of at least two sensors. Hence, for all pairs of sensors, I find the points that are just outside of both sensor's ranges as candidates. Out of these candidates, I search for a point that is also outside of all the other sensor's ranges. 
+
+Well ... it works. But coming up with the formulas for the points was a pain and very error prone for me. I am sure there is something more elegant and simple.
+
+There is also a flaw in the candidates function. Normally, it should be symmetric, i.e., `candidates(s1, s2) == candidates(s2, s1)`; it is not in all cases. I guess this is rounding issues ... It seems the function returns rather too many candidates than too few, which would not be an issue.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
