@@ -4278,25 +4278,40 @@ parsing and output processing.</p>
 <div class="sect4">
 <h5 id="_solution_14"><a class="anchor" href="#_solution_14"></a><a class="link" href="#_solution_14">Solution</a></h5>
 <div class="paragraph">
-<p>Literally no time today.
-Part 1 was easy enough, I simply gave each exclusion zone a function that
+<p>Part 1 was easy enough, I simply gave each exclusion zone a function that
 provided all points within it at a certain y-coordinate, fed all of them into a
 set, and then checked how many elements it had.
 Not very pretty but worked well enough.</p>
 </div>
 <div class="paragraph">
-<p>Part 2 was more complicated, but I had no time, so I brute forced it.
-Assuming that the actual solution won&#8217;t be anywhere it can be found easily, i.e.
-close to any of the edges in x or y direction, or even the centre, I split the
-x-coordinates in 4 separate parts.
-Then, I wrote a script that launches 4 separate instances of the code, each
-starting 25% displaced from the previous one in x direction with 100% being the
-4 million mark.
-The third process got luckly at 78.0025% after my computer heated up my flat for
-several hours.</p>
+<p>At first, I brute-forced part 2 and got lucky.
+However, that solution wasn&#8217;t satisfying and then I found some more time to look
+into this today.
+Yeah!</p>
 </div>
 <div class="paragraph">
-<p>WARNING, expect a very long runtime.</p>
+<p>The final solution to part 2 turned out to be one that I never expected to
+perform well but that did, as it turns out.
+What I do is I basically perform a line scan along the x axis for all y
+coordinates.
+For each y, I extract all non-empty overlaps between exclusion zones and the
+scanning line and discarded those that were outside the playing field.
+Then, I merged those overlaps.</p>
+</div>
+<div class="paragraph">
+<p>To make merging overlaps, which are ranges, very easy, I sorted all of then
+first by their x_min coordinate and, if those are equal, by their x_max
+coordinate.
+I never thought that sorting them would be efficient enough, but it is.
+Once they have been sorted, merging them is easy.
+If x_min of the first entry is not 0, we&#8217;ve found the coordinates.
+Otherwise, we check whether x_min of the next range in line is greater than the
+current x_max.
+If so, we&#8217;ve found the empty spot.
+If not, we increase our currently known x_max to the x_max of that range.
+Once the known x_max reached 4,000,000, we know that this line doesn&#8217;t contain
+the beacon.
+Rinse repeat for every y until the distress beacon has been found.</p>
 </div>
 <div class="paragraph">
 <p><code>main.rs</code></p>
@@ -4306,13 +4321,55 @@ several hours.</p>
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
 use std::collections::HashSet;
 // Constants.
-const MULT: isize = 1_000_000;
 
-fn env(var: &amp;str, def: &amp;str) -&gt; String {
-    std::env::var(var).unwrap_or(def.to_string())
+fn find_missing_x(
+    diamonds: &amp;Vec&lt;data::Diamond&gt;,
+    outer_min: isize,
+    outer_max: isize,
+    y: isize,
+) -&gt; Option&lt;(isize, isize)&gt; {
+    // Extract all ranges at the given y-coordinate first.
+    let mut ranges = diamonds
+        .iter()
+        .map(|el| el.xrange_at_y(&amp;y).clamp(outer_min, outer_max))
+        .filter(|el| el != &amp;data::NULL_RANGE)
+        .collect::&lt;Vec&lt;_&gt;&gt;();
+
+    // Then, we sort by left coordinate first and by right coordinate second. That makes finding
+    // the missing x spot trivial.
+    ranges.sort_by(|range1, range2| {
+        let left_cmp = range1.left.cmp(&amp;range2.left);
+        if left_cmp == std::cmp::Ordering::Equal {
+            range1.right.cmp(&amp;range2.right)
+        } else {
+            left_cmp
+        }
+    });
+
+    let mut max = ranges[0].right;
+    if ranges[0].left != outer_min {
+        // Wouldn't that be nice.
+        Some((outer_min, y))
+    } else {
+        for range in ranges[1..].into_iter() {
+            // We can never find a left coordinate that is smaller than what we already have.
+            if range.left &gt; max {
+                // Yeah, found it!
+                return Some((max, y));
+            } else if range.right &gt; max {
+                max = range.right;
+            } else if range.right &lt;= max {
+                // Don't do anything here.
+            } else {
+                unreachable!("there are no more conditions");
+            }
+        }
+
+        None
+    }
 }
 
-fn solve(file: &amp;str, y: isize, max: isize) -&gt; Result&lt;()&gt; {
+fn solve(file: &amp;str, y: isize, (min, max): (isize, isize)) -&gt; Result&lt;()&gt; {
     println!("PROCESSING {} WITH Y {}", file, y);
 
     // Read file and convert into data.
@@ -4322,6 +4379,7 @@ fn solve(file: &amp;str, y: isize, max: isize) -&gt; Result&lt;()&gt; {
         None,
         None,
     )?;
+    println!("number of diamons is {}", exclusion_zones.len());
 
     let beacons = exclusion_zones
         .iter()
@@ -4332,7 +4390,6 @@ fn solve(file: &amp;str, y: isize, max: isize) -&gt; Result&lt;()&gt; {
         .map(|el| (el.x, el.y))
         .collect::&lt;HashSet&lt;_&gt;&gt;();
     let objects = &amp;beacons | &amp;sensors;
-    println!("{:?}", objects);
 
     // Part 1.
     let count = exclusion_zones
@@ -4345,35 +4402,23 @@ fn solve(file: &amp;str, y: isize, max: isize) -&gt; Result&lt;()&gt; {
         .collect::&lt;HashSet&lt;_&gt;&gt;()
         .len();
 
-    println!("{:?} {}", exclusion_zones, count);
+    println!("number of points along {} is {}", y, count);
 
-    // Part 2. This is a brute force solution.
-    // Default to including everything.
-    let min_x = env("MIN", "-1").parse::&lt;isize&gt;()? * MULT;
-    let max_x = env("MAX", "5").parse::&lt;isize&gt;()? * MULT;
+    // Part 2.
+    // There is guaranteed to be exactly one point.
+    let missing = (min..max + 1).find_map(|y| find_missing_x(&amp;exclusion_zones, min, max + 1, y));
 
-    for x in 0..max + 1 {
-        if x &lt; min_x || x &gt; max_x {
-            continue;
-        }
-        for y in 0..max + 1 {
-            if !exclusion_zones.iter().any(|el| el.contains(&amp;x, &amp;y)) {
-                // We found it!
-                println!("distress beacon found at {} {}", x, y);
-                return Ok(());
-            }
-        }
-        if x % 100 == 0 {
-            println!("{}%", x as f64 / max as f64 * 100.0);
-        }
+    if let Some((x, y)) = missing {
+        println!("tuning frequency is {}", x * max + y);
+        Ok(())
+    } else {
+        Err(Error::msg("there is no distress beacon"))
     }
-
-    Ok(())
 }
 
 fn main() -&gt; Result&lt;()&gt; {
-    solve(SAMPLE1, 10, 20)?;
-    solve(REAL, 2_000_000, 4_000_000)?;
+    solve(SAMPLE1, 10, (0, 20))?;
+    solve(REAL, 2_000_000, (0, 4_000_000))?;
     Ok(())
 }</code></pre>
 </div>
@@ -4384,7 +4429,6 @@ fn main() -&gt; Result&lt;()&gt; {
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
-use std::hash::Hash;
 use std::str::FromStr;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -4395,6 +4439,27 @@ pub struct Diamond {
     pub by: isize,
     pub dist: isize,
 }
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct Range {
+    pub left: isize,
+    pub right: isize,
+}
+
+impl Range {
+    pub fn clamp(&amp;self, min: isize, max: isize) -&gt; Range {
+        if self.right &lt;= min || self.left &gt;= max {
+            NULL_RANGE
+        } else {
+            Range {
+                left: self.left.clamp(min, max),
+                right: self.right.clamp(min, max),
+            }
+        }
+    }
+}
+
+pub const NULL_RANGE: Range = Range { left: 0, right: 0 };
 
 impl FromStr for Diamond {
     type Err = Error;
@@ -4435,26 +4500,24 @@ impl FromStr for Diamond {
 impl Diamond {
     pub fn xs_at_y(&amp;self, y: &amp;isize) -&gt; std::ops::Range&lt;isize&gt; {
         let dist = (y - self.y).abs();
-        let remaining = self.dist - dist;
         if dist &lt;= self.dist {
+            let remaining = self.dist - dist;
             self.x - remaining..self.x + remaining + 1
         } else {
             0..0
         }
     }
 
-    // This has turned out to be more efficient than always computing the full manhattan ditance.
-    pub fn contains(&amp;self, x: &amp;isize, y: &amp;isize) -&gt; bool {
-        let dx = (x - self.x).abs();
-        if dx &gt; self.dist {
-            false
-        } else {
-            let dy = (y - self.y).abs();
-            if dy &gt; self.dist {
-                false
-            } else {
-                dx + dy &lt;= self.dist
+    pub fn xrange_at_y(&amp;self, y: &amp;isize) -&gt; Range {
+        let dist = (y - self.y).abs();
+        if dist &lt;= self.dist {
+            let remaining = self.dist - dist;
+            Range {
+                left: self.x - remaining,
+                right: self.x + remaining + 1,
             }
+        } else {
+            NULL_RANGE
         }
     }
 }</code></pre>
