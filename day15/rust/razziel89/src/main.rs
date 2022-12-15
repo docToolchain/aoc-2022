@@ -10,56 +10,43 @@ mod io;
 
 // tag::main[]
 use anyhow::{Error, Result};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 // Constants.
 
-fn gather_unique_zones(input: &Vec<data::Diamond>) -> Vec<data::Diamond> {
-    // Find those diamonds that are fully enclosed in another one.
-    let overlaps = (0..input.len())
-        .map(|small_idx| {
-            (0..input.len()).filter_map(move |big_idx| {
-                if big_idx != small_idx && input[big_idx].encompasses(&input[small_idx]) {
-                    Some((small_idx, big_idx))
-                } else {
-                    None
-                }
-            })
-        })
-        .flatten()
-        .collect::<HashMap<_, _>>();
-
-    // Keep those that aren't contained in any other diamond, which means their indics don't
-    // appear on any left side.
-    let mut zones = input
+fn find_missing_x(
+    diamonds: &Vec<data::Diamond>,
+    outer_min: isize,
+    outer_max: isize,
+    y: isize,
+) -> Option<(isize, isize)> {
+    // Extract all ranges at the given y-coordinate first.
+    let mut ranges = diamonds
         .iter()
-        .enumerate()
-        .filter_map(|(idx, el)| {
-            if !overlaps.iter().any(|el| el.0 == &idx) {
-                Some(el.clone())
-            } else {
-                None
-            }
-        })
+        .map(|el| el.xrange_at_y(&y).clamp(outer_min, outer_max))
+        .filter(|el| el != &data::NULL_RANGE)
         .collect::<Vec<_>>();
 
-    zones.sort_by(|el1, el2| el1.size().cmp(&el2.size()));
+    // Then, we sort by left coordinate first and by right coordinate second. That makes finding
+    // the missing x spot trivial.
+    ranges.sort_by(|range1, range2| {
+        let left_cmp = range1.left.cmp(&range2.left);
+        if left_cmp == std::cmp::Ordering::Equal {
+            range1.right.cmp(&range2.right)
+        } else {
+            left_cmp
+        }
+    });
 
-    zones
-}
-
-// This function assumes that the ranges it gets are sorted by their left coordinates first and by
-// their right coordinates second.
-fn find_missing_x(ranges: &Vec<data::Range>, outer_min: isize, outer_max: isize) -> Option<isize> {
     let mut max = ranges[0].right;
     if ranges[0].left != outer_min {
         // Wouldn't that be nice.
-        Some(outer_min)
+        Some((outer_min, y))
     } else {
         for range in ranges[1..].into_iter() {
             // We can never find a left coordinate that is smaller than what we already have.
             if range.left > max {
                 // Yeah, found it!
-                return Some(max);
+                return Some((max, y));
             } else if range.right > max {
                 max = range.right;
             } else if range.right <= max {
@@ -73,7 +60,7 @@ fn find_missing_x(ranges: &Vec<data::Range>, outer_min: isize, outer_max: isize)
     }
 }
 
-fn solve(file: &str, y: isize, max: isize) -> Result<()> {
+fn solve(file: &str, y: isize, (min, max): (isize, isize)) -> Result<()> {
     println!("PROCESSING {} WITH Y {}", file, y);
 
     // Read file and convert into data.
@@ -84,14 +71,6 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
         None,
     )?;
     println!("number of diamons is {}", exclusion_zones.len());
-
-    // Remove all diamonds that are completely enclosed in at least one other diamond.
-    // let unique_zones = gather_unique_zones(&exclusion_zones);
-    // println!("number of unique diamonds is {}", unique_zones.len());
-    let unique_zones = exclusion_zones
-        .iter()
-        .map(|el| el.clone())
-        .collect::<Vec<_>>();
 
     let beacons = exclusion_zones
         .iter()
@@ -104,7 +83,7 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
     let objects = &beacons | &sensors;
 
     // Part 1.
-    let count = unique_zones
+    let count = exclusion_zones
         .iter()
         .map(|el| el.xs_at_y(&y))
         .flatten()
@@ -117,31 +96,10 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
     println!("number of points along {} is {}", y, count);
 
     // Part 2.
-    // Nothing yet.
-    let mut found_y: Option<isize> = None;
-    let mut found_x: Option<isize> = None;
-    for y in 0..max + 1 {
-        let mut ranges = unique_zones
-            .iter()
-            .map(|el| el.xrange_at_y(&y).clamp(0, max + 1))
-            .filter(|el| el != &data::NULL_RANGE)
-            .collect::<Vec<_>>();
-        // We sort by left coordinate first and by right coordinate second.
-        ranges.sort_by(|range1, range2| {
-            let left_cmp = range1.left.cmp(&range2.left);
-            if left_cmp == std::cmp::Ordering::Equal {
-                range1.right.cmp(&range2.right)
-            } else {
-                left_cmp
-            }
-        });
-        if let Some(x) = find_missing_x(&ranges, 0, max + 1) {
-            found_y = Some(y);
-            found_x = Some(x);
-            break;
-        }
-    }
-    if let (Some(x), Some(y)) = (found_x, found_y) {
+    // There is guaranteed to be exactly one point.
+    let missing = (min..max + 1).find_map(|y| find_missing_x(&exclusion_zones, min, max + 1, y));
+
+    if let Some((x, y)) = missing {
         println!("tuning frequency is {}", x * max + y);
         Ok(())
     } else {
@@ -150,8 +108,8 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    solve(SAMPLE1, 10, 20)?;
-    solve(REAL, 2_000_000, 4_000_000)?;
+    solve(SAMPLE1, 10, (0, 20))?;
+    solve(REAL, 2_000_000, (0, 4_000_000))?;
     Ok(())
 }
 // end::main[]

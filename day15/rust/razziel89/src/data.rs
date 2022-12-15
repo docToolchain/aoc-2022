@@ -1,6 +1,5 @@
 // tag::data[]
 use anyhow::{Error, Result};
-use std::hash::Hash;
 use std::str::FromStr;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -32,12 +31,6 @@ impl Range {
 }
 
 pub const NULL_RANGE: Range = Range { left: 0, right: 0 };
-
-impl Range {
-    pub fn len(&self) -> usize {
-        (self.right - self.left) as usize
-    }
-}
 
 impl FromStr for Diamond {
     type Err = Error;
@@ -97,32 +90,6 @@ impl Diamond {
         } else {
             NULL_RANGE
         }
-    }
-
-    // This has turned out to be more efficient than always computing the full manhattan ditance.
-    pub fn contains(&self, x: &isize, y: &isize) -> bool {
-        let dx = (x - self.x).abs();
-        if dx > self.dist {
-            false
-        } else {
-            let dy = (y - self.y).abs();
-            if dy > self.dist {
-                false
-            } else {
-                dx + dy <= self.dist
-            }
-        }
-    }
-
-    pub fn size(&self) -> usize {
-        (2 * self.dist * self.dist) as usize
-    }
-
-    // Returns true if this diamond completely encloses another one.
-    pub fn encompasses(&self, other: &Self) -> bool {
-        // If the other zone's beacon and centre are in this zone, then this zone fully contains
-        // the other zone.
-        self.contains(&other.x, &other.y) && self.contains(&other.bx, &other.by)
     }
 }
 // end::data[]
