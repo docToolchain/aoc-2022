@@ -73,5 +73,12 @@ impl Diamond {
             }
         }
     }
+
+    // Returns true if this diamond completely encloses another one.
+    pub fn encompasses(&self, other: &Self) -> bool {
+        // If the other zone's beacon and centre are in this zone, then this zone fully contains
+        // the other zone.
+        self.contains(&other.x, &other.y) && self.contains(&other.bx, &other.by)
+    }
 }
 // end::data[]

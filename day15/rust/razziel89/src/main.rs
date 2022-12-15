@@ -10,12 +10,39 @@ mod io;
 
 // tag::main[]
 use anyhow::{Error, Result};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 // Constants.
 const MULT: isize = 1_000_000;
 
-fn env(var: &str, def: &str) -> String {
-    std::env::var(var).unwrap_or(def.to_string())
+fn gather_unique_zones(input: &Vec<data::Diamond>) -> Vec<data::Diamond> {
+    // Find those diamonds that are fully enclosed in another one.
+    let overlaps = (0..input.len())
+        .map(|small_idx| {
+            (0..input.len()).filter_map(move |big_idx| {
+                if big_idx != small_idx && input[big_idx].encompasses(&input[small_idx]) {
+                    Some((small_idx, big_idx))
+                } else {
+                    None
+                }
+            })
+        })
+        .flatten()
+        .collect::<HashMap<_, _>>();
+    eprintln!("overlaps {:?} #{}", overlaps, overlaps.len());
+
+    // Keep those that aren't contained in any other diamond, which means their indics don't
+    // appear on any left side.
+    input
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, el)| {
+            if !overlaps.iter().any(|el| el.0 == &idx) {
+                Some(el.clone())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>()
 }
 
 fn solve(file: &str, y: isize, max: isize) -> Result<()> {
@@ -28,6 +55,11 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
         None,
         None,
     )?;
+    println!("number of diamons is {}", exclusion_zones.len());
+
+    // Copy the diamonds.
+    let fewer_zones = gather_unique_zones(&exclusion_zones);
+    println!("number of unique diamonds is {}", fewer_zones.len());
 
     let beacons = exclusion_zones
         .iter()
@@ -38,7 +70,6 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
         .map(|el| (el.x, el.y))
         .collect::<HashSet<_>>();
     let objects = &beacons | &sensors;
-    println!("{:?}", objects);
 
     // Part 1.
     let count = exclusion_zones
@@ -51,28 +82,10 @@ fn solve(file: &str, y: isize, max: isize) -> Result<()> {
         .collect::<HashSet<_>>()
         .len();
 
-    println!("{:?} {}", exclusion_zones, count);
+    println!("number of points along {} is {}", y, count);
 
-    // Part 2. This is a brute force solution.
-    // Default to including everything.
-    let min_x = env("MIN", "-1").parse::<isize>()? * MULT;
-    let max_x = env("MAX", "5").parse::<isize>()? * MULT;
-
-    for x in 0..max + 1 {
-        if x < min_x || x > max_x {
-            continue;
-        }
-        for y in 0..max + 1 {
-            if !exclusion_zones.iter().any(|el| el.contains(&x, &y)) {
-                // We found it!
-                println!("distress beacon found at {} {}", x, y);
-                return Ok(());
-            }
-        }
-        if x % 100 == 0 {
-            println!("{}%", x as f64 / max as f64 * 100.0);
-        }
-    }
+    // Part 2.
+    // Nothing yet.
 
     Ok(())
 }
