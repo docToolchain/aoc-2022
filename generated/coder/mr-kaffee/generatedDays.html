@@ -332,6 +332,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_15_rust">Day 15: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_15_beacon_exclusion_zone">Day 15: Beacon Exclusion Zone</a>
+<ul class="sectlevel4">
+<li><a href="#_input_15">Input</a></li>
+<li><a href="#_star_1_13">Star 1</a></li>
+<li><a href="#_star_2_13">Star 2</a></li>
+<li><a href="#_tests_16">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -3808,6 +3820,382 @@ mod tests {
     pub fn test_star_2() {
         let data = PuzzleData::from(CONTENT);
         assert_eq!(93, star_2(&amp;data));
+    }
+}</code></pre>
+</div>
+</div>
+<a id="day15" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_15_rust"><a class="anchor" href="#_day_15_rust"></a><a class="link" href="#_day_15_rust">Day 15: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_15_beacon_exclusion_zone"><a class="anchor" href="#_day_15_beacon_exclusion_zone"></a><a class="link" href="#_day_15_beacon_exclusion_zone">Day 15: Beacon Exclusion Zone</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/15">AoC|2022|15</a>.</p>
+</div>
+<div class="paragraph">
+<p>This one was a challenge for me. Part one is solved with brute force (maybe something to re-think another day).</p>
+</div>
+<div class="paragraph">
+<p>For part 2, brute force was not a real option.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_15"><a class="anchor" href="#_input_15"></a><a class="link" href="#_input_15">Input</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        sensors: Vec&lt;((isize, isize), (isize, isize))&gt;,
+        pub row: isize,
+        pub width: isize,
+    }
+
+    fn parse_line(l: &amp;str) -&gt; ((isize, isize), (isize, isize)) {
+        let words = l.split_ascii_whitespace();
+        let mut words = words.skip(2); // Sensor at
+
+        let x_s = words.next().unwrap();
+        let x_s = x_s.strip_prefix("x=").unwrap().strip_suffix(",").unwrap();
+        let x_s = x_s.parse().unwrap();
+
+        let y_s = words.next().unwrap();
+        let y_s = y_s.strip_prefix("y=").unwrap().strip_suffix(":").unwrap();
+        let y_s = y_s.parse().unwrap();
+
+        let mut words = words.skip(4); // closest beacon is at
+
+        let x_b = words.next().unwrap();
+        let x_b = x_b.strip_prefix("x=").unwrap().strip_suffix(",").unwrap();
+        let x_b = x_b.parse().unwrap();
+
+        let y_b = words.next().unwrap();
+        let y_b = y_b.strip_prefix("y=").unwrap();
+        let y_b = y_b.parse().unwrap();
+
+        ((x_s, y_s), (x_b, y_b))
+    }
+
+    impl From&lt;&amp;str&gt; for PuzzleData {
+        /// parse the puzzle input
+        fn from(s: &amp;str) -&gt; Self {
+            Self {
+                sensors: s.lines().map(parse_line).collect(),
+                row: 2_000_000,
+                width: 4_000_000,
+            }
+        }
+    }
+
+    impl PuzzleData {
+        pub fn sensors(&amp;self) -&gt; &amp;[((isize, isize), (isize, isize))] {
+            &amp;self.sensors
+        }
+
+        pub fn sensors_with_r(&amp;self) -&gt; Vec&lt;((isize, isize), isize)&gt; {
+            self.sensors
+                .iter()
+                .map(|((x, y), (x_b, y_b))| ((*x, *y), (x - x_b).abs() + (y - y_b).abs()))
+                .collect()
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_13"><a class="anchor" href="#_star_1_13"></a><a class="link" href="#_star_1_13">Star 1</a></h5>
+<div class="paragraph">
+<p>Brute force &#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    let mut no_beacons = HashSet::new();
+    let mut beacons_on_line = HashSet::new();
+
+    for ((x_s, y_s), (x_b, y_b)) in data.sensors() {
+        if *y_b == data.row {
+            beacons_on_line.insert(*x_b);
+        }
+
+        let d = (x_s - x_b).abs() + (y_s - y_b).abs();
+        let d_y = (y_s - data.row).abs();
+
+        let dlt = d - d_y;
+
+        for x in x_s - dlt..=x_s + dlt {
+            no_beacons.insert(x);
+        }
+    }
+
+    no_beacons.difference(&amp;beacons_on_line).count()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_13"><a class="anchor" href="#_star_2_13"></a><a class="link" href="#_star_2_13">Star 2</a></h5>
+<div class="paragraph">
+<p>The idea is that the position of the distress beacon must be just outside the range of at least two sensors. Hence, for all pairs of sensors, I find the points that are just outside of both sensor&#8217;s ranges as candidates. Out of these candidates, I search for a point that is also outside of all the other sensor&#8217;s ranges.</p>
+</div>
+<div class="paragraph">
+<p>Well &#8230;&#8203; it works. But coming up with the formulas for the points was a pain and very error prone for me. I am sure there is something more elegant and simple.</p>
+</div>
+<div class="paragraph">
+<p>There is also a flaw in the candidates function. Normally, it should be symmetric, i.e., <code>candidates(s1, s2) == candidates(s2, s1)</code>; it is not in all cases. I guess this is rounding issues &#8230;&#8203; It seems the function returns rather too many candidates than too few, which would not be an issue.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn is_distress_beacon(
+    sensors: &amp;[((isize, isize), isize)],
+    p: &amp;(isize, isize),
+    width: isize,
+) -&gt; bool {
+    (0..=width).contains(&amp;p.0)
+        &amp;&amp; (0..=width).contains(&amp;p.1)
+        &amp;&amp; sensors
+            .iter()
+            .all(|((x, y), r)| (x - p.0).abs() + (y - p.1).abs() &gt; *r)
+}
+
+pub fn candidates(
+    (((x_1, y_1), r_1), ((x_2, y_2), r_2)): (&amp;((isize, isize), isize), &amp;((isize, isize), isize)),
+) -&gt; HashSet&lt;(isize, isize)&gt; {
+    let dx = x_2 - x_1;
+    let dy = y_2 - y_1;
+    let dr = r_2 - r_1;
+
+    [
+        // TL - RT
+        // x1+(dx+dy-dr)/2,y1-r1-1+(dx+dy-dr)/2
+        (
+            x_1 + (dx + dy - dr + 1) / 2,
+            y_1 - r_1 - 1 + (dx + dy - dr) / 2,
+        ),
+        (x_1 + (dx + dy - dr) / 2, y_1 - r_1 - 1 + (dx + dy - dr) / 2),
+        // LB - BR
+        // x1+(dx+dy+dr)/2,y1+r1+1+(dx+dy+dr)/2
+        (
+            x_1 + (dx + dy + dr - 1) / 2,
+            y_1 + r_1 + 1 + (dx + dy + dr) / 2,
+        ),
+        (x_1 + (dx + dy + dr) / 2, y_1 + r_1 + 1 + (dx + dy + dr) / 2),
+        // RT - TL
+        // x1+(dx-dy+dr)/2,y1-r1-1-(dx-dy+dr)/2
+        (
+            x_1 + (dx - dy + dr - 1) / 2,
+            y_1 - r_1 - 1 - (dx - dy + dr) / 2,
+        ),
+        (x_1 + (dx - dy + dr) / 2, y_1 - r_1 - 1 - (dx - dy + dr) / 2),
+        // BR - LB
+        // x1+(dx-dy-dr)/2,y1+r1+1-(dx-dy-dr)/2
+        (
+            x_1 + (dx - dy - dr + 1) / 2,
+            y_1 + r_1 + 1 - (dx - dy - dr) / 2,
+        ),
+        (x_1 + (dx - dy - dr) / 2, y_1 + r_1 + 1 - (dx - dy - dr) / 2),
+        // LB - TL
+        // x1-r1-1+(dx+dy-dr)/2,y1+(dx+dy-dr)/2
+        (
+            x_1 - r_1 - 1 + (dx + dy - dr) / 2,
+            y_1 + (dx + dy - dr + 1) / 2,
+        ),
+        (x_1 - r_1 - 1 + (dx + dy - dr) / 2, y_1 + (dx + dy - dr) / 2),
+        // BR - RT
+        // x1+r1+1+(dx-dy+dr)/2,y1-(dx-dy+dr)/2
+        (
+            x_1 + r_1 + 1 + (dx - dy + dr) / 2,
+            y_1 - (dx - dy + dr - 1) / 2,
+        ),
+        (x_1 + r_1 + 1 + (dx - dy + dr) / 2, y_1 - (dx - dy + dr) / 2),
+        // TL - LB
+        // x1-r1-1+(dx-dy-dr)/2,y1-(dx-dy-dr)/2
+        (
+            x_1 - r_1 - 1 + (dx - dy - dr) / 2,
+            y_1 - (dx - dy - dr + 1) / 2,
+        ),
+        (x_1 - r_1 - 1 + (dx - dy - dr) / 2, y_1 - (dx - dy - dr) / 2),
+        // RT - BR
+        // x2+r2+1+(dx+dy+dr)/2,y2+(dx+dy+dr)/2
+        (
+            x_1 + r_1 + 1 + (dx + dy + dr) / 2,
+            y_1 + (dx + dy + dr - 1) / 2,
+        ),
+        (x_1 + r_1 + 1 + (dx + dy + dr) / 2, y_1 + (dx + dy + dr) / 2),
+    ]
+    .into_iter()
+    .filter(|(x, y)| {
+        (1..=2).contains(&amp;((x - x_1).abs() + (y - y_1).abs() - r_1))
+            &amp;&amp; (1..=2).contains(&amp;((x - x_2).abs() + (y - y_2).abs() - r_2))
+    })
+    .collect()
+}
+
+fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let sensors = data.sensors_with_r();
+    let (x, y) = sensors
+        .iter()
+        .zip(sensors.iter().skip(1))
+        .map(candidates)
+        .map(HashSet::into_iter)
+        .flatten()
+        .find(|p| is_distress_beacon(&amp;sensors, p, data.width))
+        .unwrap();
+
+    (x * 4_000_000 + y) as _
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_16"><a class="anchor" href="#_tests_16"></a><a class="link" href="#_tests_16">Tests</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"Sensor at x=2, y=18: closest beacon is at x=-2, y=15
+Sensor at x=9, y=16: closest beacon is at x=10, y=16
+Sensor at x=13, y=2: closest beacon is at x=15, y=3
+Sensor at x=12, y=14: closest beacon is at x=10, y=16
+Sensor at x=10, y=20: closest beacon is at x=10, y=16
+Sensor at x=14, y=17: closest beacon is at x=10, y=16
+Sensor at x=8, y=7: closest beacon is at x=2, y=10
+Sensor at x=2, y=0: closest beacon is at x=2, y=10
+Sensor at x=0, y=11: closest beacon is at x=2, y=10
+Sensor at x=20, y=14: closest beacon is at x=25, y=17
+Sensor at x=17, y=20: closest beacon is at x=21, y=22
+Sensor at x=16, y=7: closest beacon is at x=15, y=3
+Sensor at x=14, y=3: closest beacon is at x=15, y=3
+Sensor at x=20, y=1: closest beacon is at x=15, y=3
+"#;
+
+    #[test]
+    pub fn test_is_distress_beacon() {
+        let data = PuzzleData::from(CONTENT);
+        let sensors = data.sensors_with_r();
+        assert!(is_distress_beacon(&amp;sensors, &amp;(14, 11), 20));
+    }
+
+    #[test]
+    pub fn test_candidates() {
+        // 0...#..%...
+        // 1..#.#%.%..
+        // 2.#.A%#B.%.
+        // 3..#.#%.%..
+        // 4...#..%...
+        //  0123456789
+        let s1 = ((3, 2), 2);
+        let s2 = ((6, 2), 2);
+        let e = HashSet::from([(4, 0), (5, 0), (4, 4), (5, 4)]);
+        assert_eq!(
+            e,
+            candidates((&amp;s1, &amp;s2)).intersection(&amp;e).cloned().collect()
+        );
+        assert_eq!(
+            e,
+            candidates((&amp;s2, &amp;s1)).intersection(&amp;e).cloned().collect()
+        );
+
+        // 0...#...%..
+        // 1..#.#.%.%.
+        // 2.#.A.$.B.%
+        // 3..#.#.%.%.
+        // 4...#...%..
+        //  0123456789
+        //
+        // RT: [x1 + r1 + 1 - k1, y1 - k1];
+        // TL: [x2 - k2, y2 - r2 - 1 + k2];
+        // [x1+(dx+dy-dr)/2,y1-r1-1+(dx+dy-dr)/2];
+        // --- [x1+(dx-dy+dr)/2,y1-r1-1-(dx-dy+dr)/2];
+        //
+        // BR: [x1 + k1, y1 + r1 + 1 - k1];
+        // LB: [x2 - r2 - 1 + k2, y2 + k2];
+        // [x1+(dx-dy-dr)/2,y1+r1+1-(dx-dy-dr)/2];
+        // --- [x1+(dx+dy+dr)/2,y1+r1+1+(dx+dy+dr)/2];
+        let s1 = ((3, 2), 2);
+        let s2 = ((7, 2), 2);
+        let e = HashSet::from([(5, 1), (5, 3)]);
+        assert_eq!(
+            e,
+            candidates((&amp;s1, &amp;s2)).intersection(&amp;e).cloned().collect()
+        );
+        assert_eq!(
+            e,
+            candidates((&amp;s2, &amp;s1)).intersection(&amp;e).cloned().collect()
+        );
+
+        // 0...#....
+        // 1..#.#...
+        // 2.#.A%#..
+        // 3..#%#%..
+        // 4..%#..%.
+        // 5.%..B..%
+        // 6..%...%.
+        // 7...%.%..
+        // 8....%...
+        //  01234567
+        // LB: [x1 - r1 - 1 + k1, y1 + k1];
+        // TL: [x2 - k2, y2 - r2 - 1 + k2];
+        // [x1-r1-1+(dx+dy-dr)/2,y1+(dx+dy-dr)/2]
+        // --- [x1-r1-1+(dx-dy-dr)/2,y1-(dx-dy-dr)/2]
+        let s1 = ((3, 2), 2);
+        let s2 = ((4, 5), 3);
+        let e = HashSet::from([(1, 3), (1, 4), (6, 2), (6, 3)]);
+        assert_eq!(
+            e,
+            candidates((&amp;s1, &amp;s2)).intersection(&amp;e).cloned().collect()
+        );
+        assert_eq!(
+            e,
+            candidates((&amp;s2, &amp;s1)).intersection(&amp;e).cloned().collect()
+        );
+
+        // 0...#...
+        // 1..#.#..
+        // 2.#.A.#.
+        // 3..#.#..
+        // 4...$...
+        // 5.-%.%..
+        // 6.%.B.%.
+        // 7..%.%..
+        // 8...%...
+        //  0123456
+        let s1 = ((3, 2), 2);
+        let s2 = ((3, 6), 2);
+        let e = HashSet::from([(2, 4), (4, 4)]);
+        assert_eq!(
+            e,
+            candidates((&amp;s1, &amp;s2)).intersection(&amp;e).cloned().collect()
+        );
+        assert_eq!(
+            e,
+            candidates((&amp;s2, &amp;s1)).intersection(&amp;e).cloned().collect()
+        );
+    }
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let mut data = PuzzleData::from(CONTENT);
+        data.row = 10;
+        assert_eq!(26, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_solve_2() {
+        let mut data = PuzzleData::from(CONTENT);
+        data.width = 20;
+        assert_eq!(56_000_011, star_2(&amp;data));
     }
 }</code></pre>
 </div>
