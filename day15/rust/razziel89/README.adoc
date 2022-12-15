@@ -17,23 +17,35 @@ parsing and output processing.
 
 === Solution ===
 
-Literally no time today.
 Part 1 was easy enough, I simply gave each exclusion zone a function that
 provided all points within it at a certain y-coordinate, fed all of them into a
 set, and then checked how many elements it had.
 Not very pretty but worked well enough.
 
-Part 2 was more complicated, but I had no time, so I brute forced it.
-Assuming that the actual solution won't be anywhere it can be found easily, i.e.
-close to any of the edges in x or y direction, or even the centre, I split the
-x-coordinates in 4 separate parts.
-Then, I wrote a script that launches 4 separate instances of the code, each
-starting 25% displaced from the previous one in x direction with 100% being the
-4 million mark.
-The third process got luckly at 78.0025% after my computer heated up my flat for
-several hours.
+At first, I brute-forced part 2 and got lucky.
+However, that solution wasn't satisfying and then I found some more time to look
+into this today.
+Yeah!
 
-WARNING, expect a very long runtime.
+The final solution to part 2 turned out to be one that I never expected to
+perform well but that did, as it turns out.
+What I do is I basically perform a line scan along the x axis for all y
+coordinates.
+For each y, I extract all non-empty overlaps between exclusion zones and the
+scanning line and discarded those that were outside the playing field.
+Then, I merged those overlaps.
+
+To make merging overlaps, which are ranges, very easy, I sorted all of then
+first by their x_min coordinate and, if those are equal, by their x_max
+coordinate.
+I never thought that sorting them would be efficient enough, but it is.
+Once they have been sorted, merging them is easy.
+If x_min of the first entry is not 0, we've found the coordinates.
+Otherwise, we check whether x_min of the next range in line is greater than the
+current x_max.
+If so, we've found the empty spot.
+If not, we increase our currently known x_max to the x_max of that range.
+Rinse repeat for every y until the distress beacon has been found.
 
 `main.rs`
 [source,rust,numbered]
