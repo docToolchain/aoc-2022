@@ -1,0 +1,57 @@
+== Day 15: Beacon Exclusion Zone ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+Literally no time today.
+Part 1 was easy enough, I simply gave each exclusion zone a function that
+provided all points within it at a certain y-coordinate, fed all of them into a
+set, and then checked how many elements it had.
+Not very pretty but worked well enough.
+
+Part 2 was more complicated, but I had no time, so I brute forced it.
+Assuming that the actual solution won't be anywhere it can be found easily, i.e.
+close to any of the edges in x or y direction, or even the centre, I split the
+x-coordinates in 4 separate parts.
+Then, I wrote a script that launches 4 separate instances of the code, each
+starting 25% displaced from the previous one in x direction with 100% being the
+4 million mark.
+The third process got luckly at 78.0025% after my computer heated up my flat for
+several hours.
+
+WARNING, expect a very long runtime.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute the command
+`cargo run --release` to run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
