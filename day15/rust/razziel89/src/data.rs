@@ -12,6 +12,33 @@ pub struct Diamond {
     pub dist: isize,
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub struct Range {
+    pub left: isize,
+    pub right: isize,
+}
+
+impl Range {
+    pub fn clamp(&self, min: isize, max: isize) -> Range {
+        if self.right <= min || self.left >= max {
+            NULL_RANGE
+        } else {
+            Range {
+                left: self.left.clamp(min, max),
+                right: self.right.clamp(min, max),
+            }
+        }
+    }
+}
+
+pub const NULL_RANGE: Range = Range { left: 0, right: 0 };
+
+impl Range {
+    pub fn len(&self) -> usize {
+        (self.right - self.left) as usize
+    }
+}
+
 impl FromStr for Diamond {
     type Err = Error;
 
@@ -51,11 +78,24 @@ impl FromStr for Diamond {
 impl Diamond {
     pub fn xs_at_y(&self, y: &isize) -> std::ops::Range<isize> {
         let dist = (y - self.y).abs();
-        let remaining = self.dist - dist;
         if dist <= self.dist {
+            let remaining = self.dist - dist;
             self.x - remaining..self.x + remaining + 1
         } else {
             0..0
+        }
+    }
+
+    pub fn xrange_at_y(&self, y: &isize) -> Range {
+        let dist = (y - self.y).abs();
+        if dist <= self.dist {
+            let remaining = self.dist - dist;
+            Range {
+                left: self.x - remaining,
+                right: self.x + remaining + 1,
+            }
+        } else {
+            NULL_RANGE
         }
     }
 
@@ -72,6 +112,10 @@ impl Diamond {
                 dx + dy <= self.dist
             }
         }
+    }
+
+    pub fn size(&self) -> usize {
+        (2 * self.dist * self.dist) as usize
     }
 
     // Returns true if this diamond completely encloses another one.
