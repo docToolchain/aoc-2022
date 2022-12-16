@@ -339,6 +339,7 @@
 <li><a href="#_input_15">Input</a></li>
 <li><a href="#_star_1_13">Star 1</a></li>
 <li><a href="#_star_2_13">Star 2</a></li>
+<li><a href="#_star_2scan_lines">Star 2&#8201;&#8212;&#8201;Scan Lines</a></li>
 <li><a href="#_tests_16">Tests</a></li>
 </ul>
 </li>
@@ -3848,7 +3849,7 @@ mod tests {
 <p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/15">AoC|2022|15</a>.</p>
 </div>
 <div class="paragraph">
-<p>This one was a challenge for me. Part one is solved with brute force (maybe something to re-think another day).</p>
+<p>This one was a challenge for me. Part one was initially solved with brute force. My current solution projects ranges on the row to scan.</p>
 </div>
 <div class="paragraph">
 <p>For part 2, brute force was not a real option.</p>
@@ -3920,30 +3921,64 @@ mod tests {
 <div class="sect4">
 <h5 id="_star_1_13"><a class="anchor" href="#_star_1_13"></a><a class="link" href="#_star_1_13">Star 1</a></h5>
 <div class="paragraph">
-<p>Brute force &#8230;&#8203;</p>
+<p>Project ranges</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
-    let mut no_beacons = HashSet::new();
-    let mut beacons_on_line = HashSet::new();
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">/// determine ranges covered by sensors on given row
+pub fn ranges(
+    sensors: &amp;[((isize, isize), (isize, isize))],
+    mn: isize,
+    mx: isize,
+    row: isize,
+) -&gt; Vec&lt;(isize, isize)&gt; {
+    sensors
+        .iter()
+        .map(|((x, y), (x_b, y_b))| (*x, (x - x_b).abs() + (y - y_b).abs() - (y - row).abs()))
+        .map(|(x, d)| ((x - d).max(mn), (x + d).min(mx)))
+        .filter(|(mn, mx)| mx &gt;= mn)
+        .fold(Vec::new(), |mut ranges, range| {
+            ranges.push(range);
+            let mut k_2 = ranges.len() - 1;
+            for k_1 in (0..ranges.len() - 1).rev() {
+                if ranges[k_1].0 &lt;= ranges[k_2].0 &amp;&amp; ranges[k_1].1 &gt;= ranges[k_2].1 {
+                    // k_2 contained in k_1
+                    ranges.swap_remove(k_2);
+                    break;
+                } else if ranges[k_2].0 &lt;= ranges[k_1].0 &amp;&amp; ranges[k_2].1 &gt;= ranges[k_1].1 {
+                    // k_1 contained in k_2
+                    ranges.swap_remove(k_1);
+                    k_2 = if k_2 == ranges.len() { k_1 } else { k_2 };
+                } else if ranges[k_2].0 &gt;= ranges[k_1].0 &amp;&amp; ranges[k_2].0 &lt;= ranges[k_1].1 + 1 {
+                    // k_2's min in k_1 or immediately after
+                    ranges[k_1].1 = ranges[k_2].1;
+                    ranges.swap_remove(k_2);
+                    k_2 = k_1;
+                } else if ranges[k_2].1 &gt;= ranges[k_1].0 - 1 &amp;&amp; ranges[k_2].1 &lt;= ranges[k_1].1 {
+                    // k_2's max in k_1 or immediately before
+                    ranges[k_1].0 = ranges[k_2].0;
+                    ranges.swap_remove(k_2);
+                    k_2 = k_1;
+                }
+            }
+            ranges
+        })
+}
 
-    for ((x_s, y_s), (x_b, y_b)) in data.sensors() {
-        if *y_b == data.row {
-            beacons_on_line.insert(*x_b);
-        }
-
-        let d = (x_s - x_b).abs() + (y_s - y_b).abs();
-        let d_y = (y_s - data.row).abs();
-
-        let dlt = d - d_y;
-
-        for x in x_s - dlt..=x_s + dlt {
-            no_beacons.insert(x);
-        }
-    }
-
-    no_beacons.difference(&amp;beacons_on_line).count()
+pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    let ranges: Vec&lt;(isize, isize)&gt; = ranges(data.sensors(), isize::MIN, isize::MAX, data.row);
+    let r = ranges
+        .iter()
+        .map(|(mn, mx)| (mx - mn + 1) as usize)
+        .sum::&lt;usize&gt;();
+    let s = data
+        .sensors()
+        .iter()
+        .filter(|(_, (_, y))| *y == data.row)
+        .map(|(_, b)| b)
+        .collect::&lt;HashSet&lt;_&gt;&gt;()
+        .len();
+    r - s
 }</code></pre>
 </div>
 </div>
@@ -4046,7 +4081,7 @@ pub fn candidates(
     .collect()
 }
 
-fn star_2(data: &amp;PuzzleData) -&gt; usize {
+fn star_2_geometry(data: &amp;PuzzleData) -&gt; usize {
     let sensors = data.sensors_with_r();
     let (x, y) = sensors
         .iter()
@@ -4056,6 +4091,26 @@ fn star_2(data: &amp;PuzzleData) -&gt; usize {
         .flatten()
         .find(|p| is_distress_beacon(&amp;sensors, p, data.width))
         .unwrap();
+
+    (x * 4_000_000 + y) as _
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2scan_lines"><a class="anchor" href="#_star_2scan_lines"></a><a class="link" href="#_star_2scan_lines">Star 2&#8201;&#8212;&#8201;Scan Lines</a></h5>
+<div class="paragraph">
+<p>A solution using the functionality from star 1 is as follows. Much simpler code but much longer run-time.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2_scan_lines(data: &amp;PuzzleData) -&gt; usize {
+    let (y, ranges) = (0..data.width)
+        .map(|row| (row, ranges(data.sensors(), 0, data.width, row)))
+        .find(|(_, r)| r.len() == 2)
+        .unwrap();
+
+    let x = ranges[0].0.max(ranges[1].0) - 1;
 
     (x * 4_000_000 + y) as _
 }</code></pre>
@@ -4207,7 +4262,9 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
     pub fn test_solve_2() {
         let mut data = PuzzleData::from(CONTENT);
         data.width = 20;
-        assert_eq!(56_000_011, star_2(&amp;data));
+        assert_eq!(56_000_011, star_2_geometry(&amp;data));
+        assert_eq!(56_000_011, star_2_scan_lines(&amp;data));
+        assert_eq!(56_000_011, star_2_brute_force(&amp;data));
     }
 }</code></pre>
 </div>
@@ -4332,37 +4389,33 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
             let valves = lines
                 .iter()
                 .enumerate()
-                .map(|(index, (name, tunnels, flow))| Valve {
+                .map(|(idx, (name, tunnels, flow))| Valve {
                     name,
-                    idx: index,
+                    idx,
                     flow: *flow,
                     tunnels: tunnels
                         .iter()
-                        .map(|tunnel| {
+                        .map(|&amp;tunnel| {
                             lines
                                 .iter()
-                                .position(|(name, _, _)| name == tunnel)
+                                .position(|&amp;(name, _, _)| name == tunnel)
                                 .unwrap()
                         })
                         .collect(),
                 })
                 .collect();
-            let root = lines.iter().position(|(name, _, _)| name == &amp;"AA").unwrap();
+            let root = lines.iter().position(|&amp;(name, _, _)| name == "AA").unwrap();
             Self { valves, root }
         }
     }
 
     impl&lt;'a&gt; PuzzleData&lt;'a&gt; {
-        pub fn get(&amp;self, index: usize) -&gt; &amp;Valve {
-            &amp;self.valves[index]
+        pub fn get(&amp;self, idx: usize) -&gt; &amp;Valve {
+            &amp;self.valves[idx]
         }
 
         pub fn root(&amp;self) -&gt; &amp;Valve {
             &amp;self.valves[self.root]
-        }
-
-        pub fn size(&amp;self) -&gt; usize {
-            self.valves.len()
         }
 
         pub fn valves(&amp;self) -&gt; &amp;[Valve] {
@@ -4406,14 +4459,12 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
         timer: usize,
     }
 
-    // all valves opened
-    let all_opened = data
+    // all valves opened / max flow
+    let (all_opened, max_flow) = data
         .valves()
         .iter()
-        .filter(|valve| valve.flow &gt; 0)
-        .fold(0u64, |all_opened, valve| all_opened | 1 &lt;&lt; valve.idx);
-
-    let max_flow = data.valves().iter().map(|v| v.flow).sum::&lt;usize&gt;();
+        .filter(|v| v.flow &gt; 0)
+        .fold((0, 0), |(o, f), v| (o | 1 &lt;&lt; v.idx, f + v.flow));
 
     // max time
     let timer: usize = 30;
@@ -4444,17 +4495,14 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
 
         let v = data.get(s.idx);
 
-        let can_open = (s.opened &amp; 1 &lt;&lt; v.idx) == 0 &amp;&amp; v.flow &gt; 0;
+        let can_o = (s.opened &amp; 1 &lt;&lt; v.idx) == 0 &amp;&amp; v.flow &gt; 0;
 
-        for (open, adj) in once((true, v))
+        for (o, adj) in once((true, v))
             .chain(v.tunnels.iter().map(|&amp;idx| (false, data.get(idx))))
-            .filter(|&amp;(open, _)| !open || can_open)
+            .filter(|&amp;(o, _)| !o || can_o)
         {
-            let (opened, flow) = if open {
-                (s.opened | 1 &lt;&lt; adj.idx, s.flow + adj.flow)
-            } else {
-                (s.opened, s.flow)
-            };
+            let opened = s.opened | if o { 1 &lt;&lt; adj.idx } else { 0 };
+            let flow = s.flow + if o { adj.flow } else { 0 };
             let next = State {
                 potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
                 // pressure is
@@ -4469,17 +4517,9 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
                 // decrement timer
                 timer: s.timer - 1,
             };
-            if match seen.entry((next.idx, next.opened)) {
-                Entry::Occupied(o) if o.get() &lt; &amp;next.potential =&gt; {
-                    *o.into_mut() = next.potential;
-                    true
-                }
-                Entry::Vacant(v) =&gt; {
-                    v.insert(next.potential);
-                    true
-                }
-                _ =&gt; false,
-            } {
+            let v = seen.entry((next.idx, next.opened)).or_insert(0);
+            if next.potential.gt(v) {
+                *v = next.potential;
                 queue.push(next);
             }
         }
@@ -4515,14 +4555,12 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
         timer: usize,
     }
 
-    // all valves opened
-    let all_opened = data
+    // all valves opened / max flow
+    let (all_opened, max_flow) = data
         .valves()
         .iter()
-        .filter(|valve| valve.flow &gt; 0)
-        .fold(0u64, |all_opened, valve| all_opened | 1 &lt;&lt; valve.idx);
-
-    let max_flow = data.valves().iter().map(|v| v.flow).sum::&lt;usize&gt;();
+        .filter(|v| v.flow &gt; 0)
+        .fold((0, 0), |(o, f), v| (o | 1 &lt;&lt; v.idx, f + v.flow));
 
     // max time
     let timer: usize = 26;
@@ -4542,7 +4580,7 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
     queue.push(start);
 
     // do not visit the same spot with the same opened valves again
-    let mut seen = HashMap::from([((start.idx, start.opened), max_flow * timer)]);
+    let mut seen = HashMap::from([((start.idx, start.opened), start.potential)]);
 
     while let Some(s) = queue.pop() {
         // do not explore further if timer elapsed or all valves open,
@@ -4554,27 +4592,22 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
         let v_1 = data.get(s.idx[0]);
         let v_2 = data.get(s.idx[1]);
 
-        let can_open_1 = (s.opened &amp; 1 &lt;&lt; v_1.idx) == 0 &amp;&amp; v_1.flow &gt; 0;
-        let can_open_2 = v_1.idx != v_2.idx &amp;&amp; (s.opened &amp; 1 &lt;&lt; v_2.idx) == 0 &amp;&amp; v_2.flow &gt; 0;
+        let can_o_1 = (s.opened &amp; 1 &lt;&lt; v_1.idx) == 0 &amp;&amp; v_1.flow &gt; 0;
+        let can_o_2 = v_1.idx != v_2.idx &amp;&amp; (s.opened &amp; 1 &lt;&lt; v_2.idx) == 0 &amp;&amp; v_2.flow &gt; 0;
 
-        for (open_1, adj_1) in once((true, v_1))
+        for (o_1, adj_1) in once((true, v_1))
             .chain(v_1.tunnels.iter().map(|&amp;idx| (false, data.get(idx))))
-            .filter(|&amp;(open, _)| !open || can_open_1)
+            .filter(|&amp;(o, _)| !o || can_o_1)
         {
-            for (open_2, adj_2) in once((true, v_2))
+            for (o_2, adj_2) in once((true, v_2))
                 .chain(v_2.tunnels.iter().map(|&amp;idx| (false, data.get(idx))))
-                .filter(|&amp;(open, _)| !open || can_open_2)
+                .filter(|&amp;(o, _)| !o || can_o_2)
             {
-                let mut opened = s.opened;
-                let mut flow = s.flow;
-                if open_1 {
-                    opened |= 1 &lt;&lt; adj_1.idx;
-                    flow += adj_1.flow;
-                }
-                if open_2 {
-                    opened |= 1 &lt;&lt; adj_2.idx;
-                    flow += adj_2.flow;
-                }
+                let opened = s.opened
+                    | if o_1 { 1 &lt;&lt; adj_1.idx } else { 0 }
+                    | if o_2 { 1 &lt;&lt; adj_2.idx } else { 0 };
+                let flow =
+                    s.flow + if o_1 { adj_1.flow } else { 0 } + if o_2 { adj_2.flow } else { 0 };
                 let next = State {
                     potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
                     // pressure is
@@ -4589,17 +4622,9 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
                     // decrement timer
                     timer: s.timer - 1,
                 };
-                if match seen.entry((next.idx, next.opened)) {
-                    Entry::Occupied(o) if o.get() &lt; &amp;next.potential =&gt; {
-                        *o.into_mut() = next.potential;
-                        true
-                    }
-                    Entry::Vacant(v) =&gt; {
-                        v.insert(next.potential);
-                        true
-                    }
-                    _ =&gt; false,
-                } {
+                let v = seen.entry((next.idx, next.opened)).or_insert(0);
+                if next.potential.gt(v) {
+                    *v = next.potential;
                     queue.push(next);
                 }
             }
@@ -4645,7 +4670,7 @@ Valve JJ has flow rate=21; tunnel leads to valve II
             vec!["DD", "II", "BB"],
             root.tunnels
                 .iter()
-                .map(|&amp;index| data.get(index).name)
+                .map(|&amp;idx| data.get(idx).name)
                 .collect::&lt;Vec&lt;_&gt;&gt;()
         );
         println!("{data:?}");
@@ -4660,8 +4685,10 @@ Valve JJ has flow rate=21; tunnel leads to valve II
     #[test]
     pub fn test_example() {
         let data = PuzzleData::from(CONTENT);
-        let map = (0..data.size())
-            .map(|index| (data.get(index as _).name, index as usize))
+        let map = data
+            .valves()
+            .iter()
+            .map(|v| (v.name, v.idx))
             .collect::&lt;HashMap&lt;_, _&gt;&gt;();
 
         let steps = [
