@@ -4,12 +4,6 @@ This solution is written in Kotlin.
 
 The original puzzle can be found at https://adventofcode.com/2022/day/15
 
-
-[source, kotlin, numbered]
-....
-include::day2215_1_2.kt[tags=part1]
-....
-
 === First Star
 
 How does it work: +
@@ -17,7 +11,7 @@ How does it work: +
 For each line in puzzle input the function _BeaconExclusion_ evaluates, if the given y line is within the distance of the given sensor and its beacon. If so, dependend on the difference of the manhatten distance of sensor and beacon minus the absolute distance of the sensor and the given y line all not reacheable positions are added to a list. After going through all input lines, all positions which were more then once are deleted and the positions where already sensors or beacons are placed are substracted. The remaining number is the solution
 [source, kotlin, numbered]
 ....
-include::day2215_1_2.kt[tags=HillClimbing]
+include::day2215_1_2.kt[tags=part1]
 ....
 
 
@@ -25,7 +19,7 @@ include::day2215_1_2.kt[tags=HillClimbing]
 
 How does it work: +
 
-It was clear from the start, that iterating for each input line through 4000000 x 4000000 would not work, so a different solution must be found. After some drawings I figured out, that a free beacon could only mean, that there are four sections which are exactly in a distance of 2 more than their manhatten distances, where each two define a line. 4 sections means two crossing lines, the intersection is the position we are searching for. Here the propsed solution has a problem, it only works for a puzzle input which has exactly two times two matching inputs, which obviously was here the case.
+It was clear from the start, that iterating for each input line through 4000000 x 4000000 would not work, so a different solution must be found. After some drawings I figured out, that a free beacon could only mean, that there are four sections which are exactly in a distance of 2 more than their manhatten distances, where each two define a line. 4 sections means two crossing lines, the intersection is the position we are searching for. Here the propsed solution has a problem, it only works for a puzzle input which has exactly two times two matching inputs, which obviously was here the case. Have a look at function _FindBeacon_ how I managed it to find the solution, but don't take it as a good example.
 [source, kotlin, numbered]
 ....
 include::day2215_1_2.kt[tags=part2]
