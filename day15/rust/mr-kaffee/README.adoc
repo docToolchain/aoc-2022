@@ -2,7 +2,7 @@
 
 https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/15[AoC|2022|15].
 
-This one was a challenge for me. Part one is solved with brute force (maybe something to re-think another day).
+This one was a challenge for me. Part one was initially solved with brute force. My current solution projects ranges on the row to scan.
 
 For part 2, brute force was not a real option.
 
@@ -15,7 +15,7 @@ include::src/lib.rs[tags=input]
 
 === Star 1 ===
 
-Brute force ...
+Project ranges
 
 [source,rust,numbered]
 ----
@@ -33,6 +33,15 @@ There is also a flaw in the candidates function. Normally, it should be symmetri
 [source,rust,numbered]
 ----
 include::src/lib.rs[tags=star_2]
+----
+
+=== Star 2 -- Scan Lines === 
+
+A solution using the functionality from star 1 is as follows. Much simpler code but much longer run-time.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2_scan]
 ----
 
 === Tests ===
