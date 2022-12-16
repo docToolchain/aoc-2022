@@ -1,4 +1,4 @@
-﻿[package]
+[package]
 name = "mr-kaffee-2022-16"
 description = "Solution to AoC 2022/16, http://adventofcode.com/2022/day/16/"
 authors = ["Peter Wieland <peter@die-wielands.net>"]
@@ -8,4 +8,4 @@ edition = "2021"
 
 [dependencies]
 
-mr-kaffee-aoc = { path = "./aoc/" }
+mr-kaffee-aoc = { path = "../../aoc/" }

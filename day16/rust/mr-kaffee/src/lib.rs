@@ -1,7 +1,7 @@
 use input::*;
 use mr_kaffee_aoc::{Puzzle, Star};
 use std::{
-    collections::{hash_map::Entry, BinaryHeap, HashMap},
+    collections::{BinaryHeap, HashMap},
     iter::once,
 };
 
@@ -57,37 +57,33 @@ pub mod input {
             let valves = lines
                 .iter()
                 .enumerate()
-                .map(|(index, (name, tunnels, flow))| Valve {
+                .map(|(idx, (name, tunnels, flow))| Valve {
                     name,
-                    idx: index,
+                    idx,
                     flow: *flow,
                     tunnels: tunnels
                         .iter()
-                        .map(|tunnel| {
+                        .map(|&tunnel| {
                             lines
                                 .iter()
-                                .position(|(name, _, _)| name == tunnel)
+                                .position(|&(name, _, _)| name == tunnel)
                                 .unwrap()
                         })
                         .collect(),
                 })
                 .collect();
-            let root = lines.iter().position(|(name, _, _)| name == &"AA").unwrap();
+            let root = lines.iter().position(|&(name, _, _)| name == "AA").unwrap();
             Self { valves, root }
         }
     }
 
     impl<'a> PuzzleData<'a> {
-        pub fn get(&self, index: usize) -> &Valve {
-            &self.valves[index]
+        pub fn get(&self, idx: usize) -> &Valve {
+            &self.valves[idx]
         }
 
         pub fn root(&self) -> &Valve {
             &self.valves[self.root]
-        }
-
-        pub fn size(&self) -> usize {
-            self.valves.len()
         }
 
         pub fn valves(&self) -> &[Valve] {
@@ -124,14 +120,12 @@ pub fn star_1(data: &PuzzleData) -> usize {
         timer: usize,
     }
 
-    // all valves opened
-    let all_opened = data
+    // all valves opened / max flow
+    let (all_opened, max_flow) = data
         .valves()
         .iter()
-        .filter(|valve| valve.flow > 0)
-        .fold(0u64, |all_opened, valve| all_opened | 1 << valve.idx);
-
-    let max_flow = data.valves().iter().map(|v| v.flow).sum::<usize>();
+        .filter(|v| v.flow > 0)
+        .fold((0, 0), |(o, f), v| (o | 1 << v.idx, f + v.flow));
 
     // max time
     let timer: usize = 30;
@@ -162,17 +156,14 @@ pub fn star_1(data: &PuzzleData) -> usize {
 
         let v = data.get(s.idx);
 
-        let can_open = (s.opened & 1 << v.idx) == 0 && v.flow > 0;
+        let can_o = (s.opened & 1 << v.idx) == 0 && v.flow > 0;
 
-        for (open, adj) in once((true, v))
+        for (o, adj) in once((true, v))
             .chain(v.tunnels.iter().map(|&idx| (false, data.get(idx))))
-            .filter(|&(open, _)| !open || can_open)
+            .filter(|&(o, _)| !o || can_o)
         {
-            let (opened, flow) = if open {
-                (s.opened | 1 << adj.idx, s.flow + adj.flow)
-            } else {
-                (s.opened, s.flow)
-            };
+            let opened = s.opened | if o { 1 << adj.idx } else { 0 };
+            let flow = s.flow + if o { adj.flow } else { 0 };
             let next = State {
                 potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
                 // pressure is
@@ -187,17 +178,9 @@ pub fn star_1(data: &PuzzleData) -> usize {
                 // decrement timer
                 timer: s.timer - 1,
             };
-            if match seen.entry((next.idx, next.opened)) {
-                Entry::Occupied(o) if o.get() < &next.potential => {
-                    *o.into_mut() = next.potential;
-                    true
-                }
-                Entry::Vacant(v) => {
-                    v.insert(next.potential);
-                    true
-                }
-                _ => false,
-            } {
+            let v = seen.entry((next.idx, next.opened)).or_insert(0);
+            if next.potential.gt(v) {
+                *v = next.potential;
                 queue.push(next);
             }
         }
@@ -227,14 +210,12 @@ pub fn star_2(data: &PuzzleData) -> usize {
         timer: usize,
     }
 
-    // all valves opened
-    let all_opened = data
+    // all valves opened / max flow
+    let (all_opened, max_flow) = data
         .valves()
         .iter()
-        .filter(|valve| valve.flow > 0)
-        .fold(0u64, |all_opened, valve| all_opened | 1 << valve.idx);
-
-    let max_flow = data.valves().iter().map(|v| v.flow).sum::<usize>();
+        .filter(|v| v.flow > 0)
+        .fold((0, 0), |(o, f), v| (o | 1 << v.idx, f + v.flow));
 
     // max time
     let timer: usize = 26;
@@ -254,7 +235,7 @@ pub fn star_2(data: &PuzzleData) -> usize {
     queue.push(start);
 
     // do not visit the same spot with the same opened valves again
-    let mut seen = HashMap::from([((start.idx, start.opened), max_flow * timer)]);
+    let mut seen = HashMap::from([((start.idx, start.opened), start.potential)]);
 
     while let Some(s) = queue.pop() {
         // do not explore further if timer elapsed or all valves open,
@@ -266,27 +247,22 @@ pub fn star_2(data: &PuzzleData) -> usize {
         let v_1 = data.get(s.idx[0]);
         let v_2 = data.get(s.idx[1]);
 
-        let can_open_1 = (s.opened & 1 << v_1.idx) == 0 && v_1.flow > 0;
-        let can_open_2 = v_1.idx != v_2.idx && (s.opened & 1 << v_2.idx) == 0 && v_2.flow > 0;
+        let can_o_1 = (s.opened & 1 << v_1.idx) == 0 && v_1.flow > 0;
+        let can_o_2 = v_1.idx != v_2.idx && (s.opened & 1 << v_2.idx) == 0 && v_2.flow > 0;
 
-        for (open_1, adj_1) in once((true, v_1))
+        for (o_1, adj_1) in once((true, v_1))
             .chain(v_1.tunnels.iter().map(|&idx| (false, data.get(idx))))
-            .filter(|&(open, _)| !open || can_open_1)
+            .filter(|&(o, _)| !o || can_o_1)
         {
-            for (open_2, adj_2) in once((true, v_2))
+            for (o_2, adj_2) in once((true, v_2))
                 .chain(v_2.tunnels.iter().map(|&idx| (false, data.get(idx))))
-                .filter(|&(open, _)| !open || can_open_2)
+                .filter(|&(o, _)| !o || can_o_2)
             {
-                let mut opened = s.opened;
-                let mut flow = s.flow;
-                if open_1 {
-                    opened |= 1 << adj_1.idx;
-                    flow += adj_1.flow;
-                }
-                if open_2 {
-                    opened |= 1 << adj_2.idx;
-                    flow += adj_2.flow;
-                }
+                let opened = s.opened
+                    | if o_1 { 1 << adj_1.idx } else { 0 }
+                    | if o_2 { 1 << adj_2.idx } else { 0 };
+                let flow =
+                    s.flow + if o_1 { adj_1.flow } else { 0 } + if o_2 { adj_2.flow } else { 0 };
                 let next = State {
                     potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
                     // pressure is
@@ -301,17 +277,9 @@ pub fn star_2(data: &PuzzleData) -> usize {
                     // decrement timer
                     timer: s.timer - 1,
                 };
-                if match seen.entry((next.idx, next.opened)) {
-                    Entry::Occupied(o) if o.get() < &next.potential => {
-                        *o.into_mut() = next.potential;
-                        true
-                    }
-                    Entry::Vacant(v) => {
-                        v.insert(next.potential);
-                        true
-                    }
-                    _ => false,
-                } {
+                let v = seen.entry((next.idx, next.opened)).or_insert(0);
+                if next.potential.gt(v) {
+                    *v = next.potential;
                     queue.push(next);
                 }
             }
@@ -350,7 +318,7 @@ Valve JJ has flow rate=21; tunnel leads to valve II
             vec!["DD", "II", "BB"],
             root.tunnels
                 .iter()
-                .map(|&index| data.get(index).name)
+                .map(|&idx| data.get(idx).name)
                 .collect::<Vec<_>>()
         );
         println!("{data:?}");
@@ -365,8 +333,10 @@ Valve JJ has flow rate=21; tunnel leads to valve II
     #[test]
     pub fn test_example() {
         let data = PuzzleData::from(CONTENT);
-        let map = (0..data.size())
-            .map(|index| (data.get(index as _).name, index as usize))
+        let map = data
+            .valves()
+            .iter()
+            .map(|v| (v.name, v.idx))
             .collect::<HashMap<_, _>>();
 
         let steps = [
