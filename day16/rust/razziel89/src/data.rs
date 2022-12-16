@@ -2,12 +2,6 @@
 use anyhow::{Error, Result};
 use std::str::FromStr;
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
-pub struct Point {
-    pub x: isize,
-    pub y: isize,
-}
-
 #[derive(Debug)]
 pub struct Valve {
     pub name: String,
