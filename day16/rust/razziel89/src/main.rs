@@ -84,6 +84,7 @@ fn backtrack(
     current_best: usize,
     visited: &mut HashSet<String>,
     allow_elephant: bool,
+    elephant_depth: usize,
 ) -> Result<(usize, HashSet<String>)> {
     // Check that None is the first entry in the list of relevant_valves.
     if allow_elephant && !relevant_valves[0].as_ref().is_none() {
@@ -134,9 +135,10 @@ fn backtrack(
                     current_best + benefit,
                     visited,
                     allow_elephant,
+                    elephant_depth,
                 )?
             }
-        } else if allow_elephant {
+        } else if allow_elephant && visited.len() == elephant_depth {
             // Let the elephant also do its thing, allowing it only to visit those points that we
             // haven't yet visited. Actually, this has to be the first step we do for the algorithm
             // to work. Otherwise, better paths will be missed.
@@ -151,6 +153,7 @@ fn backtrack(
                 visited,
                 // Don't allow the elephant to explore again.
                 false,
+                elephant_depth,
             )?
         } else {
             // This block allows us to still run part 1.
@@ -207,7 +210,7 @@ fn solve(file: &str) -> Result<()> {
     let start_release = 0;
     let mut visited = HashSet::<String>::with_capacity(relevant_valves.len());
 
-    let (max, best_stack) = backtrack(
+    let (max_part1, _) = backtrack(
         &valve_name_map,
         &distances,
         &relevant_valves,
@@ -217,13 +220,12 @@ fn solve(file: &str) -> Result<()> {
         start_release,
         &mut visited,
         false,
+        0,
     )?;
-    println!("part 1: {:?} {}", best_stack, max);
+    println!("part 1: {}", max_part1);
 
     // Part 2.
     // Backtrack the solution.
-    // Reset some mutable data structures.
-    visited = HashSet::<String>::with_capacity(relevant_valves.len());
 
     let max_time_part2 = 26;
     // A value of None means that the human should stop what they are doing and let the elephant do
@@ -232,18 +234,42 @@ fn solve(file: &str) -> Result<()> {
     let mut relevant_with_elephant = vec![None];
     relevant_with_elephant.extend_from_slice(&relevant_valves);
 
-    let (max, best_stack) = backtrack(
-        &valve_name_map,
-        &distances,
-        &relevant_with_elephant,
-        &START.to_string(),
-        start_time,
-        max_time_part2,
-        start_release,
-        &mut visited,
-        true,
-    )?;
-    println!("part 2: {:?} {}", best_stack, max);
+    let mut best = 0;
+    // This is a bit hacky but it works. We check what happens if the human is guaranteed a certain
+    // number of valves because the elephant can only open those that the human didn't approach.
+    // Then, we assume that, the fewer valves the human opens, the higher the overal pressure
+    // release gets because the elephant can open some. At some point, since this is at least a
+    // certain number of steps, there will no longer be an increase followed by a decrease, which
+    // is our stopping point. This is an assumption, which tunrs out to hold, but it might not for
+    // all possible inputs. If it doesn't simply remove the breaking condition and use the overall
+    // max, it'll just take longer.
+    for num_human_valves in (0..relevant_valves.len()).rev() {
+        // Reset some mutable data structures.
+        visited = HashSet::<String>::with_capacity(relevant_valves.len());
+
+        let (max, _) = backtrack(
+            &valve_name_map,
+            &distances,
+            &relevant_with_elephant,
+            &START.to_string(),
+            start_time,
+            max_time_part2,
+            start_release,
+            &mut visited,
+            true,
+            num_human_valves,
+        )?;
+        println!(
+            "part 2: with {} guaranteed human valves: {}",
+            num_human_valves, max
+        );
+        if max < best {
+            break;
+        } else {
+            best = max;
+        }
+    }
+    println!("part 2: {}", best);
 
     Ok(())
 }
