@@ -344,6 +344,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_16_rust">Day 16: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_16_proboscidea_volcanium">Day 16: Proboscidea Volcanium</a>
+<ul class="sectlevel4">
+<li><a href="#_input_16">Input</a></li>
+<li><a href="#_star_1_14">Star 1</a></li>
+<li><a href="#_star_2_14">Star 2</a></li>
+<li><a href="#_tests_17">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -4196,6 +4208,554 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
         let mut data = PuzzleData::from(CONTENT);
         data.width = 20;
         assert_eq!(56_000_011, star_2(&amp;data));
+    }
+}</code></pre>
+</div>
+</div>
+<a id="day16" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_16_rust"><a class="anchor" href="#_day_16_rust"></a><a class="link" href="#_day_16_rust">Day 16: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_16_proboscidea_volcanium"><a class="anchor" href="#_day_16_proboscidea_volcanium"></a><a class="link" href="#_day_16_proboscidea_volcanium">Day 16: Proboscidea Volcanium</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/16">AoC|2022|16</a>.</p>
+</div>
+<div class="paragraph">
+<p>Today was a tough nut to crack for me.</p>
+</div>
+<div class="paragraph">
+<p>My attempt is to use a path finding algorithm to explore the valve &amp; tunnel system.</p>
+</div>
+<div class="paragraph">
+<p>The current state (node) is modeled by</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the <code>potential</code>, i.e, the max pressure released until the timer is elapsed if all valves were opened in subsequent steps. If all valves are actually open, the potential is equal to the pressure released until the timer elapses (the volcano erupts)</p>
+</li>
+<li>
+<p>the <code>pressure</code> released</p>
+</li>
+<li>
+<p>the <code>flow</code> of all currently opened valves</p>
+</li>
+<li>
+<p>the <code>idx</code> (position) of the agents opening valves (just me for part 1 and me + an elephant for part 2)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Actually, for part two, the two agents exploring the valve &amp; tunnel system are interchangeable, so I transform to an elephant from time to time</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>the <code>opened</code> valves</p>
+</li>
+<li>
+<p>the <code>timer</code> (counting down to zero)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>I use a priority queue which yields the state with the highest <code>potential</code> first. This results in the following properties:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If a state is expanded, it is guaranteed that all adjacent states have at most the same potential. They will have equal potential if and only if all valves with positive flow are open. In all other cases, they will have lower potential.</p>
+</li>
+<li>
+<p>If a state is popped from the queue, all states popped later on will have at most the same potential.</p>
+</li>
+<li>
+<p>The potential of the first state popped from the queue with all valves open is the max. possible pressure.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The key is to figure out how to narrow down the search space without eliding relevant states. I tried several ideas and do not quite understand why those are not working:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If there is a possibility to open a valve, open it and discard possibilities to move on without opening the valve&#8201;&#8212;&#8201;worked for the real data but not for the examples.</p>
+</li>
+<li>
+<p>If a state is expanded with position and opened valves identical to a state seen previously, skip it&#8201;&#8212;&#8201;worked for the real data but not for the examples.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Eventually, I finished with a variant of the second option: If a state is expanded with position and opened valves identical to a state seen previously, skip it unless it has higher potential than the state seen previously (kind of 'decrease key').</p>
+</div>
+<div class="sect4">
+<h5 id="_input_16"><a class="anchor" href="#_input_16"></a><a class="link" href="#_input_16">Input</a></h5>
+<div class="paragraph">
+<p>I parse the input into a vec of valves. Each valve has its tunnels stored as vec of indices to that list for cheap lookups.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    #[derive(Debug)]
+    pub struct PuzzleData&lt;'a&gt; {
+        valves: Vec&lt;Valve&lt;'a&gt;&gt;,
+        root: usize,
+    }
+
+    fn parse_line(line: &amp;str) -&gt; (&amp;str, Vec&lt;&amp;str&gt;, usize) {
+        let mut words = line.split_ascii_whitespace().skip(1);
+
+        let name = words.next().unwrap();
+
+        let mut words = words.skip(2);
+
+        let flow = words.next().unwrap();
+        let flow = flow[5..flow.len() - 1].parse().unwrap();
+
+        let tunnels = words
+            .skip(4)
+            .map(|word| word.trim_end_matches(','))
+            .collect();
+
+        (name, tunnels, flow)
+    }
+
+    impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData&lt;'a&gt; {
+        /// parse the puzzle input
+        fn from(s: &amp;'a str) -&gt; Self {
+            let lines = s.lines().map(parse_line).collect::&lt;Vec&lt;_&gt;&gt;();
+            let valves = lines
+                .iter()
+                .enumerate()
+                .map(|(index, (name, tunnels, flow))| Valve {
+                    name,
+                    idx: index,
+                    flow: *flow,
+                    tunnels: tunnels
+                        .iter()
+                        .map(|tunnel| {
+                            lines
+                                .iter()
+                                .position(|(name, _, _)| name == tunnel)
+                                .unwrap()
+                        })
+                        .collect(),
+                })
+                .collect();
+            let root = lines.iter().position(|(name, _, _)| name == &amp;"AA").unwrap();
+            Self { valves, root }
+        }
+    }
+
+    impl&lt;'a&gt; PuzzleData&lt;'a&gt; {
+        pub fn get(&amp;self, index: usize) -&gt; &amp;Valve {
+            &amp;self.valves[index]
+        }
+
+        pub fn root(&amp;self) -&gt; &amp;Valve {
+            &amp;self.valves[self.root]
+        }
+
+        pub fn size(&amp;self) -&gt; usize {
+            self.valves.len()
+        }
+
+        pub fn valves(&amp;self) -&gt; &amp;[Valve] {
+            &amp;self.valves
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct Valve&lt;'a&gt; {
+        pub idx: usize,
+        pub name: &amp;'a str,
+        pub flow: usize,
+        pub tunnels: Vec&lt;usize&gt;,
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_14"><a class="anchor" href="#_star_1_14"></a><a class="link" href="#_star_1_14">Star 1</a></h5>
+<div class="paragraph">
+<p>Solution with a single agent (me).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    // search state
+    // - pressure potential
+    // - pressure
+    // - flow (valves opened so far)
+    // - idx (position)
+    // - opened (valves opened so far)
+    // - timer (time left before eruption)
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    struct State {
+        potential: usize,
+        pressure: usize,
+        flow: usize,
+        idx: usize,
+        opened: u64,
+        timer: usize,
+    }
+
+    // all valves opened
+    let all_opened = data
+        .valves()
+        .iter()
+        .filter(|valve| valve.flow &gt; 0)
+        .fold(0u64, |all_opened, valve| all_opened | 1 &lt;&lt; valve.idx);
+
+    let max_flow = data.valves().iter().map(|v| v.flow).sum::&lt;usize&gt;();
+
+    // max time
+    let timer: usize = 30;
+
+    // start at root, no valves open
+    let start = State {
+        potential: max_flow * timer,
+        pressure: 0,
+        flow: 0,
+        idx: data.root().idx,
+        opened: 0,
+        timer,
+    };
+
+    // the queue for searching
+    let mut queue = BinaryHeap::new();
+    queue.push(start);
+
+    // do not visit the same spot with the same opened valves again
+    let mut seen = HashMap::from([((start.idx, start.opened), max_flow * timer)]);
+
+    while let Some(s) = queue.pop() {
+        // do not explore further if timer elapsed or all valves open,
+        // just see if there is something better in the queue
+        if s.timer == 0 || s.opened == all_opened {
+            return s.potential;
+        }
+
+        let v = data.get(s.idx);
+
+        let can_open = (s.opened &amp; 1 &lt;&lt; v.idx) == 0 &amp;&amp; v.flow &gt; 0;
+
+        for (open, adj) in once((true, v))
+            .chain(v.tunnels.iter().map(|&amp;idx| (false, data.get(idx))))
+            .filter(|&amp;(open, _)| !open || can_open)
+        {
+            let (opened, flow) = if open {
+                (s.opened | 1 &lt;&lt; adj.idx, s.flow + adj.flow)
+            } else {
+                (s.opened, s.flow)
+            };
+            let next = State {
+                potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
+                // pressure is
+                // - actual pressure in previous step: s.pressure - s.flow * s.timer
+                // - plus everything added in this step: s.flow
+                // - plus everything added until timer elapsed: flow * (s.timer - 1)
+                pressure: s.pressure + s.flow,
+                flow,
+                // indices are sorted to avoid exploring the same state multiple times
+                idx: adj.idx,
+                opened,
+                // decrement timer
+                timer: s.timer - 1,
+            };
+            if match seen.entry((next.idx, next.opened)) {
+                Entry::Occupied(o) if o.get() &lt; &amp;next.potential =&gt; {
+                    *o.into_mut() = next.potential;
+                    true
+                }
+                Entry::Vacant(v) =&gt; {
+                    v.insert(next.potential);
+                    true
+                }
+                _ =&gt; false,
+            } {
+                queue.push(next);
+            }
+        }
+    }
+
+    unreachable!();
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_14"><a class="anchor" href="#_star_2_14"></a><a class="link" href="#_star_2_14">Star 2</a></h5>
+<div class="paragraph">
+<p>Same solution with two agents (me + elephant), not really anything new compared to star 1.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    // search state
+    // - pressure potential
+    // - pressure
+    // - flow (valves opened so far)
+    // - idx (positions, sorted)
+    // - opened (valves opened so far)
+    // - timer (time left before eruption)
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    struct State {
+        potential: usize,
+        pressure: usize,
+        flow: usize,
+        idx: [usize; 2],
+        opened: u64,
+        timer: usize,
+    }
+
+    // all valves opened
+    let all_opened = data
+        .valves()
+        .iter()
+        .filter(|valve| valve.flow &gt; 0)
+        .fold(0u64, |all_opened, valve| all_opened | 1 &lt;&lt; valve.idx);
+
+    let max_flow = data.valves().iter().map(|v| v.flow).sum::&lt;usize&gt;();
+
+    // max time
+    let timer: usize = 26;
+
+    // start at root, no valves open
+    let start = State {
+        potential: max_flow * timer,
+        pressure: 0,
+        flow: 0,
+        idx: [data.root().idx; 2],
+        opened: 0,
+        timer,
+    };
+
+    // the queue for searching
+    let mut queue = BinaryHeap::new();
+    queue.push(start);
+
+    // do not visit the same spot with the same opened valves again
+    let mut seen = HashMap::from([((start.idx, start.opened), max_flow * timer)]);
+
+    while let Some(s) = queue.pop() {
+        // do not explore further if timer elapsed or all valves open,
+        // just see if there is something better in the queue
+        if s.timer == 0 || s.opened == all_opened {
+            return s.potential;
+        }
+
+        let v_1 = data.get(s.idx[0]);
+        let v_2 = data.get(s.idx[1]);
+
+        let can_open_1 = (s.opened &amp; 1 &lt;&lt; v_1.idx) == 0 &amp;&amp; v_1.flow &gt; 0;
+        let can_open_2 = v_1.idx != v_2.idx &amp;&amp; (s.opened &amp; 1 &lt;&lt; v_2.idx) == 0 &amp;&amp; v_2.flow &gt; 0;
+
+        for (open_1, adj_1) in once((true, v_1))
+            .chain(v_1.tunnels.iter().map(|&amp;idx| (false, data.get(idx))))
+            .filter(|&amp;(open, _)| !open || can_open_1)
+        {
+            for (open_2, adj_2) in once((true, v_2))
+                .chain(v_2.tunnels.iter().map(|&amp;idx| (false, data.get(idx))))
+                .filter(|&amp;(open, _)| !open || can_open_2)
+            {
+                let mut opened = s.opened;
+                let mut flow = s.flow;
+                if open_1 {
+                    opened |= 1 &lt;&lt; adj_1.idx;
+                    flow += adj_1.flow;
+                }
+                if open_2 {
+                    opened |= 1 &lt;&lt; adj_2.idx;
+                    flow += adj_2.flow;
+                }
+                let next = State {
+                    potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
+                    // pressure is
+                    // - actual pressure in previous step: s.pressure - s.flow * s.timer
+                    // - plus everything added in this step: s.flow
+                    // - plus everything added until timer elapsed: flow * (s.timer - 1)
+                    pressure: s.pressure + s.flow,
+                    flow,
+                    // indices are sorted to avoid exploring the same state multiple times
+                    idx: [adj_1.idx.min(adj_2.idx), adj_1.idx.max(adj_2.idx)],
+                    opened,
+                    // decrement timer
+                    timer: s.timer - 1,
+                };
+                if match seen.entry((next.idx, next.opened)) {
+                    Entry::Occupied(o) if o.get() &lt; &amp;next.potential =&gt; {
+                        *o.into_mut() = next.potential;
+                        true
+                    }
+                    Entry::Vacant(v) =&gt; {
+                        v.insert(next.potential);
+                        true
+                    }
+                    _ =&gt; false,
+                } {
+                    queue.push(next);
+                }
+            }
+        }
+    }
+
+    unreachable!();
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_17"><a class="anchor" href="#_tests_17"></a><a class="link" href="#_tests_17">Tests</a></h5>
+<div class="paragraph">
+<p>One additional test to see whether my calculations come up with the correct result but following the path defined in the puzzle for part 2. They do ;)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use std::collections::{HashMap, HashSet};
+
+    use super::*;
+
+    const CONTENT: &amp;str = r#"Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
+Valve BB has flow rate=13; tunnels lead to valves CC, AA
+Valve CC has flow rate=2; tunnels lead to valves DD, BB
+Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
+Valve EE has flow rate=3; tunnels lead to valves FF, DD
+Valve FF has flow rate=0; tunnels lead to valves EE, GG
+Valve GG has flow rate=0; tunnels lead to valves FF, HH
+Valve HH has flow rate=22; tunnel leads to valve GG
+Valve II has flow rate=0; tunnels lead to valves AA, JJ
+Valve JJ has flow rate=21; tunnel leads to valve II
+"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        let root = data.root();
+        assert_eq!("AA", root.name);
+        assert_eq!(
+            vec!["DD", "II", "BB"],
+            root.tunnels
+                .iter()
+                .map(|&amp;index| data.get(index).name)
+                .collect::&lt;Vec&lt;_&gt;&gt;()
+        );
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(1_651, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_example() {
+        let data = PuzzleData::from(CONTENT);
+        let map = (0..data.size())
+            .map(|index| (data.get(index as _).name, index as usize))
+            .collect::&lt;HashMap&lt;_, _&gt;&gt;();
+
+        let steps = [
+            (1, false, "DD"),
+            (2, true, "DD"),
+            (3, false, "CC"),
+            (4, false, "BB"),
+            (5, true, "BB"),
+            (6, false, "AA"),
+            (7, false, "II"),
+            (8, false, "JJ"),
+            (9, true, "JJ"),
+            (10, false, "II"),
+            (11, false, "AA"),
+            (12, false, "DD"),
+            (13, false, "EE"),
+            (14, false, "FF"),
+            (15, false, "GG"),
+            (16, false, "HH"),
+            (17, true, "HH"),
+            (18, false, "GG"),
+            (19, false, "FF"),
+            (20, false, "EE"),
+            (21, true, "EE"),
+            (22, false, "DD"),
+            (23, false, "CC"),
+            (24, true, "CC"),
+        ];
+
+        let max_flow: usize = data.valves().iter().map(|v| v.flow).sum();
+        let timer = 30;
+
+        #[derive(Debug)]
+        struct State {
+            potential: usize,
+            pressure: usize,
+            flow: usize,
+            idx: usize,
+            opened: u64,
+            timer: usize,
+        }
+
+        let mut s = State {
+            potential: timer * max_flow,
+            pressure: 0,
+            flow: 0,
+            idx: *map.get("AA").unwrap(),
+            opened: 0,
+            timer: timer,
+        };
+
+        let mut seen = HashSet::new();
+        seen.insert((s.idx, s.opened));
+
+        for (minute, open, valve) in steps {
+            let idx = *map.get(valve).unwrap();
+            let v = data.get(idx);
+            assert!(idx == s.idx || !open);
+            assert!(open || data.get(s.idx).tunnels.contains(&amp;idx));
+            s = State {
+                potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
+                pressure: s.pressure + s.flow,
+                flow: if open { s.flow + v.flow } else { s.flow },
+                idx: v.idx,
+                opened: if open { s.opened | 1 &lt;&lt; idx } else { s.opened },
+                timer: s.timer - 1,
+            };
+            assert!(seen.insert((s.idx, s.opened)));
+            println!(
+                "{minute}, {} {valve}, open valves: {:?} ({s:?})",
+                if open { "opened" } else { "moved to" },
+                data.valves()
+                    .iter()
+                    .filter(|v| (s.opened &amp; 1 &lt;&lt; v.idx) &gt; 0)
+                    .map(|v| v.name)
+                    .collect::&lt;Vec&lt;_&gt;&gt;()
+            );
+        }
+        println!(
+            "{} + {} * {} = {}, {}",
+            s.pressure,
+            s.timer,
+            s.flow,
+            s.pressure + s.timer * s.flow,
+            s.potential
+        );
+
+        assert_eq!(1_651, s.potential);
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(1_707, star_2(&amp;data));
     }
 }</code></pre>
 </div>
