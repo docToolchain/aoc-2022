@@ -309,6 +309,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_16_rust">Day 16: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_16_proboscidea_volcanium">Day 16: Proboscidea Volcanium</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_14">Oveview</a></li>
+<li><a href="#_solution_15">Solution</a></li>
+<li><a href="#_how_to_run_16">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -4533,6 +4544,428 @@ impl Diamond {
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute the command
 <code>cargo run --release</code> to run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day16" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_16_rust"><a class="anchor" href="#_day_16_rust"></a><a class="link" href="#_day_16_rust">Day 16: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_16_proboscidea_volcanium"><a class="anchor" href="#_day_16_proboscidea_volcanium"></a><a class="link" href="#_day_16_proboscidea_volcanium">Day 16: Proboscidea Volcanium</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_14"><a class="anchor" href="#_oveview_14"></a><a class="link" href="#_oveview_14">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_15"><a class="anchor" href="#_solution_15"></a><a class="link" href="#_solution_15">Solution</a></h5>
+<div class="paragraph">
+<p>Today&#8217;s part 2 was pretty tricky and I guess rust&#8217;s efficiency kind of saved me.
+I actually assumed something completely different, but luckily I refrained from
+overcomplicating part 1 because of that.</p>
+</div>
+<div class="paragraph">
+<p>Part 1 was a straightforward backtracking problem.
+A stupid mistake caused me to lose quite some time, though, which meant I had a
+lot less time for part 2.
+The main idea I had was not to simulate the passing of time but instead have
+each valve contribute directly to the overall release value because we know for
+how long it will be opened.
+Furthermore, I computed pairwise distances before running any backtracking and
+ignored all those valves that had a zero release rate.
+Pairwise distances can be computed easily by bubbling a nearest neighbour sphere
+outwards.</p>
+</div>
+<div class="paragraph">
+<p>I still solved part 2 like a backtracking problem.
+The added complexity comes from the fact that the elephant can also act.</p>
+</div>
+<div class="paragraph">
+<p>I modelled the world in a way that had the human act first on a specific number
+of valves.
+Then time is reset, and the elephant acts on as many valves at it likes from
+among those valves that the human hasn&#8217;t acted on, yet, until there are no more
+valves left or time runs out.
+I then decrease the number of valves the human acts on in steps of 1 starting at
+the maximum possible number and take the overall highest release value.</p>
+</div>
+<div class="paragraph">
+<p>I added a quick stopping condition, which worked for my inputs but might not
+translate.
+Set the env var <code>QUICK=0</code> to disable quick mode, which is enabled by default.
+Quick mode assumes that, as the number of valves opened by the human decreases,
+the best possible release value will only ever increase.
+With quick mode enabled, this runs in &lt;20s on my &gt;10year old business notebook.
+Without quick mode, it takes &lt;3min.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::{HashMap, HashSet};
+// Constants.
+const START: &amp;'static str = "AA";
+
+fn pairwise_distances(
+    valve_map: &amp;HashMap&lt;String, &amp;data::Valve&gt;,
+) -&gt; HashMap&lt;(String, String), usize&gt; {
+    let mut result = HashMap::&lt;(String, String), usize&gt;::new();
+
+    for (name, valve) in valve_map {
+        let mut curr_dist = 1 as usize;
+        // All neighbours have a distance of one.
+        let mut distances = valve
+            .neighbours
+            .iter()
+            .map(|el| (el.clone(), curr_dist))
+            .collect::&lt;HashMap&lt;_, _&gt;&gt;();
+        // We always remeber new points we added. Those points have a distance of one more than the
+        // previous max.
+        let mut new_valves = distances
+            .iter()
+            .map(|el| el.0.clone())
+            .collect::&lt;HashSet&lt;_&gt;&gt;();
+        // We include the point itself for ease of use later on.
+        distances.insert(name.clone(), 0);
+
+        // Repeat until no more neighbours have been added.
+        while new_valves.len() != 0 {
+            curr_dist += 1;
+            // Determine those valve names that are at the next distance.
+            new_valves = new_valves
+                .iter()
+                // Extract the actual valve data.
+                .filter_map(|el| valve_map.get(el))
+                // Get all neighbours of those valves we just extracted in one big iterator.
+                .map(|el| el.neighbours.iter())
+                .flatten()
+                // Get a unique set of the names of those valves that may have been added in this
+                // iteration.
+                .collect::&lt;HashSet&lt;_&gt;&gt;()
+                .into_iter()
+                // Keep only those to which we haven't yet computed distances.
+                .filter_map(|el| {
+                    if let Some(_) = distances.get(el) {
+                        None
+                    } else {
+                        Some(el.clone())
+                    }
+                })
+                .collect::&lt;HashSet&lt;_&gt;&gt;();
+            // Add those distances.
+            distances.extend(new_valves.iter().map(|el| (el.clone(), curr_dist)));
+        }
+
+        result.extend(
+            distances
+                .into_iter()
+                .map(|(new_valve, dist)| ((name.clone(), new_valve), dist)),
+        );
+    }
+
+    result
+}
+
+fn backtrack(
+    valve_name_map: &amp;HashMap&lt;String, &amp;data::Valve&gt;,
+    distances: &amp;HashMap&lt;(String, String), usize&gt;,
+    relevant_valves: &amp;Vec&lt;Option&lt;String&gt;&gt;,
+    current_spot: &amp;String,
+    current_time: usize,
+    max_time: usize,
+    current_best: usize,
+    visited: &amp;mut HashSet&lt;String&gt;,
+    allow_elephant: bool,
+    elephant_depth: usize,
+) -&gt; Result&lt;usize&gt; {
+    // Check that None is the first entry in the list of relevant_valves.
+    if allow_elephant &amp;&amp; !relevant_valves[0].as_ref().is_none() {
+        return Err(Error::msg("the first relevant valve has to be None"));
+    }
+    let mut next_best = current_best;
+
+    for maybe_next_spot in relevant_valves.iter() {
+        let possible_best = if let Some(next_spot) = maybe_next_spot {
+            // Let the human do their thing.
+            // Skip spots we've already seen.
+            if visited.contains(next_spot) {
+                continue;
+            }
+
+            let time_spent_traveling = distances
+                .get(&amp;(current_spot.to_string(), next_spot.to_string()))
+                .ok_or(Error::msg("cannot retrieve distance"))?;
+
+            // We add 1 because of the time it takes to open the valve.
+            let time_of_next_valve_opening = current_time + time_spent_traveling + 1;
+
+            // Check whether we have any time left to open another valve.
+            if time_of_next_valve_opening &gt;= max_time {
+                // If not, we found the best we can using this route. Skip this spot.
+                continue;
+            } else {
+                // We will be able to open that valve.
+                // Remember that we visited it.
+                visited.insert(next_spot.to_string());
+
+                // Check by how much the next valve can increase our release value.
+                let next_valve_rate = valve_name_map
+                    .get(next_spot)
+                    .ok_or(Error::msg("cannot retrieve valve"))?
+                    .rate;
+                let benefit = (max_time - time_of_next_valve_opening) * next_valve_rate;
+
+                backtrack(
+                    valve_name_map,
+                    distances,
+                    relevant_valves,
+                    &amp;next_spot,
+                    time_of_next_valve_opening,
+                    max_time,
+                    current_best + benefit,
+                    visited,
+                    allow_elephant,
+                    elephant_depth,
+                )?
+            }
+        } else if allow_elephant &amp;&amp; visited.len() == elephant_depth {
+            // Let the elephant also do its thing, allowing it only to visit those points that we
+            // haven't yet visited. Actually, this has to be the first step we do for the algorithm
+            // to work. Otherwise, better paths will be missed.
+            backtrack(
+                valve_name_map,
+                distances,
+                relevant_valves,
+                // The elephant starts at the start.
+                &amp;START.to_string(),
+                // Time is reset.
+                0,
+                max_time,
+                // We will still have acted, meaning the elephant can only ever increase the
+                // release value.
+                next_best,
+                // The elephant may only visit those valves that we haven't yet visited.
+                visited,
+                // Don't allow yet another elephant to explore.
+                false,
+                elephant_depth,
+            )?
+        } else {
+            // This block allows us to still run part 1 despite all the code related to elephants.
+            0
+        };
+        if possible_best &gt; next_best {
+            next_best = possible_best;
+        }
+
+        // Forget that we visited the point but only if this isn't the elephant's turn.
+        if let Some(next_spot) = maybe_next_spot {
+            visited.remove(next_spot);
+        }
+    }
+    // Return the bext one we found.
+    Ok(next_best)
+}
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let valves = io::parse_chunks_to_data::&lt;data::Valve&gt;(
+        io::read_lines_from_file(file, 1)?,
+        "valves",
+        None,
+        None,
+    )?;
+    // We only want to look at valves that have non-zero rates for part 1. I suspect it's gonna be
+    // different for part 2. Nope, it's not.
+    let relevant_valves = valves
+        .iter()
+        .filter_map(|el| {
+            if el.rate &gt; 0 {
+                Some(el.name.clone())
+            } else {
+                None
+            }
+        })
+        .map(|el| Some(el))
+        .collect::&lt;Vec&lt;_&gt;&gt;();
+
+    // Compute pairwise distances.
+    let valve_name_map = valves
+        .iter()
+        .map(|el| (el.name.clone(), el))
+        .collect::&lt;HashMap&lt;_, _&gt;&gt;();
+    let distances = pairwise_distances(&amp;valve_name_map);
+
+    // Backtrack the solution.
+    let start_time = 0;
+    let max_time = 30;
+    let start_release = 0;
+    let mut visited = HashSet::&lt;String&gt;::with_capacity(relevant_valves.len());
+
+    let max_part1 = backtrack(
+        &amp;valve_name_map,
+        &amp;distances,
+        &amp;relevant_valves,
+        &amp;START.to_string(),
+        start_time,
+        max_time,
+        start_release,
+        &amp;mut visited,
+        false,
+        0,
+    )?;
+    println!("part 1: {}", max_part1);
+
+    // Part 2.
+    // Backtrack the solution.
+
+    let max_time_part2 = 26;
+    // A value of None means that the human should stop what they are doing and let the elephant do
+    // its thing. It has to be the first entry in relevant_valves. Otherwise, better paths are
+    // lost, somehow.
+    let mut relevant_with_elephant = vec![None];
+    relevant_with_elephant.extend_from_slice(&amp;relevant_valves);
+
+    // Quick mode uses the below assumptions and we use it by default.
+    let quick_mode = std::env::var("QUICK").unwrap_or("1".to_string()) == "1";
+
+    let mut best = 0;
+    // This is a bit hacky but it works. We check what happens if the human is guaranteed a certain
+    // number of valves because the elephant can only open those that the human didn't approach.
+    // Then, we assume that, the fewer valves the human opens, the higher the overal pressure
+    // release gets because the elephant can open some. At some point, since this is at least a
+    // certain number of steps, there will no longer be an increase followed by a decrease, which
+    // is our stopping point. This is an assumption, which tunrs out to hold, but it might not for
+    // all possible inputs. If it doesn't simply disable quick mode.
+    for num_human_valves in (0..relevant_valves.len()).rev() {
+        // Reset some mutable data structures.
+        visited = HashSet::&lt;String&gt;::with_capacity(relevant_valves.len());
+
+        let max = backtrack(
+            &amp;valve_name_map,
+            &amp;distances,
+            &amp;relevant_with_elephant,
+            &amp;START.to_string(),
+            start_time,
+            max_time_part2,
+            start_release,
+            &amp;mut visited,
+            true,
+            num_human_valves,
+        )?;
+        println!(
+            "part 2: with {} guaranteed human valves: {}",
+            num_human_valves, max
+        );
+        if quick_mode {
+            if max &lt; best {
+                break;
+            } else {
+                best = max;
+            }
+        } else {
+            if max &gt; best {
+                best = max;
+            }
+        }
+    }
+    println!("part 2: {}", best);
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1)?;
+    solve(REAL)?;
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub struct Valve {
+    pub name: String,
+    pub rate: usize,
+    pub neighbours: Vec&lt;String&gt;,
+}
+
+impl FromStr for Valve {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        let name: String;
+        let rate: usize;
+        let neighbours: Vec&lt;String&gt;;
+
+        match s.split(";").collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+            [valve_data, tunnel_data] =&gt; {
+                match valve_data.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+                    ["Valve", id, "has", "flow", rate_str] =&gt; {
+                        name = id.to_string();
+                        rate = rate_str.trim_start_matches("rate=").parse()?;
+                    }
+                    _ =&gt; {
+                        return Err(Error::msg("cannot parse valve data"));
+                    }
+                }
+                if !tunnel_data.starts_with(" tunnels lead to valve")
+                    &amp;&amp; !tunnel_data.starts_with(" tunnel leads to valve")
+                {
+                    return Err(Error::msg("cannot parse tunnel data"));
+                }
+                neighbours = tunnel_data
+                    .split_whitespace()
+                    .skip(4)
+                    .map(|el| el.trim().trim_end_matches(",").to_string())
+                    .collect::&lt;Vec&lt;_&gt;&gt;();
+                Ok(Self {
+                    name,
+                    rate,
+                    neighbours,
+                })
+            }
+            _ =&gt; Err(Error::msg("cannot parse valve")),
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_16"><a class="anchor" href="#_how_to_run_16"></a><a class="link" href="#_how_to_run_16">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
 The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
 </div>
 </div>
