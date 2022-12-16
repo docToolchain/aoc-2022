@@ -1,0 +1,73 @@
+== Day 16: Proboscidea Volcanium ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+Today's part 2 was pretty tricky and I guess rust's efficiency kind of saved me.
+I actually assumed something completely different, but luckily I refrained from
+overcomplicating part 1 because of that.
+
+Part 1 was a straightforward backtracking problem.
+A stupid mistake caused me to lose quite some time, though, which meant I had a
+lot less time for part 2.
+The main idea I had was not to simulate the passing of time but instead have
+each valve contribute directly to the overall release value because we know for
+how long it will be opened.
+Furthermore, I computed pairwise distances before running any backtracking and
+ignored all those valves that had a zero release rate.
+Pairwise distances can be computed easily by bubbling a nearest neighbour sphere
+outwards.
+
+I still solved part 2 like a backtracking problem.
+The added complexity comes from the fact that the elephant can also act.
+
+I modelled the world in a way that had the human act first on a specific number
+of valves.
+Then time is reset, and the elephant acts on as many valves at it likes from
+among those valves that the human hasn't acted on, yet, until there are no more
+valves left or time runs out.
+I then decrease the number of valves the human acts on in steps of 1 starting at
+the maximum possible number and take the overall highest release value.
+
+I added a quick stopping condition, which worked for my inputs but might not
+translate.
+Set the env var `QUICK=0` to disable quick mode, which is enabled by default.
+Quick mode assumes that, as the number of valves opened by the human decreases,
+the best possible release value will only ever increase.
+With quick mode enabled, this runs in <20s on my >10year old business notebook.
+Without quick mode, it takes <3min.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.

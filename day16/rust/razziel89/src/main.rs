@@ -109,8 +109,7 @@ fn backtrack(
 
             // Check whether we have any time left to open another valve.
             if time_of_next_valve_opening >= max_time {
-                // If not, we found the best we can using this route. Skip this spot, but make sure
-                // to let the elephant do its thing.
+                // If not, we found the best we can using this route. Skip this spot.
                 continue;
             } else {
                 // We will be able to open that valve.
@@ -145,17 +144,22 @@ fn backtrack(
                 valve_name_map,
                 distances,
                 relevant_valves,
+                // The elephant starts at the start.
                 &START.to_string(),
+                // Time is reset.
                 0,
                 max_time,
+                // We will still have acted, meaning the elephant can only ever increase the
+                // release value.
                 next_best,
+                // The elephant may only visit those valves that we haven't yet visited.
                 visited,
-                // Don't allow the elephant to explore again.
+                // Don't allow yet another elephant to explore.
                 false,
                 elephant_depth,
             )?
         } else {
-            // This block allows us to still run part 1.
+            // This block allows us to still run part 1 despite all the code related to elephants.
             0
         };
         if possible_best > next_best {
@@ -182,7 +186,7 @@ fn solve(file: &str) -> Result<()> {
         None,
     )?;
     // We only want to look at valves that have non-zero rates for part 1. I suspect it's gonna be
-    // different for part 2.
+    // different for part 2. Nope, it's not.
     let relevant_valves = valves
         .iter()
         .filter_map(|el| {
@@ -242,8 +246,7 @@ fn solve(file: &str) -> Result<()> {
     // release gets because the elephant can open some. At some point, since this is at least a
     // certain number of steps, there will no longer be an increase followed by a decrease, which
     // is our stopping point. This is an assumption, which tunrs out to hold, but it might not for
-    // all possible inputs. If it doesn't simply remove the breaking condition and use the overall
-    // max, it'll just take longer.
+    // all possible inputs. If it doesn't simply disable quick mode.
     for num_human_valves in (0..relevant_valves.len()).rev() {
         // Reset some mutable data structures.
         visited = HashSet::<String>::with_capacity(relevant_valves.len());
