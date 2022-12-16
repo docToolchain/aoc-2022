@@ -85,16 +85,15 @@ fn backtrack(
     visited: &mut HashSet<String>,
     allow_elephant: bool,
     elephant_depth: usize,
-) -> Result<(usize, HashSet<String>)> {
+) -> Result<usize> {
     // Check that None is the first entry in the list of relevant_valves.
     if allow_elephant && !relevant_valves[0].as_ref().is_none() {
         return Err(Error::msg("the first relevant valve has to be None"));
     }
     let mut next_best = current_best;
-    let mut best_stack: HashSet<String> = visited.iter().map(|el| el.clone()).collect();
 
     for maybe_next_spot in relevant_valves.iter() {
-        let (possible_best, possible_stack) = if let Some(next_spot) = maybe_next_spot {
+        let possible_best = if let Some(next_spot) = maybe_next_spot {
             // Let the human do their thing.
             // Skip spots we've already seen.
             if visited.contains(next_spot) {
@@ -157,11 +156,10 @@ fn backtrack(
             )?
         } else {
             // This block allows us to still run part 1.
-            (0, HashSet::<String>::new())
+            0
         };
         if possible_best > next_best {
             next_best = possible_best;
-            best_stack = possible_stack.iter().map(|el| el.clone()).collect();
         }
 
         // Forget that we visited the point but only if this isn't the elephant's turn.
@@ -170,7 +168,7 @@ fn backtrack(
         }
     }
     // Return the bext one we found.
-    Ok((next_best, best_stack))
+    Ok(next_best)
 }
 
 fn solve(file: &str) -> Result<()> {
@@ -210,7 +208,7 @@ fn solve(file: &str) -> Result<()> {
     let start_release = 0;
     let mut visited = HashSet::<String>::with_capacity(relevant_valves.len());
 
-    let (max_part1, _) = backtrack(
+    let max_part1 = backtrack(
         &valve_name_map,
         &distances,
         &relevant_valves,
@@ -234,6 +232,9 @@ fn solve(file: &str) -> Result<()> {
     let mut relevant_with_elephant = vec![None];
     relevant_with_elephant.extend_from_slice(&relevant_valves);
 
+    // Quick mode uses the below assumptions and we use it by default.
+    let quick_mode = std::env::var("QUICK").unwrap_or("1".to_string()) == "1";
+
     let mut best = 0;
     // This is a bit hacky but it works. We check what happens if the human is guaranteed a certain
     // number of valves because the elephant can only open those that the human didn't approach.
@@ -247,7 +248,7 @@ fn solve(file: &str) -> Result<()> {
         // Reset some mutable data structures.
         visited = HashSet::<String>::with_capacity(relevant_valves.len());
 
-        let (max, _) = backtrack(
+        let max = backtrack(
             &valve_name_map,
             &distances,
             &relevant_with_elephant,
@@ -263,10 +264,16 @@ fn solve(file: &str) -> Result<()> {
             "part 2: with {} guaranteed human valves: {}",
             num_human_valves, max
         );
-        if max < best {
-            break;
+        if quick_mode {
+            if max < best {
+                break;
+            } else {
+                best = max;
+            }
         } else {
-            best = max;
+            if max > best {
+                best = max;
+            }
         }
     }
     println!("part 2: {}", best);
