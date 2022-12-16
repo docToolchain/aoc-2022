@@ -85,6 +85,10 @@ fn backtrack(
     visited: &mut HashSet<String>,
     allow_elephant: bool,
 ) -> Result<(usize, HashSet<String>)> {
+    // Check that None is the first entry in the list of relevant_valves.
+    if allow_elephant && !relevant_valves[0].as_ref().is_none() {
+        return Err(Error::msg("the first relevant valve has to be None"));
+    }
     let mut next_best = current_best;
     let mut best_stack: HashSet<String> = visited.iter().map(|el| el.clone()).collect();
 
@@ -222,6 +226,9 @@ fn solve(file: &str) -> Result<()> {
     visited = HashSet::<String>::with_capacity(relevant_valves.len());
 
     let max_time_part2 = 26;
+    // A value of None means that the human should stop what they are doing and let the elephant do
+    // its thing. It has to be the first entry in relevant_valves. Otherwise, better paths are
+    // lost, somehow.
     let mut relevant_with_elephant = vec![None];
     relevant_with_elephant.extend_from_slice(&relevant_valves);
 
