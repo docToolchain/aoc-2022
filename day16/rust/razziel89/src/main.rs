@@ -101,8 +101,9 @@ fn backtrack(
 
         // Check whether we have any time left to open another valve.
         if time_of_next_valve_opening >= max_time {
-            // If not, we found the best we can using this route.
-            return Ok((current_best, best_stack));
+            // If not, we found the best we can using this route. Skip this spot.
+            // return Ok((current_best, best_stack));
+            continue;
         } else {
             // We will be able to open that valve.
             // Remember that we visited it.
@@ -166,20 +167,12 @@ fn solve(file: &str) -> Result<()> {
         })
         .collect::<Vec<_>>();
 
-    // for v in &valves {
-    //     println!("all {:?}", v);
-    // }
-    // for v in &relevant_valves {
-    //     println!("rel {:?}", v);
-    // }
-
     // Compute pairwise distances.
     let valve_name_map = valves
         .iter()
         .map(|el| (el.name.clone(), el))
         .collect::<HashMap<_, _>>();
     let distances = pairwise_distances(&valve_name_map);
-    // println!("{:?}", distances);
 
     // Backtrack the solution.
     let start_time = 0;
@@ -207,7 +200,7 @@ fn solve(file: &str) -> Result<()> {
 
 fn main() -> Result<()> {
     solve(SAMPLE1)?;
-    // solve(REAL)?;
+    solve(REAL)?;
     Ok(())
 }
 // end::main[]
