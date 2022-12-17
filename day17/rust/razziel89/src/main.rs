@@ -44,7 +44,6 @@ fn render(field: &HashSet<data::Pos>, rock: &data::Rock, pos: &data::Pos) {
         print!("\n");
     }
     print!("\n");
-    // std::io::stdin().lines().next();
 }
 
 fn is_blocked(field: &HashSet<data::Pos>, check: &data::Pos, width: isize) -> data::Blocked {
@@ -54,13 +53,15 @@ fn is_blocked(field: &HashSet<data::Pos>, check: &data::Pos, width: isize) -> da
         data::Blocked::Rock
     } else if check.y == 0 {
         // This is hacky but we simulate a floor of rocks so that a downward operation will have
-        // the rock settle there.
+        // the rock to settle on.
         data::Blocked::Rock
     } else {
         data::Blocked::None
     }
 }
 
+// Nice means no rock can muddle its way through. There is a direct connection from the left wall
+// to the right wall.
 fn is_nice_ground(ground: &HashSet<data::Pos>, field: &HashSet<data::Pos>) -> bool {
     let mut x = 1;
     let mut candidates = ground
@@ -82,6 +83,9 @@ fn is_nice_ground(ground: &HashSet<data::Pos>, field: &HashSet<data::Pos>) -> bo
     x == 8
 }
 
+// We try to find the ground the last rock settled on. We basically go from top to the bottom until
+// we have found at least one rock at each of the possible 7 x positions. For piece of mind, we
+// only consider nice grounds (see is_nice_ground for a definition).
 fn get_ground(field: &HashSet<data::Pos>, top_rock: isize) -> Option<HashSet<data::Pos>> {
     let mut found = vec![false; 7];
     let mut bottom = HashSet::<data::Pos>::new();
@@ -109,36 +113,38 @@ fn get_ground(field: &HashSet<data::Pos>, top_rock: isize) -> Option<HashSet<dat
     }
 }
 
+// Rep stands for repetition.
 #[derive(Debug)]
 struct Rep {
     round: usize,
-    step: usize,
     top_rock: isize,
     ground: HashSet<data::Pos>,
 }
 
 // Yeah, we are playing tetris today.
+// This function looked OK until after part 1 but now it's horrible, but I don't want to take any
+// time to refactor.
 fn play_tetris(
     mut stream: Cycle<IntoIter<data::Push>>,
     mut rocks: Cycle<IntoIter<data::Rock>>,
     max_num_rocks: usize,
     num_steam_steps: usize,
     num_rock_steps: usize,
+    // trigger for part 2.
     do_repeat: bool,
 ) -> usize {
-    // let mut nice_repeating_grounds = Vec::<(usize, usize, HashSet<data::Pos>)>::new();
     let mut possible_rep_store = HashMap::<(usize, usize), Vec<Rep>>::new();
-    // The field is 7 spots wide. Thus, if one wall is at 0, the other is at 8.
+    // We will track the positions of all rocks with this.
     let mut field = HashSet::<data::Pos>::new();
     // At the beginning, there is no rock yet. Thus, the top position is the floor.
     let mut top_rock = 0;
+    // Round counts rocks.
     let mut round = 0;
+    // Step counts gusts of air.
     let mut step = 0;
-    // let mut potential_ground = HashSet::<data::Pos>::new();
     while round < max_num_rocks {
         round += 1;
         let rock = rocks.next().expect("weren't there infinitely many rocks");
-        // println!("{}/{} {}", round, max_num_rocks, top_rock);
         // Spwan a rock.
         let mut pos = data::Pos {
             // There also have to be 2 free spaces in x direction. Thus, it spawns at x
@@ -148,7 +154,6 @@ fn play_tetris(
             // further above.
             y: top_rock + 4,
         };
-        // render(&field, &rock, &pos);
         let mut has_settled = false;
         while !has_settled {
             // Get the next stream element. This is an infinite iterator.
@@ -157,7 +162,6 @@ fn play_tetris(
 
             // Apply the movement operation to the side.
             let next_pushed = push.apply(&pos);
-            // render(&field, &rock, &next_pushed);
             // Check whether there is any collision.
             let push_blocked_check = rock
                 .occupied_fields(&next_pushed)
@@ -170,7 +174,6 @@ fn play_tetris(
 
             // Move downwards and check again.
             let next_dropped = pos.drop();
-            // render(&field, &rock, &next_dropped);
             // Check whether there is any collision.
             let drop_blocked_check = rock
                 .occupied_fields(&next_dropped)
@@ -182,6 +185,7 @@ fn play_tetris(
                 has_settled = true;
                 // Find the topmost position and occupy all fields of the rock.
                 field.extend(rock.occupied_fields(&pos));
+                // Check whether the rock that just settled reaches higher than before.
                 let possible_top_rock = rock
                     .occupied_fields(&pos)
                     .map(|el| el.y)
@@ -195,10 +199,17 @@ fn play_tetris(
                 pos = next_dropped;
             }
         }
+        // This entire block is horrible and takes care of part 2. Ignore it for part 1.
         if do_repeat && round % num_rock_steps == 0 {
+            // If we're in here, a square block has settled.
+            // Determine our position in the repeating rock and steam streams.
             let rep_key = (round % num_rock_steps, step % num_steam_steps);
             if let Some(ground) = get_ground(&field, top_rock) {
+                // If we're in here, then the rock has settled on a patch of ground that is nice
+                // (i.e. where no rock can muddle its way through).
                 if let Some(possible_rep) = possible_rep_store.get_mut(&rep_key) {
+                    // If we're in here, we have already found this type of rock settling at this
+                    // position in the stream/gust of air sequence.
                     // Check whether the ground repeated, too.
                     if let Some(rep) = possible_rep.iter().find_map(|el| {
                         if el.ground.len() == ground.len() && (&el.ground ^ &ground).len() == 0 {
@@ -207,39 +218,21 @@ fn play_tetris(
                             None
                         }
                     }) {
-                        // We have found a ground that repeated itself, yeah!
-                        render(&ground, &data::Rock::Minus, &data::Pos { x: -10, y: -10 });
-                        render(
-                            &rep.ground,
-                            &data::Rock::Minus,
-                            &data::Pos { x: -10, y: -10 },
-                        );
-                        println!("{:?}", rep);
-                        println!(
-                            "{:?}",
-                            Rep {
-                                round,
-                                step,
-                                top_rock,
-                                ground: HashSet::new(),
-                            }
-                        );
-                        println!("{:?}", rep_key);
-
+                        // If we're in here, we found the same type of rock that settled at the
+                        // same position in the steam stream AND that rock settled on an identical
+                        // patch of ground as a previous rock. That means everything will repeat
+                        // from here on out.
+                        //
+                        // Clear the field to save memory. Then, fast forward time and use the most
+                        // recently found ground to reinitialise the field.
                         field.clear();
                         let rounds_in_loop = round - rep.round;
-                        let increase_in_loop = (top_rock - rep.top_rock) as usize;
+                        let increase_per_loop = (top_rock - rep.top_rock) as usize;
                         let loops_remaining = (max_num_rocks - round) / rounds_in_loop;
                         round += loops_remaining * rounds_in_loop;
-                        println!(
-                            "{} {} {} {}",
-                            rounds_in_loop,
-                            increase_in_loop,
-                            loops_remaining,
-                            max_num_rocks - round,
-                        );
-                        top_rock += (loops_remaining * increase_in_loop) as isize;
-                        // Displace the ground to where it belongs.
+                        top_rock += (loops_remaining * increase_per_loop) as isize;
+                        // Displace the ground to where it belongs. It will not form the top of the
+                        // field. Because the ground is nice, no rock can fall through it.
                         let top_rock_in_ground = ground
                             .iter()
                             .map(|el| el.y)
@@ -255,81 +248,22 @@ fn play_tetris(
                         possible_rep.push(Rep {
                             round,
                             top_rock,
-                            step,
                             ground,
                         });
                     }
                 } else {
-                    // Remember the ground for this combination of round and step.
+                    // Remember the ground for this combination of rock and position in the steam
+                    // stream.
                     let rep_val = Rep {
                         round,
-                        step,
                         top_rock,
                         ground,
                     };
                     possible_rep_store.insert(rep_key, vec![rep_val]);
                 }
             }
-            // println!("{} {}", round, step);
-            // if let Some(ground) = get_ground(&field, top_rock) {
-            //     // If we reach here, we found a nice ground, which is a ground that we know has no
-            //     // holes.
-            //     // Only remember the possibly repeating ground if we hadn't yet seen it.
-            //     if let Some((last_round, last_top_rock, last_ground)) =
-            //         nice_repeating_grounds.iter().find_map(|el| {
-            //             if el.2.len() == ground.len() && (&el.2 ^ &ground).len() == 0 {
-            //                 Some(el)
-            //             } else {
-            //                 None
-            //             }
-            //         })
-            //     {
-            //         // We have found a repeating ground, yeah!
-            //         render(&ground, &data::Rock::Minus, &data::Pos { x: -10, y: -10 });
-            //         render(
-            //             &last_ground,
-            //             &data::Rock::Minus,
-            //             &data::Pos { x: -10, y: -10 },
-            //         );
-            //         println!("{} {}", last_round, last_top_rock);
-            //         println!("{} {}", round, top_rock);
-            //         if potential_ground.len() == 0 {
-            //             potential_ground = ground;
-            //         } else {
-            //             // Now let's first clear the entire field to save RAM and extrapolate from
-            //             // here.
-            //             field.clear();
-            //             let rounds_in_loop = round - last_round;
-            //             let increase_in_loop = top_rock as usize - last_top_rock;
-            //             let loops_remaining = (max_num_rocks - round) / rounds_in_loop;
-            //             round += loops_remaining * rounds_in_loop;
-            //             println!(
-            //                 "{} {} {} {}",
-            //                 rounds_in_loop,
-            //                 increase_in_loop,
-            //                 loops_remaining,
-            //                 max_num_rocks - round,
-            //             );
-            //             top_rock += (loops_remaining * increase_in_loop) as isize;
-            //             // Displace the ground to where it belongs.
-            //             let top_rock_in_ground = ground
-            //                 .iter()
-            //                 .map(|el| el.y)
-            //                 .max()
-            //                 .expect("there is no ground");
-            //             let disp = data::Pos {
-            //                 x: 0,
-            //                 y: top_rock - top_rock_in_ground,
-            //             };
-            //             field = ground.into_iter().map(|el| el.add(&disp)).collect();
-            //         }
-            //     } else {
-            //         nice_repeating_grounds.push((round, top_rock as usize, ground));
-            //     }
-            // }
         }
     }
-    println!("{} {}", round, max_num_rocks);
 
     top_rock as usize
 }
@@ -352,8 +286,6 @@ fn solve(file: &str, max_num_rocks: usize) -> Result<()> {
     println!("push sequence has {} elements", num_pushes);
     let num_rocks = std::mem::variant_count::<data::Rock>();
     println!("rock sequence has {} elements", num_rocks);
-    // let rep_rounds = num_pushes * num_rocks;
-    // println!("possible repetition after {} rounds", rep_rounds);
 
     let tallness = play_tetris(
         stream.infinite(),
@@ -361,18 +293,22 @@ fn solve(file: &str, max_num_rocks: usize) -> Result<()> {
         max_num_rocks,
         num_pushes,
         num_rocks,
+        // Works but hacky trigger for part 2 ^^.
         max_num_rocks > 10_000,
     );
-    println!("{}", tallness);
+    println!(
+        "tower will be {} tall after {} rocks",
+        tallness, max_num_rocks
+    );
 
     Ok(())
 }
 
 fn main() -> Result<()> {
-    // solve(SAMPLE1, 2022)?;
-    // solve(REAL, 2022)?;
+    solve(SAMPLE1, 2022)?;
+    solve(REAL, 2022)?;
 
-    // solve(SAMPLE1, 1_000_000_000_000)?;
+    solve(SAMPLE1, 1_000_000_000_000)?;
     solve(REAL, 1_000_000_000_000)?;
 
     Ok(())

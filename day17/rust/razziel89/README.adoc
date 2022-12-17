@@ -1,0 +1,66 @@
+== Day 17: Pyroclastic Flow ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+Part 1 was a straightforward implementation of a tetris-like game.
+I used a `HashMap` of 2d vectors to represent spots that were occupied by rocks.
+If you read the rules carefully and don't make a mistake with the shape of the
+rocks, you're good.
+
+Part 2 was very tricky for me and I fell into so many traps that I almost gave
+up.
+It was clear from the start that you can't simply keep expanding the playing
+field until the 1 billionth rock had dropped.
+Instead, there had to be some repetition involved.
+Finding the correct point from which to extrapolate into the future was the crux
+here.
+It basically took an entire day of background thinking and trying it out every
+now and again to solve.
+
+There are two infinite streams that need to repeat, the stream of rocks and the
+stream of air.
+For the example, the lengths of both are nicely divisible.
+not so much for the real puzzle.
+Instead, I check the ground each square rock has settled on after it settled as
+well as the position in the infinite air stream at that time.
+If the shape of the ground, the type of rock, and the position in the air stream
+have the same values again, we found our repetition.
+Ground extraction is explained in the code and works reasonably well.
+I even neglect some grounds that would be tricky to work with, which is maybe
+not even needed.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.

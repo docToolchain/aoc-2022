@@ -30,9 +30,6 @@ pub enum Rock {
     Block,
 }
 
-// LRIS stands for last rock in sequence but it's nicer to type.
-pub const LRIS: Rock = Rock::Block;
-
 #[derive(Debug, PartialEq)]
 pub enum Blocked {
     Rock,
