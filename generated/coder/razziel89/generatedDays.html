@@ -320,6 +320,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_17_rust">Day 17: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_17_pyroclastic_flow">Day 17: Pyroclastic Flow</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_15">Oveview</a></li>
+<li><a href="#_solution_16">Solution</a></li>
+<li><a href="#_how_to_run_17">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -4621,12 +4632,13 @@ Without quick mode, it takes &lt;3min.</p>
 <pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
 use std::collections::{HashMap, HashSet};
 // Constants.
-const START: &amp;'static str = "AA";
+// We map each set of two chars to one usize. Since there are 26 letters in the alphabet, we map
+// each pair to 100*ord(first) + ord(second) where ord("A")==0 and ord("Z")==25. Thus, "AA" maps to
+// zero.
+const START: u8 = 0;
 
-fn pairwise_distances(
-    valve_map: &amp;HashMap&lt;String, &amp;data::Valve&gt;,
-) -&gt; HashMap&lt;(String, String), usize&gt; {
-    let mut result = HashMap::&lt;(String, String), usize&gt;::new();
+fn pairwise_distances(valve_map: &amp;HashMap&lt;u8, &amp;data::Valve&gt;) -&gt; HashMap&lt;(u8, u8), usize&gt; {
+    let mut result = HashMap::&lt;(u8, u8), usize&gt;::new();
 
     for (name, valve) in valve_map {
         let mut curr_dist = 1 as usize;
@@ -4684,14 +4696,14 @@ fn pairwise_distances(
 }
 
 fn backtrack(
-    valve_name_map: &amp;HashMap&lt;String, &amp;data::Valve&gt;,
-    distances: &amp;HashMap&lt;(String, String), usize&gt;,
-    relevant_valves: &amp;Vec&lt;Option&lt;String&gt;&gt;,
-    current_spot: &amp;String,
+    valve_name_map: &amp;HashMap&lt;u8, &amp;data::Valve&gt;,
+    distances: &amp;HashMap&lt;(u8, u8), usize&gt;,
+    relevant_valves: &amp;Vec&lt;Option&lt;u8&gt;&gt;,
+    current_spot: &amp;u8,
     current_time: usize,
     max_time: usize,
     current_best: usize,
-    visited: &amp;mut HashSet&lt;String&gt;,
+    visited: &amp;mut HashSet&lt;u8&gt;,
     allow_elephant: bool,
     elephant_depth: usize,
 ) -&gt; Result&lt;usize&gt; {
@@ -4710,7 +4722,7 @@ fn backtrack(
             }
 
             let time_spent_traveling = distances
-                .get(&amp;(current_spot.to_string(), next_spot.to_string()))
+                .get(&amp;(current_spot.clone(), next_spot.clone()))
                 .ok_or(Error::msg("cannot retrieve distance"))?;
 
             // We add 1 because of the time it takes to open the valve.
@@ -4723,7 +4735,7 @@ fn backtrack(
             } else {
                 // We will be able to open that valve.
                 // Remember that we visited it.
-                visited.insert(next_spot.to_string());
+                visited.insert(next_spot.clone());
 
                 // Check by how much the next valve can increase our release value.
                 let next_valve_rate = valve_name_map
@@ -4754,7 +4766,7 @@ fn backtrack(
                 distances,
                 relevant_valves,
                 // The elephant starts at the start.
-                &amp;START.to_string(),
+                &amp;START,
                 // Time is reset.
                 0,
                 max_time,
@@ -4819,13 +4831,13 @@ fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
     let start_time = 0;
     let max_time = 30;
     let start_release = 0;
-    let mut visited = HashSet::&lt;String&gt;::with_capacity(relevant_valves.len());
+    let mut visited = HashSet::&lt;_&gt;::with_capacity(relevant_valves.len());
 
     let max_part1 = backtrack(
         &amp;valve_name_map,
         &amp;distances,
         &amp;relevant_valves,
-        &amp;START.to_string(),
+        &amp;START,
         start_time,
         max_time,
         start_release,
@@ -4858,13 +4870,13 @@ fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
     // all possible inputs. If it doesn't simply disable quick mode.
     for num_human_valves in (0..relevant_valves.len()).rev() {
         // Reset some mutable data structures.
-        visited = HashSet::&lt;String&gt;::with_capacity(relevant_valves.len());
+        visited = HashSet::&lt;_&gt;::with_capacity(relevant_valves.len());
 
         let max = backtrack(
             &amp;valve_name_map,
             &amp;distances,
             &amp;relevant_with_elephant,
-            &amp;START.to_string(),
+            &amp;START,
             start_time,
             max_time_part2,
             start_release,
@@ -4910,24 +4922,104 @@ use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct Valve {
-    pub name: String,
+    pub name: u8,
     pub rate: usize,
-    pub neighbours: Vec&lt;String&gt;,
+    pub neighbours: Vec&lt;u8&gt;,
+}
+
+// Using u8 instead of two-character strings speeds the entire thing up by about a factor of 4. If
+// you have other character combinations, simply add them here.
+pub fn str_to_usize(s: &amp;str) -&gt; Option&lt;u8&gt; {
+    match s {
+        "AA" =&gt; Some(0),
+        "AF" =&gt; Some(1),
+        "AK" =&gt; Some(2),
+        "BB" =&gt; Some(3),
+        "BC" =&gt; Some(4),
+        "BF" =&gt; Some(5),
+        "BV" =&gt; Some(6),
+        "CA" =&gt; Some(7),
+        "CC" =&gt; Some(8),
+        "CM" =&gt; Some(9),
+        "DD" =&gt; Some(10),
+        "DO" =&gt; Some(11),
+        "DW" =&gt; Some(12),
+        "EE" =&gt; Some(13),
+        "EI" =&gt; Some(14),
+        "EJ" =&gt; Some(15),
+        "EV" =&gt; Some(16),
+        "FD" =&gt; Some(17),
+        "FF" =&gt; Some(18),
+        "FN" =&gt; Some(19),
+        "GG" =&gt; Some(20),
+        "GO" =&gt; Some(21),
+        "GW" =&gt; Some(22),
+        "HH" =&gt; Some(23),
+        "HO" =&gt; Some(24),
+        "HP" =&gt; Some(25),
+        "HR" =&gt; Some(26),
+        "HX" =&gt; Some(27),
+        "II" =&gt; Some(28),
+        "IR" =&gt; Some(29),
+        "JJ" =&gt; Some(30),
+        "JQ" =&gt; Some(31),
+        "JS" =&gt; Some(32),
+        "KH" =&gt; Some(33),
+        "KL" =&gt; Some(34),
+        "KQ" =&gt; Some(35),
+        "KX" =&gt; Some(36),
+        "LR" =&gt; Some(37),
+        "MS" =&gt; Some(38),
+        "MW" =&gt; Some(39),
+        "NB" =&gt; Some(40),
+        "NC" =&gt; Some(41),
+        "NQ" =&gt; Some(42),
+        "OF" =&gt; Some(43),
+        "OM" =&gt; Some(44),
+        "OQ" =&gt; Some(45),
+        "OX" =&gt; Some(46),
+        "PC" =&gt; Some(47),
+        "PD" =&gt; Some(48),
+        "PH" =&gt; Some(49),
+        "PU" =&gt; Some(50),
+        "QE" =&gt; Some(51),
+        "RX" =&gt; Some(52),
+        "RZ" =&gt; Some(53),
+        "SG" =&gt; Some(54),
+        "SM" =&gt; Some(55),
+        "SY" =&gt; Some(56),
+        "TN" =&gt; Some(57),
+        "TS" =&gt; Some(58),
+        "TY" =&gt; Some(59),
+        "UE" =&gt; Some(60),
+        "VL" =&gt; Some(61),
+        "WE" =&gt; Some(62),
+        "WU" =&gt; Some(63),
+        "WW" =&gt; Some(64),
+        "XG" =&gt; Some(65),
+        "XN" =&gt; Some(66),
+        "YD" =&gt; Some(67),
+        "YQ" =&gt; Some(68),
+        "ZQ" =&gt; Some(69),
+        "ZX" =&gt; Some(70),
+        _ =&gt; None,
+    }
 }
 
 impl FromStr for Valve {
     type Err = Error;
 
     fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
-        let name: String;
+        let name;
         let rate: usize;
-        let neighbours: Vec&lt;String&gt;;
+        let neighbours: Vec&lt;_&gt;;
 
         match s.split(";").collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
             [valve_data, tunnel_data] =&gt; {
                 match valve_data.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
                     ["Valve", id, "has", "flow", rate_str] =&gt; {
-                        name = id.to_string();
+                        name =
+                            str_to_usize(id).ok_or(Error::msg("cannot convert chars to usize"))?;
                         rate = rate_str.trim_start_matches("rate=").parse()?;
                     }
                     _ =&gt; {
@@ -4939,10 +5031,15 @@ impl FromStr for Valve {
                 {
                     return Err(Error::msg("cannot parse tunnel data"));
                 }
-                neighbours = tunnel_data
+                let maybe_neighbours = tunnel_data
                     .split_whitespace()
                     .skip(4)
-                    .map(|el| el.trim().trim_end_matches(",").to_string())
+                    .map(|el| str_to_usize(el.trim().trim_end_matches(",")))
+                    .collect::&lt;Vec&lt;_&gt;&gt;();
+                // We let this panic if it wants to.
+                neighbours = maybe_neighbours
+                    .into_iter()
+                    .map(|el| el.unwrap())
                     .collect::&lt;Vec&lt;_&gt;&gt;();
                 Ok(Self {
                     name,
@@ -4962,6 +5059,625 @@ impl FromStr for Valve {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_16"><a class="anchor" href="#_how_to_run_16"></a><a class="link" href="#_how_to_run_16">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day17" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_17_rust"><a class="anchor" href="#_day_17_rust"></a><a class="link" href="#_day_17_rust">Day 17: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_17_pyroclastic_flow"><a class="anchor" href="#_day_17_pyroclastic_flow"></a><a class="link" href="#_day_17_pyroclastic_flow">Day 17: Pyroclastic Flow</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_15"><a class="anchor" href="#_oveview_15"></a><a class="link" href="#_oveview_15">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_16"><a class="anchor" href="#_solution_16"></a><a class="link" href="#_solution_16">Solution</a></h5>
+<div class="paragraph">
+<p>Part 1 was a straightforward implementation of a tetris-like game.
+I used a <code>HashMap</code> of 2d vectors to represent spots that were occupied by rocks.
+If you read the rules carefully and don&#8217;t make a mistake with the shape of the
+rocks, you&#8217;re good.</p>
+</div>
+<div class="paragraph">
+<p>Part 2 was very tricky for me and I fell into so many traps that I almost gave
+up.
+It was clear from the start that you can&#8217;t simply keep expanding the playing
+field until the 1 billionth rock had dropped.
+Instead, there had to be some repetition involved.
+Finding the correct point from which to extrapolate into the future was the crux
+here.
+It basically took an entire day of background thinking and trying it out every
+now and again to solve.</p>
+</div>
+<div class="paragraph">
+<p>There are two infinite streams that need to repeat, the stream of rocks and the
+stream of air.
+For the example, the lengths of both are nicely divisible.
+not so much for the real puzzle.
+Instead, I check the ground each square rock has settled on after it settled as
+well as the position in the infinite air stream at that time.
+If the shape of the ground, the type of rock, and the position in the air stream
+have the same values again, we found our repetition.
+Ground extraction is explained in the code and works reasonably well.
+I even neglect some grounds that would be tricky to work with, which is maybe
+not even needed.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::{HashMap, HashSet};
+use std::iter::Cycle;
+use std::vec::IntoIter;
+// Constants.
+
+fn render(field: &amp;HashSet&lt;data::Pos&gt;, rock: &amp;data::Rock, pos: &amp;data::Pos) {
+    let max_x = 8;
+    let max_y = field.iter().map(|el| el.y).max().unwrap_or(10) + 10;
+    let min_x = 0;
+    let min_y = 0;
+
+    let rock_fields = rock.occupied_fields(pos).collect::&lt;HashSet&lt;_&gt;&gt;();
+
+    for y in (min_y..max_y).rev() {
+        for x in min_x..=max_x {
+            let pos = data::Pos { x, y };
+            if field.contains(&amp;pos) &amp;&amp; rock_fields.contains(&amp;pos) {
+                // This a conflict field.
+                print!("X")
+            } else if field.contains(&amp;pos) {
+                print!("#")
+            } else if rock_fields.contains(&amp;pos) {
+                print!("@")
+            } else if y == 0 {
+                print!("-")
+            } else if x == 0 || x == 8 {
+                print!("|")
+            } else {
+                print!(".");
+            }
+        }
+        print!("\n");
+    }
+    print!("\n");
+}
+
+fn is_blocked(field: &amp;HashSet&lt;data::Pos&gt;, check: &amp;data::Pos, width: isize) -&gt; data::Blocked {
+    if check.x &lt;= 0 || check.x &gt;= width {
+        data::Blocked::Wall
+    } else if field.contains(check) {
+        data::Blocked::Rock
+    } else if check.y == 0 {
+        // This is hacky but we simulate a floor of rocks so that a downward operation will have
+        // the rock to settle on.
+        data::Blocked::Rock
+    } else {
+        data::Blocked::None
+    }
+}
+
+// Nice means no rock can muddle its way through. There is a direct connection from the left wall
+// to the right wall.
+fn is_nice_ground(ground: &amp;HashSet&lt;data::Pos&gt;, field: &amp;HashSet&lt;data::Pos&gt;) -&gt; bool {
+    let mut x = 1;
+    let mut candidates = ground
+        .iter()
+        .filter_map(|el| if el.x == x { Some(el.clone()) } else { None })
+        .collect::&lt;HashSet&lt;data::Pos&gt;&gt;();
+    candidates = &amp;candidates &amp; field;
+
+    while candidates.len() != 0 {
+        x += 1;
+        candidates = candidates
+            .into_iter()
+            .map(|el| el.right_env())
+            .flatten()
+            .collect::&lt;HashSet&lt;data::Pos&gt;&gt;();
+        candidates = &amp;candidates &amp; field;
+    }
+
+    x == 8
+}
+
+// We try to find the ground the last rock settled on. We basically go from top to the bottom until
+// we have found at least one rock at each of the possible 7 x positions. For piece of mind, we
+// only consider nice grounds (see is_nice_ground for a definition).
+fn get_ground(field: &amp;HashSet&lt;data::Pos&gt;, top_rock: isize) -&gt; Option&lt;HashSet&lt;data::Pos&gt;&gt; {
+    let mut found = vec![false; 7];
+    let mut bottom = HashSet::&lt;data::Pos&gt;::new();
+    let mut min_y = top_rock;
+
+    for y in (1..=top_rock).rev() {
+        min_y = y;
+        for x in 1..=7 {
+            let check = data::Pos { x, y };
+            if field.contains(&amp;check) {
+                found[(x - 1) as usize] = true;
+                bottom.insert(check);
+            }
+        }
+        if found.iter().all(|el| *el) {
+            break;
+        }
+    }
+
+    if is_nice_ground(&amp;bottom, field) {
+        let disp = data::Pos { x: 0, y: -min_y };
+        Some(bottom.into_iter().map(|el| el.add(&amp;disp)).collect())
+    } else {
+        None
+    }
+}
+
+// Rep stands for repetition.
+#[derive(Debug)]
+struct Rep {
+    round: usize,
+    top_rock: isize,
+    ground: HashSet&lt;data::Pos&gt;,
+}
+
+// Yeah, we are playing tetris today.
+// This function looked OK until after part 1 but now it's horrible, but I don't want to take any
+// time to refactor.
+fn play_tetris(
+    mut stream: Cycle&lt;IntoIter&lt;data::Push&gt;&gt;,
+    mut rocks: Cycle&lt;IntoIter&lt;data::Rock&gt;&gt;,
+    max_num_rocks: usize,
+    num_steam_steps: usize,
+    num_rock_steps: usize,
+    // trigger for part 2.
+    do_repeat: bool,
+) -&gt; usize {
+    let mut possible_rep_store = HashMap::&lt;(usize, usize), Vec&lt;Rep&gt;&gt;::new();
+    // We will track the positions of all rocks with this.
+    let mut field = HashSet::&lt;data::Pos&gt;::new();
+    // At the beginning, there is no rock yet. Thus, the top position is the floor.
+    let mut top_rock = 0;
+    // Round counts rocks.
+    let mut round = 0;
+    // Step counts gusts of air.
+    let mut step = 0;
+    while round &lt; max_num_rocks {
+        round += 1;
+        let rock = rocks.next().expect("weren't there infinitely many rocks");
+        // Spwan a rock.
+        let mut pos = data::Pos {
+            // There also have to be 2 free spaces in x direction. Thus, it spawns at x
+            // coordinate 3.
+            x: 3,
+            // There have to be 3 free spaces in y direction. Thus, it spwans 4 units
+            // further above.
+            y: top_rock + 4,
+        };
+        let mut has_settled = false;
+        while !has_settled {
+            // Get the next stream element. This is an infinite iterator.
+            let push = stream.next().expect("wasn't this supposed to be infinite");
+            step += 1;
+
+            // Apply the movement operation to the side.
+            let next_pushed = push.apply(&amp;pos);
+            // Check whether there is any collision.
+            let push_blocked_check = rock
+                .occupied_fields(&amp;next_pushed)
+                .map(|el| is_blocked(&amp;field, &amp;el, 8))
+                .find(|el| el != &amp;data::Blocked::None);
+            // Accept the movement only if we haven't been blocked.
+            if let None = push_blocked_check {
+                pos = next_pushed;
+            }
+
+            // Move downwards and check again.
+            let next_dropped = pos.drop();
+            // Check whether there is any collision.
+            let drop_blocked_check = rock
+                .occupied_fields(&amp;next_dropped)
+                .map(|el| is_blocked(&amp;field, &amp;el, 8))
+                .find(|el| el == &amp;data::Blocked::Rock);
+            // Accept the movement only if we haven't been blocked.
+            if let Some(_) = drop_blocked_check {
+                // The rock has settled!
+                has_settled = true;
+                // Find the topmost position and occupy all fields of the rock.
+                field.extend(rock.occupied_fields(&amp;pos));
+                // Check whether the rock that just settled reaches higher than before.
+                let possible_top_rock = rock
+                    .occupied_fields(&amp;pos)
+                    .map(|el| el.y)
+                    .max()
+                    .expect("cannot find top rock");
+                if possible_top_rock &gt; top_rock {
+                    top_rock = possible_top_rock;
+                }
+            } else {
+                // The rock hasn't settled yet. Accept the update.
+                pos = next_dropped;
+            }
+        }
+        // This entire block is horrible and takes care of part 2. Ignore it for part 1.
+        if do_repeat &amp;&amp; round % num_rock_steps == 0 {
+            // If we're in here, a square block has settled.
+            // Determine our position in the repeating rock and steam streams.
+            let rep_key = (round % num_rock_steps, step % num_steam_steps);
+            if let Some(ground) = get_ground(&amp;field, top_rock) {
+                // If we're in here, then the rock has settled on a patch of ground that is nice
+                // (i.e. where no rock can muddle its way through).
+                if let Some(possible_rep) = possible_rep_store.get_mut(&amp;rep_key) {
+                    // If we're in here, we have already found this type of rock settling at this
+                    // position in the stream/gust of air sequence.
+                    // Check whether the ground repeated, too.
+                    if let Some(rep) = possible_rep.iter().find_map(|el| {
+                        if el.ground.len() == ground.len() &amp;&amp; (&amp;el.ground ^ &amp;ground).len() == 0 {
+                            Some(el)
+                        } else {
+                            None
+                        }
+                    }) {
+                        // If we're in here, we found the same type of rock that settled at the
+                        // same position in the steam stream AND that rock settled on an identical
+                        // patch of ground as a previous rock. That means everything will repeat
+                        // from here on out.
+                        //
+                        // Clear the field to save memory. Then, fast forward time and use the most
+                        // recently found ground to reinitialise the field.
+                        field.clear();
+                        let rounds_in_loop = round - rep.round;
+                        let increase_per_loop = (top_rock - rep.top_rock) as usize;
+                        let loops_remaining = (max_num_rocks - round) / rounds_in_loop;
+                        round += loops_remaining * rounds_in_loop;
+                        top_rock += (loops_remaining * increase_per_loop) as isize;
+                        // Displace the ground to where it belongs. It will not form the top of the
+                        // field. Because the ground is nice, no rock can fall through it.
+                        let top_rock_in_ground = ground
+                            .iter()
+                            .map(|el| el.y)
+                            .max()
+                            .expect("there is no ground");
+                        let disp = data::Pos {
+                            x: 0,
+                            y: top_rock - top_rock_in_ground,
+                        };
+                        field = ground.into_iter().map(|el| el.add(&amp;disp)).collect();
+                    } else {
+                        // Remember this ground.
+                        possible_rep.push(Rep {
+                            round,
+                            top_rock,
+                            ground,
+                        });
+                    }
+                } else {
+                    // Remember the ground for this combination of rock and position in the steam
+                    // stream.
+                    let rep_val = Rep {
+                        round,
+                        top_rock,
+                        ground,
+                    };
+                    possible_rep_store.insert(rep_key, vec![rep_val]);
+                }
+            }
+        }
+    }
+
+    top_rock as usize
+}
+
+fn solve(file: &amp;str, max_num_rocks: usize) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let stream = io::parse_chunks_to_data::&lt;data::Stream&gt;(
+        io::read_lines_from_file(file, 1)?,
+        "stream",
+        None,
+        None,
+    )?
+    .into_iter()
+    .nth(0)
+    .ok_or(Error::msg("found no stream"))?;
+
+    let num_pushes = stream.flow.len();
+    println!("push sequence has {} elements", num_pushes);
+    let num_rocks = std::mem::variant_count::&lt;data::Rock&gt;();
+    println!("rock sequence has {} elements", num_rocks);
+
+    let tallness = play_tetris(
+        stream.infinite(),
+        data::Rock::infinite_stream(),
+        max_num_rocks,
+        num_pushes,
+        num_rocks,
+        // Works but hacky trigger for part 2 ^^.
+        max_num_rocks &gt; 10_000,
+    );
+    println!(
+        "tower will be {} tall after {} rocks",
+        tallness, max_num_rocks
+    );
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1, 2022)?;
+    solve(REAL, 2022)?;
+
+    solve(SAMPLE1, 1_000_000_000_000)?;
+    solve(REAL, 1_000_000_000_000)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug, Clone)]
+pub enum Push {
+    Left,
+    Right,
+}
+
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct Pos {
+    pub x: isize,
+    pub y: isize,
+}
+
+#[derive(Debug)]
+pub struct Stream {
+    pub flow: Vec&lt;Push&gt;,
+}
+
+// The position of each rock is indicated by the point in its bottom left. There doesn't have to be
+// anything there?
+#[derive(Debug, Clone, PartialEq)]
+pub enum Rock {
+    Minus,
+    Plus,
+    InverseL,
+    I,
+    Block,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Blocked {
+    Rock,
+    Wall,
+    None,
+}
+
+impl Pos {
+    pub fn add(&amp;self, other: &amp;Self) -&gt; Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+
+    pub fn drop(&amp;self) -&gt; Self {
+        Self {
+            x: self.x,
+            y: self.y - 1,
+        }
+    }
+
+    pub fn right_env(&amp;self) -&gt; Vec&lt;Self&gt; {
+        vec![
+            Self {
+                x: self.x + 1,
+                y: self.y + 1,
+            },
+            Self {
+                x: self.x + 1,
+                y: self.y,
+            },
+            Self {
+                x: self.x + 1,
+                y: self.y - 1,
+            },
+        ]
+    }
+}
+
+impl Push {
+    pub fn apply(&amp;self, start: &amp;Pos) -&gt; Pos {
+        match self {
+            Self::Left =&gt; Pos {
+                x: -1 + start.x,
+                y: start.y,
+            },
+            Self::Right =&gt; Pos {
+                x: 1 + start.x,
+                y: start.y,
+            },
+        }
+    }
+}
+
+impl Rock {
+    // Get an infinite stream of rocks in the correct order.
+    pub fn infinite_stream() -&gt; std::iter::Cycle&lt;std::vec::IntoIter&lt;Rock&gt;&gt; {
+        vec![
+            Self::Minus,
+            Self::Plus,
+            Self::InverseL,
+            Self::I,
+            Self::Block,
+        ]
+        .into_iter()
+        .cycle()
+    }
+
+    // We order the returned positions in such a way that we have the highest likelihood of getting
+    // a collision early on.
+    pub fn occupied_fields(&amp;self, start: &amp;Pos) -&gt; std::vec::IntoIter&lt;Pos&gt; {
+        match self {
+            Self::Minus =&gt; vec![
+                Pos {
+                    x: 0 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 3 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 1 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 2 + start.x,
+                    y: 0 + start.y,
+                },
+            ],
+            // This one has no rock at 0,0!
+            Self::Plus =&gt; vec![
+                Pos {
+                    x: 1 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 2 + start.x,
+                    y: 1 + start.y,
+                },
+                Pos {
+                    x: 0 + start.x,
+                    y: 1 + start.y,
+                },
+                Pos {
+                    x: 1 + start.x,
+                    y: 1 + start.y,
+                },
+                Pos {
+                    x: 1 + start.x,
+                    y: 2 + start.y,
+                },
+            ],
+            Self::Block =&gt; vec![
+                Pos {
+                    x: 0 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 1 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 0 + start.x,
+                    y: 1 + start.y,
+                },
+                Pos {
+                    x: 1 + start.x,
+                    y: 1 + start.y,
+                },
+            ],
+            Self::I =&gt; vec![
+                Pos {
+                    x: 0 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 0 + start.x,
+                    y: 3 + start.y,
+                },
+                Pos {
+                    x: 0 + start.x,
+                    y: 1 + start.y,
+                },
+                Pos {
+                    x: 0 + start.x,
+                    y: 2 + start.y,
+                },
+            ],
+            Self::InverseL =&gt; vec![
+                Pos {
+                    x: 0 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 1 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 2 + start.x,
+                    y: 0 + start.y,
+                },
+                Pos {
+                    x: 2 + start.x,
+                    y: 1 + start.y,
+                },
+                Pos {
+                    x: 2 + start.x,
+                    y: 2 + start.y,
+                },
+            ],
+        }
+        .into_iter()
+    }
+}
+
+impl Stream {
+    // This consumes the stream object, but we don't need it anymore.
+    pub fn infinite(self) -&gt; std::iter::Cycle&lt;std::vec::IntoIter&lt;Push&gt;&gt; {
+        self.flow.into_iter().cycle()
+    }
+}
+
+impl FromStr for Stream {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        Ok(Self {
+            flow: s
+                .chars()
+                .map(|el| match el {
+                    '&gt;' =&gt; Push::Right,
+                    '&lt;' =&gt; Push::Left,
+                    _ =&gt; panic!("oh no, we got weird input"),
+                })
+                .collect(),
+        })
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_17"><a class="anchor" href="#_how_to_run_17"></a><a class="link" href="#_how_to_run_17">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
