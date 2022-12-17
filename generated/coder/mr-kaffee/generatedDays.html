@@ -357,6 +357,19 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_17_rust">Day 17: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_17_pyroclastic_flow">Day 17: Pyroclastic Flow</a>
+<ul class="sectlevel4">
+<li><a href="#_input_17">Input</a></li>
+<li><a href="#_general_solution">General solution</a></li>
+<li><a href="#_star_1_15">Star 1</a></li>
+<li><a href="#_star_2_15">Star 2</a></li>
+<li><a href="#_tests_18">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -4783,6 +4796,338 @@ Valve JJ has flow rate=21; tunnel leads to valve II
     pub fn test_star_2() {
         let data = PuzzleData::from(CONTENT);
         assert_eq!(1_707, star_2(&amp;data));
+    }
+}</code></pre>
+</div>
+</div>
+<a id="day17" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_17_rust"><a class="anchor" href="#_day_17_rust"></a><a class="link" href="#_day_17_rust">Day 17: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_17_pyroclastic_flow"><a class="anchor" href="#_day_17_pyroclastic_flow"></a><a class="link" href="#_day_17_pyroclastic_flow">Day 17: Pyroclastic Flow</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/17">AoC|2022|17</a>.</p>
+</div>
+<div class="paragraph">
+<p>So let&#8217;s play <a href="https://de.wikipedia.org/wiki/Tetris">Tetris</a> ;)</p>
+</div>
+<div class="paragraph">
+<p>Because I made stupid bugs, I spent lots of time displaying the chamber and figuring out what I did wrong. My biggest mistake was to overwrite occupied space by empty space when a rock comes to rest and is not filling a full rectangle. Unfortunately, with this bug, I still get the correct result for the example data.</p>
+</div>
+<div class="paragraph">
+<p>Part 2 is about finding a pattern that repeats itself. I do that by looking at the top 30 rows. The number 30 is kind of arbitrarily chosen.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_17"><a class="anchor" href="#_input_17"></a><a class="link" href="#_input_17">Input</a></h5>
+<div class="paragraph">
+<p>I just read the input in a byte array.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    #[derive(Debug)]
+    pub struct PuzzleData&lt;'a&gt; {
+        jets: &amp;'a [u8],
+    }
+
+    impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData&lt;'a&gt; {
+        /// parse the puzzle input
+        fn from(s: &amp;'a str) -&gt; Self {
+            Self {
+                jets: s.trim().as_bytes(),
+            }
+        }
+    }
+
+    impl&lt;'a&gt; PuzzleData&lt;'a&gt; {
+        pub fn jets(&amp;self) -&gt; &amp;'a [u8] {
+            &amp;self.jets
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_general_solution"><a class="anchor" href="#_general_solution"></a><a class="link" href="#_general_solution">General solution</a></h5>
+<div class="paragraph">
+<p>I have a struct <code>Chamber</code> with a method <code>integrate_rock</code>. This takes a rock and let&#8217;s it move in the chamber until it comes to rest.</p>
+</div>
+<div class="paragraph">
+<p>My first version did not have the <code>.filter(|&amp;k| rock[k] == b'#')</code> part in the update chamber loop at the end of the <code>integrate_rock</code> function. I typed these 29 characters with an average speed of about 12 character / hour.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">struct Chamber&lt;'a&gt; {
+    chamber: Vec&lt;u8&gt;,
+    jets: RingBuffer&lt;'a, u8&gt;,
+    rocks: RingBuffer&lt;'static, (&amp;'static str, usize)&gt;,
+}
+
+impl&lt;'a&gt; From&lt;&amp;PuzzleData&lt;'a&gt;&gt; for Chamber&lt;'a&gt; {
+    fn from(data: &amp;PuzzleData&lt;'a&gt;) -&gt; Self {
+        Self {
+            chamber: Vec::new(),
+            jets: data.jets().into(),
+            rocks: Self::ROCKS.into(),
+        }
+    }
+}
+
+impl&lt;'a&gt; Chamber&lt;'a&gt; {
+    const WIDTH: usize = 7;
+    const ROCKS: &amp;'static [(&amp;'static str, usize)] = &amp;[
+        ("####", 4),
+        (".#.###.#.", 3),
+        ("###..#..#", 3),
+        ("####", 1),
+        ("####", 2),
+    ];
+    const X0: usize = 2;
+    const DY0: usize = 3;
+
+    pub fn check(&amp;self, rock: &amp;[u8], x: usize, y: usize, w: usize) -&gt; bool {
+        (0..rock.len())
+            .filter(|&amp;k| rock[k] == b'#')
+            .filter(|k| y + k / w &lt; self.height())
+            .all(|k| self.chamber[x + k % w + (y + k / w) * Self::WIDTH] == b'.')
+    }
+
+    pub fn height(&amp;self) -&gt; usize {
+        self.chamber.len() / Self::WIDTH
+    }
+
+    pub fn top(&amp;self, rows: usize) -&gt; (Vec&lt;u8&gt;, usize, usize) {
+        (
+            self.chamber[self.chamber.len() - rows * Self::WIDTH..].to_vec(),
+            self.rocks.pos(),
+            self.jets.pos(),
+        )
+    }
+
+    pub fn integrate_rock(&amp;mut self) {
+        let &amp;(rock, w) = self.rocks.next();
+        let rock = rock.as_bytes();
+
+        let mut x = Self::X0;
+        let mut y = self.height() + Self::DY0;
+
+        let mut stop = false;
+
+        while !stop {
+            let &amp;jet = self.jets.next();
+            x = if jet == b'&lt;' &amp;&amp; x &gt; 0 &amp;&amp; self.check(rock, x - 1, y, w) {
+                x - 1
+            } else if jet == b'&gt;' &amp;&amp; x + w &lt; Chamber::WIDTH &amp;&amp; self.check(rock, x + 1, y, w) {
+                x + 1
+            } else {
+                x
+            };
+
+            if y == 0 {
+                stop = true;
+            } else if y &lt;= self.height() {
+                if self.check(rock, x, y - 1, w) {
+                    y -= 1;
+                } else {
+                    stop = true;
+                }
+            } else {
+                y -= 1;
+            }
+
+            if stop {
+                // add new lines to chamber
+                while self.height() &lt; y + rock.len() / w {
+                    self.chamber.extend([b'.'; Self::WIDTH])
+                }
+                // update chamber
+                for k in (0..rock.len()).filter(|&amp;k| rock[k] == b'#') {
+                    self.chamber[x + k % w + (y + k / w) * Self::WIDTH] = rock[k];
+                }
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_15"><a class="anchor" href="#_star_1_15"></a><a class="link" href="#_star_1_15">Star 1</a></h5>
+<div class="paragraph">
+<p>Just integrate 2022 rocks.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    let mut chamber = Chamber::from(data);
+
+    for _ in 0..2022 {
+        chamber.integrate_rock();
+    }
+
+    chamber.height()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_15"><a class="anchor" href="#_star_2_15"></a><a class="link" href="#_star_2_15">Star 2</a></h5>
+<div class="paragraph">
+<p>Integrate rocks until a situation as defined by top rows of chamber, current jet position, current rock repeats. Calculate how much hight we gain by repeating this full cycle as often as it fits in the required number of rocks to integrate and simulate the remaining steps.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let mut chamber = Chamber::from(data);
+
+    let mut seen = HashMap::new();
+    let rows = 30; // this is somehow arbitrary
+
+    let rounds: usize = 1_000_000_000_000;
+
+    let mut cnt = 0;
+    while chamber.height() &lt; rows {
+        chamber.integrate_rock();
+        cnt += 1;
+    }
+
+    for cur in cnt..rounds {
+        if let Some((prev, prev_height)) = seen.insert(chamber.top(rows), (cur, chamber.height())) {
+            let d_round = cur - prev;
+            let d_height = chamber.height() - prev_height;
+
+            let n = (1_000_000_000_000 - cur) / d_round;
+            let h = n * d_height;
+
+            let rem = (1_000_000_000_000 - cur) % d_round;
+            for _ in 0..rem {
+                chamber.integrate_rock();
+            }
+
+            return chamber.height() + h;
+        }
+        chamber.integrate_rock();
+    }
+
+    unreachable!()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_18"><a class="anchor" href="#_tests_18"></a><a class="link" href="#_tests_18">Tests</a></h5>
+<div class="paragraph">
+<p>Tests did not help a lot today.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"&gt;&gt;&gt;&lt;&lt;&gt;&lt;&gt;&gt;&lt;&lt;&lt;&gt;&gt;&lt;&gt;&gt;&gt;&lt;&lt;&lt;&gt;&gt;&gt;&lt;&lt;&lt;&gt;&lt;&lt;&lt;&gt;&gt;&lt;&gt;&gt;&lt;&lt;&gt;&gt;"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(3_068, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(1_514_285_714_288, star_2(&amp;data));
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>My testing approach was to print various configurations using <strong>very nice</strong> printing code. Obviously, I removed all the <code>println!</code> and <code>if debug {}</code> statements before I publish my code.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">enum RockInChamber&lt;'a&gt; {
+    RIC {
+        chamber: &amp;'a [u8],
+        rock: &amp;'static [u8],
+        x: usize,
+        y: usize,
+        w: usize,
+    },
+}
+
+impl&lt;'a&gt; RockInChamber&lt;'a&gt; {
+    const PRINT_LIM: usize = 20;
+}
+
+impl&lt;'a&gt; std::fmt::Display for RockInChamber&lt;'a&gt; {
+    fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
+        match self {
+            RockInChamber::RIC {
+                chamber,
+                rock,
+                x,
+                y,
+                w,
+            } =&gt; {
+                let h = chamber.len() / Chamber::WIDTH;
+                let y_mx = h.max(y + rock.len() / w);
+                let y_mn = 0.max(h - Self::PRINT_LIM.min(h));
+                for y_ in (y_mn..y_mx).rev() {
+                    '|'.fmt(f)?;
+                    for x_ in 0..Chamber::WIDTH {
+                        if x_ &gt;= *x
+                            &amp;&amp; x_ &lt; *x + w
+                            &amp;&amp; y_ &gt;= *y
+                            &amp;&amp; y_ &lt; *y + rock.len() / *w
+                            &amp;&amp; rock[x_ - *x + (y_ - *y) * *w] == b'#'
+                        {
+                            '@'.fmt(f)?;
+                        } else if y_ &lt; h {
+                            (chamber[x_ + y_ * Chamber::WIDTH] as char).fmt(f)?;
+                        } else {
+                            '.'.fmt(f)?;
+                        }
+                    }
+                    "|\n".fmt(f)?;
+                }
+                if y_mn == 0 {
+                    '+'.fmt(f)?;
+                    for _ in 0..Chamber::WIDTH {
+                        '-'.fmt(f)?;
+                    }
+                    "+\n".fmt(f)?;
+                } else {
+                    "|~y=".fmt(f)?;
+                    (y_mn - 1).fmt(f)?;
+                    "~".fmt(f)?;
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+impl&lt;'a&gt; std::fmt::Display for Chamber&lt;'a&gt; {
+    fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
+        RockInChamber::RIC {
+            chamber: &amp;self.chamber,
+            rock: &amp;[],
+            x: 0,
+            y: 0,
+            w: 1,
+        }
+        .fmt(f)
     }
 }</code></pre>
 </div>
