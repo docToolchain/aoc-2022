@@ -12,12 +12,13 @@ mod io;
 use anyhow::{Error, Result};
 use std::collections::{HashMap, HashSet};
 // Constants.
-const START: &'static str = "AA";
+// We map each set of two chars to one usize. Since there are 26 letters in the alphabet, we map
+// each pair to 100*ord(first) + ord(second) where ord("A")==0 and ord("Z")==25. Thus, "AA" maps to
+// zero.
+const START: u8 = 0;
 
-fn pairwise_distances(
-    valve_map: &HashMap<String, &data::Valve>,
-) -> HashMap<(String, String), usize> {
-    let mut result = HashMap::<(String, String), usize>::new();
+fn pairwise_distances(valve_map: &HashMap<u8, &data::Valve>) -> HashMap<(u8, u8), usize> {
+    let mut result = HashMap::<(u8, u8), usize>::new();
 
     for (name, valve) in valve_map {
         let mut curr_dist = 1 as usize;
@@ -75,14 +76,14 @@ fn pairwise_distances(
 }
 
 fn backtrack(
-    valve_name_map: &HashMap<String, &data::Valve>,
-    distances: &HashMap<(String, String), usize>,
-    relevant_valves: &Vec<Option<String>>,
-    current_spot: &String,
+    valve_name_map: &HashMap<u8, &data::Valve>,
+    distances: &HashMap<(u8, u8), usize>,
+    relevant_valves: &Vec<Option<u8>>,
+    current_spot: &u8,
     current_time: usize,
     max_time: usize,
     current_best: usize,
-    visited: &mut HashSet<String>,
+    visited: &mut HashSet<u8>,
     allow_elephant: bool,
     elephant_depth: usize,
 ) -> Result<usize> {
@@ -101,7 +102,7 @@ fn backtrack(
             }
 
             let time_spent_traveling = distances
-                .get(&(current_spot.to_string(), next_spot.to_string()))
+                .get(&(current_spot.clone(), next_spot.clone()))
                 .ok_or(Error::msg("cannot retrieve distance"))?;
 
             // We add 1 because of the time it takes to open the valve.
@@ -114,7 +115,7 @@ fn backtrack(
             } else {
                 // We will be able to open that valve.
                 // Remember that we visited it.
-                visited.insert(next_spot.to_string());
+                visited.insert(next_spot.clone());
 
                 // Check by how much the next valve can increase our release value.
                 let next_valve_rate = valve_name_map
@@ -145,7 +146,7 @@ fn backtrack(
                 distances,
                 relevant_valves,
                 // The elephant starts at the start.
-                &START.to_string(),
+                &START,
                 // Time is reset.
                 0,
                 max_time,
@@ -210,13 +211,13 @@ fn solve(file: &str) -> Result<()> {
     let start_time = 0;
     let max_time = 30;
     let start_release = 0;
-    let mut visited = HashSet::<String>::with_capacity(relevant_valves.len());
+    let mut visited = HashSet::<_>::with_capacity(relevant_valves.len());
 
     let max_part1 = backtrack(
         &valve_name_map,
         &distances,
         &relevant_valves,
-        &START.to_string(),
+        &START,
         start_time,
         max_time,
         start_release,
@@ -249,13 +250,13 @@ fn solve(file: &str) -> Result<()> {
     // all possible inputs. If it doesn't simply disable quick mode.
     for num_human_valves in (0..relevant_valves.len()).rev() {
         // Reset some mutable data structures.
-        visited = HashSet::<String>::with_capacity(relevant_valves.len());
+        visited = HashSet::<_>::with_capacity(relevant_valves.len());
 
         let max = backtrack(
             &valve_name_map,
             &distances,
             &relevant_with_elephant,
-            &START.to_string(),
+            &START,
             start_time,
             max_time_part2,
             start_release,
