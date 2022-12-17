@@ -1,0 +1,66 @@
+== Day 16: Proboscidea Volcanium ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/16[AoC|2022|16].
+
+Today was a tough nut to crack for me.
+
+My attempt is to use a path finding algorithm to explore the valve & tunnel system.
+
+The current state (node) is modeled by 
+
+- the `potential`, i.e, the max pressure released until the timer is elapsed if all valves were opened in subsequent steps. If all valves are actually open, the potential is equal to the pressure released until the timer elapses (the volcano erupts)
+- the `pressure` released
+- the `flow` of all currently opened valves
+- the `idx` (position) of the agents opening valves (just me for part 1 and me + an elephant for part 2)
+* Actually, for part two, the two agents exploring the valve & tunnel system are interchangeable, so I transform to an elephant from time to time
+- the `opened` valves
+- the `timer` (counting down to zero)
+
+I use a priority queue which yields the state with the highest `potential` first. This results in the following properties:
+
+- If a state is expanded, it is guaranteed that all adjacent states have at most the same potential. They will have equal potential if and only if all valves with positive flow are open. In all other cases, they will have lower potential.
+- If a state is popped from the queue, all states popped later on will have at most the same potential.
+- The potential of the first state popped from the queue with all valves open is the max. possible pressure.
+
+The key is to figure out how to narrow down the search space without eliding relevant states. I tried several ideas and do not quite understand why those are not working: 
+
+- If there is a possibility to open a valve, open it and discard possibilities to move on without opening the valve -- worked for the real data but not for the examples.
+- If a state is expanded with position and opened valves identical to a state seen previously, skip it -- worked for the real data but not for the examples.
+
+Eventually, I finished with a variant of the second option: If a state is expanded with position and opened valves identical to a state seen previously, skip it unless it has higher potential than the state seen previously (kind of 'decrease key').
+
+=== Input ===
+
+I parse the input into a vec of valves. Each valve has its tunnels stored as vec of indices to that list for cheap lookups.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+Solution with a single agent (me).
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Same solution with two agents (me + elephant), not really anything new compared to star 1.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+One additional test to see whether my calculations come up with the correct result but following the path defined in the puzzle for part 2. They do ;)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----

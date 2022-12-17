@@ -1,0 +1,63 @@
+== Day 17: Pyroclastic Flow ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/17[AoC|2022|17].
+
+So let's play https://de.wikipedia.org/wiki/Tetris[Tetris] ;)
+
+Because I made stupid bugs, I spent lots of time displaying the chamber and figuring out what I did wrong. My biggest mistake was to overwrite occupied space by empty space when a rock comes to rest and is not filling a full rectangle. Unfortunately, with this bug, I still get the correct result for the example data.
+
+Part 2 is about finding a pattern that repeats itself. I do that by looking at the top 30 rows. The number 30 is kind of arbitrarily chosen.
+
+=== Input ===
+
+I just read the input in a byte array.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== General solution ===
+
+I have a struct `Chamber` with a method `integrate_rock`. This takes a rock and let's it move in the chamber until it comes to rest. 
+
+My first version did not have the `.filter(|&k| rock[k] == b'#')` part in the update chamber loop at the end of the `integrate_rock` function. I typed these 29 characters with an average speed of about 12 character / hour.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=chamber]
+----
+
+=== Star 1 ===
+
+Just integrate 2022 rocks.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Integrate rocks until a situation as defined by top rows of chamber, current jet position, current rock repeats. Calculate how much hight we gain by repeating this full cycle as often as it fits in the required number of rocks to integrate and simulate the remaining steps.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+Tests did not help a lot today. 
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+My testing approach was to print various configurations using *very nice* printing code. Obviously, I removed all the `println!` and `if debug {}` statements before I publish my code.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=display]
+----

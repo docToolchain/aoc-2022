@@ -15,7 +15,10 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
         }),
         star2: Some(Star {
             name: "Star 2",
-            f: &star_2,
+            #[cfg(feature = "scan")]
+            f: &star_2_scan_lines,
+            #[cfg(not(feature = "scan"))]
+            f: &star_2_geometry,
             exp: Some(12_977_110_973_564),
         }),
     }
@@ -82,28 +85,75 @@ pub mod input {
 // end::input[]
 
 // tag::star_1[]
+/// determine ranges covered by sensors on given row
+pub fn ranges(
+    sensors: &[((isize, isize), (isize, isize))],
+    mn: isize,
+    mx: isize,
+    row: isize,
+) -> Vec<(isize, isize)> {
+    sensors
+        .iter()
+        .map(|((x, y), (x_b, y_b))| (*x, (x - x_b).abs() + (y - y_b).abs() - (y - row).abs()))
+        .map(|(x, d)| ((x - d).max(mn), (x + d).min(mx)))
+        .filter(|(mn, mx)| mx >= mn)
+        .fold(Vec::new(), |mut ranges, range| {
+            ranges.push(range);
+            let mut k_2 = ranges.len() - 1;
+            for k_1 in (0..ranges.len() - 1).rev() {
+                if ranges[k_1].0 <= ranges[k_2].0 && ranges[k_1].1 >= ranges[k_2].1 {
+                    // k_2 contained in k_1
+                    ranges.swap_remove(k_2);
+                    break;
+                } else if ranges[k_2].0 <= ranges[k_1].0 && ranges[k_2].1 >= ranges[k_1].1 {
+                    // k_1 contained in k_2
+                    ranges.swap_remove(k_1);
+                    k_2 = if k_2 == ranges.len() { k_1 } else { k_2 };
+                } else if ranges[k_2].0 >= ranges[k_1].0 && ranges[k_2].0 <= ranges[k_1].1 + 1 {
+                    // k_2's min in k_1 or immediately after
+                    ranges[k_1].1 = ranges[k_2].1;
+                    ranges.swap_remove(k_2);
+                    k_2 = k_1;
+                } else if ranges[k_2].1 >= ranges[k_1].0 - 1 && ranges[k_2].1 <= ranges[k_1].1 {
+                    // k_2's max in k_1 or immediately before
+                    ranges[k_1].0 = ranges[k_2].0;
+                    ranges.swap_remove(k_2);
+                    k_2 = k_1;
+                }
+            }
+            ranges
+        })
+}
+
 pub fn star_1(data: &PuzzleData) -> usize {
-    let mut no_beacons = HashSet::new();
-    let mut beacons_on_line = HashSet::new();
-
-    for ((x_s, y_s), (x_b, y_b)) in data.sensors() {
-        if *y_b == data.row {
-            beacons_on_line.insert(*x_b);
-        }
-
-        let d = (x_s - x_b).abs() + (y_s - y_b).abs();
-        let d_y = (y_s - data.row).abs();
-
-        let dlt = d - d_y;
-
-        for x in x_s - dlt..=x_s + dlt {
-            no_beacons.insert(x);
-        }
-    }
-
-    no_beacons.difference(&beacons_on_line).count()
+    let ranges: Vec<(isize, isize)> = ranges(data.sensors(), isize::MIN, isize::MAX, data.row);
+    let r = ranges
+        .iter()
+        .map(|(mn, mx)| (mx - mn + 1) as usize)
+        .sum::<usize>();
+    let s = data
+        .sensors()
+        .iter()
+        .filter(|(_, (_, y))| *y == data.row)
+        .map(|(_, b)| b)
+        .collect::<HashSet<_>>()
+        .len();
+    r - s
 }
 // end::star_1[]
+
+// tag::star_2_scan[]
+pub fn star_2_scan_lines(data: &PuzzleData) -> usize {
+    let (y, ranges) = (0..data.width)
+        .map(|row| (row, ranges(data.sensors(), 0, data.width, row)))
+        .find(|(_, r)| r.len() == 2)
+        .unwrap();
+
+    let x = ranges[0].0.max(ranges[1].0) - 1;
+
+    (x * 4_000_000 + y) as _
+}
+// end::star_2_scan[]
 
 // tag::star_2[]
 pub fn is_distress_beacon(
@@ -191,7 +241,7 @@ pub fn candidates(
     .collect()
 }
 
-fn star_2(data: &PuzzleData) -> usize {
+fn star_2_geometry(data: &PuzzleData) -> usize {
     let sensors = data.sensors_with_r();
     let (x, y) = sensors
         .iter()
@@ -362,7 +412,9 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3
     pub fn test_solve_2() {
         let mut data = PuzzleData::from(CONTENT);
         data.width = 20;
-        assert_eq!(56_000_011, star_2(&data));
+        assert_eq!(56_000_011, star_2_geometry(&data));
+        assert_eq!(56_000_011, star_2_scan_lines(&data));
+        assert_eq!(56_000_011, star_2_brute_force(&data));
     }
 }
 // end::tests[]
