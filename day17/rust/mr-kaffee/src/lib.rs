@@ -274,10 +274,10 @@ pub fn star_2(data: &PuzzleData) -> usize {
             let d_round = cur - prev;
             let d_height = chamber.height() - prev_height;
 
-            let n = (1_000_000_000_000 - cur) / d_round;
+            let n = (rounds - cur) / d_round;
             let h = n * d_height;
 
-            let rem = (1_000_000_000_000 - cur) % d_round;
+            let rem = (rounds - cur) % d_round;
             for _ in 0..rem {
                 chamber.integrate_rock();
             }
