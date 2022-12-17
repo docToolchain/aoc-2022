@@ -16,12 +16,12 @@ pub struct Pos {
 
 #[derive(Debug)]
 pub struct Stream {
-    flow: Vec<Push>,
+    pub flow: Vec<Push>,
 }
 
 // The position of each rock is indicated by the point in its bottom left. There doesn't have to be
 // anything there?
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Rock {
     Minus,
     Plus,
@@ -29,6 +29,9 @@ pub enum Rock {
     I,
     Block,
 }
+
+// LRIS stands for last rock in sequence but it's nicer to type.
+pub const LRIS: Rock = Rock::Block;
 
 #[derive(Debug, PartialEq)]
 pub enum Blocked {
