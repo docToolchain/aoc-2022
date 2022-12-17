@@ -8,7 +8,7 @@ pub enum Push {
     Right,
 }
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
 pub struct Pos {
     pub x: isize,
     pub y: isize,
@@ -53,6 +53,23 @@ impl Pos {
             x: self.x,
             y: self.y - 1,
         }
+    }
+
+    pub fn right_env(&self) -> Vec<Self> {
+        vec![
+            Self {
+                x: self.x + 1,
+                y: self.y + 1,
+            },
+            Self {
+                x: self.x + 1,
+                y: self.y,
+            },
+            Self {
+                x: self.x + 1,
+                y: self.y - 1,
+            },
+        ]
     }
 }
 
