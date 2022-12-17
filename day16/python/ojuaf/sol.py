@@ -155,7 +155,6 @@ def part1():
 
 def part2():
     data = load_input()
-    data = load_input()
     graph = create_graph(data)
 
     start = ['AA', 'AA']
