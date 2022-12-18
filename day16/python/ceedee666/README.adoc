@@ -1,0 +1,23 @@
+== Day 15
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+I did really struggle totday. I tried to create all positions and filter those for part one.
+This wouldn't work for part two. So I had to change the approach to calculate which ranges of
+a row are covered by the sensors.
+
+=== What did I learn
+
+Regex can be really useful to parse files ;)
+
+=== How to run
+
+Run using:
+`$ python day_15.py --help`
