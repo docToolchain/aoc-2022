@@ -1,0 +1,32 @@
+==  Day 18: Boiling Boulders  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/18
+
+Today's puzzle for me felt easier than the days before, maybe a contribution to the 4th advent, thank's to that I am back in the game :-).
+
+=== First Star
+
+How does it work: +
+
+The puzzle input is parsed and for each new line 6 new surfaces are added to the total sum. After that, the current line is compared to all previous ones stored in a list, for each cube already exisiting the manhatten distance is calculated, and if it is one, then two surfaces are remuoved from the total sum. After that, the current line is added to the list of existing cubes. Inside the function also the code for part two is already worked in, so you may find the min/max evaluation, which will be used for part two.
+[source, kotlin, numbered]
+....
+include::day2218_1_2.kt[tags=day2218]
+....
+
+=== Second Star
+
+How does it work: +
+
+For the second part a list of free cubes is created, starting +/- one position from the min and max values of the lava cloud. This list is filled then iteratively with additional cubes inside the box, if the current position is not a lava cube and if it has a connection to all so far found free cubes. 
+
+After having found all free cubes conneted to the outer frontiers, all surfaces which have a connection to the lava cloud are added up.
+
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2218_1_2.kt[tags=output]
+....
