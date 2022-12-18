@@ -1,0 +1,43 @@
+== Day 18: Boiling Boulders ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/18[AoC|2022|18].
+
+=== Input ===
+
+Parse the input in a vec of 3D coordinates.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+I use bits of bytes to store whether a side of a cube is touching a side of another cube. I start with all bits set to 1 and set them to zero by looking at all pairs of cubes.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+The approach for part 2 is totally different from the approach for part 1.
+
+I calculate the bounding box containing all cubes and do a breadth first traversal starting from all 8 edges of the bounding box (enlarged by one in each direction) at the same time. The traversal will not exit this enlarged bounding box. 
+
+Whenever the traversal hits a cube contained in my list, there is exactly on side facing outwards to be added to the count.
+
+Interestingly, the solution for the second part is calculated faster than the solution for the first part in my case.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
