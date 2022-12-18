@@ -1,0 +1,47 @@
+
+Day 16 of year 2022
+https://adventofcode.com/2022/day/16
+
+== What I learned
+
+. This day was incredibly frustrating. :-(
+
+== Approach
+
+. I create a few data structures from the input.
+
+.. "valves" is a dictionary and if you give it the index of a room, it will give back the neighbors of that room as well as the valve pressure for that room.
+
+.. I find the index of room "AA".
+
+.. A dictionary to hold the different variants that we have to check. The key is a tuple with the index of the room that you are in currently and the state of all valves and the current time. The value is the pressure that will be released cumatively until the end of the defined time.
+
+**Star 1** +
+
+. The basic idea is to go through and try all of the variants and find the one that gives you the maximum pressure.
+
+.. Each round, you can move to an adjacent room.
+
+.. Or open the valve in the current room if it is closed.
+
+. Since there is more than one way to get to a state within the round (from different previous states), you have to be careful to find the max pressure for that state.
+
+. If you open the valve, you add the pressure that will be released until the end of the specified time.
+
+. It's not very optimal, but I made it a little bit better by throwing out the states that have no chance of leading to the max anymore.
+
+**Star 2** +
+
+. I modified the key for the state dictionary to include a tuple with the 2 positions.
+
+. I make my own move. And then based on that, let the elephant do his.
+
+. It took a while on my laptop (with only 8GB RAM), but worked. The star 2 example does *not* work. The answer is off by one and I have no idea why. And after spending so much time, I decided that I don't care.
+
+== Run script
+Run the solution with `python solution.py`
+
+[source, python]
+....
+include::solution.py[]
+....
