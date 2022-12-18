@@ -216,17 +216,22 @@ fn solve(file: &str) -> Result<()> {
     // println!("{:?}", graph);
 
     let mut air_pockets = HashSet::<data::Point>::new();
+    let mut no_air_pockets = HashSet::<data::Point>::new();
 
     for x in min.x..=max.x {
         for y in min.y..=max.y {
             for z in min.z..=max.z {
                 let start_point = data::Point { x, y, z };
                 if let Some(_) = lava.get(&start_point) {
-                    // Do not  try to find paths that start at lava.
+                    // Do not try to find paths that start at lava.
                     continue;
                 }
                 if let Some(_) = air_pockets.get(&start_point) {
-                    // Do not  try to find paths that start at lava.
+                    // Do not try to find paths that start at air pockets.
+                    continue;
+                }
+                if let Some(_) = no_air_pockets.get(&start_point) {
+                    // Do not try to find paths that start at a connected point.
                     continue;
                 }
                 let start = graph
@@ -237,6 +242,8 @@ fn solve(file: &str) -> Result<()> {
                 // If the end node is not in the found path, we discovered an air pocket.
                 if let None = path.get(&end) {
                     air_pockets = &air_pockets | &path.into_iter().map(|el| el.0.p).collect();
+                } else {
+                    no_air_pockets = &no_air_pockets | &path.into_iter().map(|el| el.0.p).collect();
                 }
             }
         }
