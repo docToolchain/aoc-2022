@@ -4874,7 +4874,7 @@ Valve JJ has flow rate=21; tunnel leads to valve II
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">struct Chamber&lt;'a&gt; {
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub struct Chamber&lt;'a&gt; {
     chamber: Vec&lt;u8&gt;,
     jets: RingBuffer&lt;'a, u8&gt;,
     rocks: RingBuffer&lt;'static, (&amp;'static str, usize)&gt;,
@@ -4890,7 +4890,7 @@ impl&lt;'a&gt; From&lt;&amp;PuzzleData&lt;'a&gt;&gt; for Chamber&lt;'a&gt; {
     }
 }
 
-impl&lt;'a&gt; Chamber&lt;'a&gt; {
+impl Chamber&lt;'_&gt; {
     const WIDTH: usize = 7;
     const ROCKS: &amp;'static [(&amp;'static str, usize)] = &amp;[
         ("####", 4),
@@ -4921,7 +4921,10 @@ impl&lt;'a&gt; Chamber&lt;'a&gt; {
         )
     }
 
-    pub fn integrate_rock(&amp;mut self) {
+    pub fn integrate_rock&lt;F&gt;(&amp;mut self, f: F)
+    where
+        F: Fn(&amp;[u8], &amp;[u8], usize, usize, usize),
+    {
         let &amp;(rock, w) = self.rocks.next();
         let rock = rock.as_bytes();
 
@@ -4931,6 +4934,7 @@ impl&lt;'a&gt; Chamber&lt;'a&gt; {
         let mut stop = false;
 
         while !stop {
+            f(&amp;self.chamber, &amp;rock, x, y, w);
             let &amp;jet = self.jets.next();
             x = if jet == b'&lt;' &amp;&amp; x &gt; 0 &amp;&amp; self.check(rock, x - 1, y, w) {
                 x - 1
@@ -4979,7 +4983,7 @@ impl&lt;'a&gt; Chamber&lt;'a&gt; {
     let mut chamber = Chamber::from(data);
 
     for _ in 0..2022 {
-        chamber.integrate_rock();
+        chamber.integrate_rock(|_, _, _, _, _| ());
     }
 
     chamber.height()
@@ -5004,7 +5008,7 @@ impl&lt;'a&gt; Chamber&lt;'a&gt; {
 
     let mut cnt = 0;
     while chamber.height() &lt; rows {
-        chamber.integrate_rock();
+        chamber.integrate_rock(|_, _, _, _, _| ());
         cnt += 1;
     }
 
@@ -5018,12 +5022,12 @@ impl&lt;'a&gt; Chamber&lt;'a&gt; {
 
             let rem = (rounds - cur) % d_round;
             for _ in 0..rem {
-                chamber.integrate_rock();
+                chamber.integrate_rock(|_, _, _, _, _| ());
             }
 
             return chamber.height() + h;
         }
-        chamber.integrate_rock();
+        chamber.integrate_rock(|_, _, _, _, _| ());
     }
 
     unreachable!()
@@ -5069,21 +5073,22 @@ mod tests {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">enum RockInChamber&lt;'a&gt; {
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub enum RockInChamber&lt;'a, 'b&gt; {
     RIC {
         chamber: &amp;'a [u8],
-        rock: &amp;'static [u8],
+        rock: &amp;'b [u8],
         x: usize,
         y: usize,
         w: usize,
     },
 }
 
-impl&lt;'a&gt; RockInChamber&lt;'a&gt; {
-    const PRINT_LIM: usize = 20;
+impl RockInChamber&lt;'_, '_&gt; {
+    const ROCK_PART: usize = 8;
+    const PRINT_LIM: usize = 25 - Self::ROCK_PART;
 }
 
-impl&lt;'a&gt; std::fmt::Display for RockInChamber&lt;'a&gt; {
+impl std::fmt::Display for RockInChamber&lt;'_, '_&gt; {
     fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
         match self {
             RockInChamber::RIC {
@@ -5094,7 +5099,7 @@ impl&lt;'a&gt; std::fmt::Display for RockInChamber&lt;'a&gt; {
                 w,
             } =&gt; {
                 let h = chamber.len() / Chamber::WIDTH;
-                let y_mx = h.max(y + rock.len() / w);
+                let y_mx = h + Self::ROCK_PART;
                 let y_mn = 0.max(h - Self::PRINT_LIM.min(h));
                 for y_ in (y_mn..y_mx).rev() {
                     '|'.fmt(f)?;
@@ -5131,7 +5136,7 @@ impl&lt;'a&gt; std::fmt::Display for RockInChamber&lt;'a&gt; {
     }
 }
 
-impl&lt;'a&gt; std::fmt::Display for Chamber&lt;'a&gt; {
+impl std::fmt::Display for Chamber&lt;'_&gt; {
     fn fmt(&amp;self, f: &amp;mut std::fmt::Formatter&lt;'_&gt;) -&gt; std::fmt::Result {
         RockInChamber::RIC {
             chamber: &amp;self.chamber,
