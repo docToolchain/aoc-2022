@@ -11,13 +11,16 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
         input: include_str!("../input.txt"),
         star1: Some(Star {
             name: "Star 1",
-            f: &star_1,
-            exp: None,
+            #[cfg(not(feature = "pairwise"))]
+            f: &star_1_traversal,
+            #[cfg(feature = "pairwise")]
+            f: &star_1_pairwise_comp,
+            exp: Some(4_288),
         }),
         star2: Some(Star {
             name: "Star 2",
             f: &star_2,
-            exp: None,
+            exp: Some(2_494),
         }),
     }
 }
@@ -57,7 +60,7 @@ pub mod input {
 // end::input[]
 
 // tag::star_1[]
-pub fn star_1(data: &PuzzleData) -> usize {
+pub fn star_1_pairwise_comp(data: &PuzzleData) -> usize {
     let cubes = data.cubes();
 
     let mut sides = vec![0b111111u8; cubes.len()];
@@ -92,6 +95,44 @@ pub fn star_1(data: &PuzzleData) -> usize {
 }
 // end::star_1[]
 
+// tag::star_1_traversal[]
+pub fn star_1_traversal(data: &PuzzleData) -> usize {
+    let droplet: HashSet<(isize, isize, isize)> = HashSet::from_iter(data.cubes().iter().cloned());
+
+    let mut sides = 0;
+
+    let mut queue = VecDeque::new();
+    let mut remain = droplet.clone();
+    while !remain.is_empty() {
+        let &start = remain.iter().next().unwrap();
+        remain.remove(&start);
+
+        queue.push_back(start);
+
+        while let Some((x, y, z)) = queue.pop_front() {
+            for a in [
+                (x + 1, y, z),
+                (x - 1, y, z),
+                (x, y + 1, z),
+                (x, y - 1, z),
+                (x, y, z + 1),
+                (x, y, z - 1),
+            ] {
+                if remain.remove(&a) {
+                    // cube in droplet and not yet seen
+                    queue.push_back(a);
+                } else if !droplet.contains(&a) {
+                    // cube which is direct adjacent is not contained
+                    sides += 1;
+                }
+            }
+        }
+    }
+
+    sides
+}
+// end::star_1_traversal[]
+
 // tag::star_2[]
 pub fn star_2(data: &PuzzleData) -> usize {
     let ((x_mn, y_mn, z_mn), (x_mx, y_mx, z_mx)) = data.cubes().iter().fold(
@@ -101,25 +142,25 @@ pub fn star_2(data: &PuzzleData) -> usize {
         ),
         |(mn, mx), c| {
             (
-                (mn.0.min(c.0), mn.1.min(c.1), mn.2.min(c.2)),
-                (mx.0.max(c.0), mx.1.max(c.1), mx.2.max(c.2)),
+                (mn.0.min(c.0 - 1), mn.1.min(c.1 - 1), mn.2.min(c.2 - 1)),
+                (mx.0.max(c.0 + 1), mx.1.max(c.1 + 1), mx.2.max(c.2 + 1)),
             )
         },
     );
 
-    let cubes: HashSet<(isize, isize, isize)> = HashSet::from_iter(data.cubes().iter().cloned());
+    let droplet: HashSet<(isize, isize, isize)> = HashSet::from_iter(data.cubes().iter().cloned());
 
     let mut queue = VecDeque::new();
-    queue.push_back((x_mn - 1, y_mn - 1, z_mn - 1));
-    queue.push_back((x_mx + 1, y_mn - 1, z_mn - 1));
-    queue.push_back((x_mn - 1, y_mx + 1, z_mn - 1));
-    queue.push_back((x_mx + 1, y_mx + 1, z_mn - 1));
-    queue.push_back((x_mn - 1, y_mn - 1, z_mx + 1));
-    queue.push_back((x_mx + 1, y_mn - 1, z_mx + 1));
-    queue.push_back((x_mn - 1, y_mx + 1, z_mx + 1));
-    queue.push_back((x_mx + 1, y_mx + 1, z_mx + 1));
+    for x in [x_mn, x_mx] {
+        for y in [y_mn, y_mx] {
+            for z in [z_mn, z_mx] {
+                queue.push_back((x, y, z));
+            }
+        }
+    }
 
     let mut seen: HashSet<(isize, isize, isize)> = HashSet::from_iter(queue.iter().cloned());
+
     let mut sides = 0;
 
     while let Some((x, y, z)) = queue.pop_front() {
@@ -133,14 +174,9 @@ pub fn star_2(data: &PuzzleData) -> usize {
         ]
         .into_iter()
         .filter(|&(x, y, z)| {
-            x >= x_mn - 1
-                && y >= y_mn - 1
-                && z >= z_mn - 1
-                && x <= x_mx + 1
-                && y <= y_mx + 1
-                && z <= z_mx + 1
+            x >= x_mn && y >= y_mn && z >= z_mn && x <= x_mx && y <= y_mx && z <= z_mx
         }) {
-            if cubes.contains(&a) {
+            if droplet.contains(&a) {
                 sides += 1;
             } else if seen.insert(a) {
                 queue.push_back(a);
@@ -183,7 +219,8 @@ mod tests {
     #[test]
     pub fn test_star_1() {
         let data = PuzzleData::from(CONTENT);
-        assert_eq!(64, star_1(&data));
+        assert_eq!(64, star_1_pairwise_comp(&data));
+        assert_eq!(64, star_1_traversal(&data));
     }
 
     #[test]
