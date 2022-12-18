@@ -370,6 +370,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_18_rust">Day 18: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_18_boiling_boulders">Day 18: Boiling Boulders</a>
+<ul class="sectlevel4">
+<li><a href="#_input_18">Input</a></li>
+<li><a href="#_star_1_16">Star 1</a></li>
+<li><a href="#_star_2_16">Star 2</a></li>
+<li><a href="#_tests_19">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -5000,10 +5012,10 @@ impl&lt;'a&gt; Chamber&lt;'a&gt; {
             let d_round = cur - prev;
             let d_height = chamber.height() - prev_height;
 
-            let n = (1_000_000_000_000 - cur) / d_round;
+            let n = (rounds - cur) / d_round;
             let h = n * d_height;
 
-            let rem = (1_000_000_000_000 - cur) % d_round;
+            let rem = (rounds - cur) % d_round;
             for _ in 0..rem {
                 chamber.integrate_rock();
             }
@@ -5128,6 +5140,222 @@ impl&lt;'a&gt; std::fmt::Display for Chamber&lt;'a&gt; {
             w: 1,
         }
         .fmt(f)
+    }
+}</code></pre>
+</div>
+</div>
+<a id="day18" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_18_rust"><a class="anchor" href="#_day_18_rust"></a><a class="link" href="#_day_18_rust">Day 18: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_18_boiling_boulders"><a class="anchor" href="#_day_18_boiling_boulders"></a><a class="link" href="#_day_18_boiling_boulders">Day 18: Boiling Boulders</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/18">AoC|2022|18</a>.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_18"><a class="anchor" href="#_input_18"></a><a class="link" href="#_input_18">Input</a></h5>
+<div class="paragraph">
+<p>Parse the input in a vec of 3D coordinates.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        cubes: Vec&lt;(isize, isize, isize)&gt;,
+    }
+
+    impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData {
+        /// parse the puzzle input
+        fn from(s: &amp;'a str) -&gt; Self {
+            Self {
+                cubes: s
+                    .lines()
+                    .map(|line| line.split(','))
+                    .map(|mut split| {
+                        (
+                            split.next().unwrap().parse().unwrap(),
+                            split.next().unwrap().parse().unwrap(),
+                            split.next().unwrap().parse().unwrap(),
+                        )
+                    })
+                    .collect(),
+            }
+        }
+    }
+
+    impl&lt;'a&gt; PuzzleData {
+        pub fn cubes(&amp;self) -&gt; &amp;[(isize, isize, isize)] {
+            &amp;self.cubes
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_16"><a class="anchor" href="#_star_1_16"></a><a class="link" href="#_star_1_16">Star 1</a></h5>
+<div class="paragraph">
+<p>I use bits of bytes to store whether a side of a cube is touching a side of another cube. I start with all bits set to 1 and set them to zero by looking at all pairs of cubes.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    let cubes = data.cubes();
+
+    let mut sides = vec![0b111111u8; cubes.len()];
+
+    for k1 in 0..cubes.len() - 1 {
+        let (x_1, y_1, z_1) = cubes[k1];
+        for k2 in k1 + 1..cubes.len() {
+            let (x_2, y_2, z_2) = cubes[k2];
+            if x_1 == x_2 + 1 &amp;&amp; y_1 == y_2 &amp;&amp; z_1 == z_2 {
+                sides[k1] &amp;= !(1 &lt;&lt; 0);
+                sides[k2] &amp;= !(1 &lt;&lt; 1);
+            } else if x_1 == x_2 - 1 &amp;&amp; y_1 == y_2 &amp;&amp; z_1 == z_2 {
+                sides[k1] &amp;= !(1 &lt;&lt; 1);
+                sides[k2] &amp;= !(1 &lt;&lt; 0);
+            } else if x_1 == x_2 &amp;&amp; y_1 == y_2 + 1 &amp;&amp; z_1 == z_2 {
+                sides[k1] &amp;= !(1 &lt;&lt; 2);
+                sides[k2] &amp;= !(1 &lt;&lt; 3);
+            } else if x_1 == x_2 &amp;&amp; y_1 == y_2 - 1 &amp;&amp; z_1 == z_2 {
+                sides[k1] &amp;= !(1 &lt;&lt; 3);
+                sides[k2] &amp;= !(1 &lt;&lt; 2);
+            } else if x_1 == x_2 &amp;&amp; y_1 == y_2 &amp;&amp; z_1 == z_2 + 1 {
+                sides[k1] &amp;= !(1 &lt;&lt; 4);
+                sides[k2] &amp;= !(1 &lt;&lt; 5);
+            } else if x_1 == x_2 &amp;&amp; y_1 == y_2 &amp;&amp; z_1 == z_2 - 1 {
+                sides[k1] &amp;= !(1 &lt;&lt; 5);
+                sides[k2] &amp;= !(1 &lt;&lt; 4);
+            }
+        }
+    }
+
+    sides.iter().map(|s| s.count_ones() as usize).sum()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_16"><a class="anchor" href="#_star_2_16"></a><a class="link" href="#_star_2_16">Star 2</a></h5>
+<div class="paragraph">
+<p>The approach for part 2 is totally different from the approach for part 1.</p>
+</div>
+<div class="paragraph">
+<p>I calculate the bounding box containing all cubes and do a breadth first traversal starting from all 8 edges of the bounding box (enlarged by one in each direction) at the same time. The traversal will not exit this enlarged bounding box.</p>
+</div>
+<div class="paragraph">
+<p>Whenever the traversal hits a cube contained in my list, there is exactly on side facing outwards to be added to the count.</p>
+</div>
+<div class="paragraph">
+<p>Interestingly, the solution for the second part is calculated faster than the solution for the first part in my case.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let ((x_mn, y_mn, z_mn), (x_mx, y_mx, z_mx)) = data.cubes().iter().fold(
+        (
+            (isize::MAX, isize::MAX, isize::MAX),
+            (isize::MIN, isize::MIN, isize::MIN),
+        ),
+        |(mn, mx), c| {
+            (
+                (mn.0.min(c.0), mn.1.min(c.1), mn.2.min(c.2)),
+                (mx.0.max(c.0), mx.1.max(c.1), mx.2.max(c.2)),
+            )
+        },
+    );
+
+    let cubes: HashSet&lt;(isize, isize, isize)&gt; = HashSet::from_iter(data.cubes().iter().cloned());
+
+    let mut queue = VecDeque::new();
+    queue.push_back((x_mn - 1, y_mn - 1, z_mn - 1));
+    queue.push_back((x_mx + 1, y_mn - 1, z_mn - 1));
+    queue.push_back((x_mn - 1, y_mx + 1, z_mn - 1));
+    queue.push_back((x_mx + 1, y_mx + 1, z_mn - 1));
+    queue.push_back((x_mn - 1, y_mn - 1, z_mx + 1));
+    queue.push_back((x_mx + 1, y_mn - 1, z_mx + 1));
+    queue.push_back((x_mn - 1, y_mx + 1, z_mx + 1));
+    queue.push_back((x_mx + 1, y_mx + 1, z_mx + 1));
+
+    let mut seen: HashSet&lt;(isize, isize, isize)&gt; = HashSet::from_iter(queue.iter().cloned());
+    let mut sides = 0;
+
+    while let Some((x, y, z)) = queue.pop_front() {
+        for a in [
+            (x + 1, y, z),
+            (x - 1, y, z),
+            (x, y + 1, z),
+            (x, y - 1, z),
+            (x, y, z + 1),
+            (x, y, z - 1),
+        ]
+        .into_iter()
+        .filter(|&amp;(x, y, z)| {
+            x &gt;= x_mn - 1
+                &amp;&amp; y &gt;= y_mn - 1
+                &amp;&amp; z &gt;= z_mn - 1
+                &amp;&amp; x &lt;= x_mx + 1
+                &amp;&amp; y &lt;= y_mx + 1
+                &amp;&amp; z &lt;= z_mx + 1
+        }) {
+            if cubes.contains(&amp;a) {
+                sides += 1;
+            } else if seen.insert(a) {
+                queue.push_back(a);
+            }
+        }
+    }
+
+    sides
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_19"><a class="anchor" href="#_tests_19"></a><a class="link" href="#_tests_19">Tests</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"2,2,2
+1,2,2
+3,2,2
+2,1,2
+2,3,2
+2,2,1
+2,2,3
+2,2,4
+2,2,6
+1,2,5
+3,2,5
+2,1,5
+2,3,5
+"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(13, data.cubes().len());
+        assert_eq!((2, 1, 2), data.cubes()[3]);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(64, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(58, star_2(&amp;data));
     }
 }</code></pre>
 </div>
