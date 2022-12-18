@@ -82,6 +82,11 @@
     </url>
 
     <url>
+    	<loc>https://doctoolchain.org/aoc-2022//rules/index.html</loc>
+    	<lastmod>2022-12-18</lastmod>
+    </url>
+
+    <url>
     	<loc>https://doctoolchain.org/aoc-2022//solutions/byLanguage.html</loc>
     	<lastmod>2022-12-18</lastmod>
     </url>
@@ -93,11 +98,6 @@
 
     <url>
     	<loc>https://doctoolchain.org/aoc-2022//solutions/index.html</loc>
-    	<lastmod>2022-12-18</lastmod>
-    </url>
-
-    <url>
-    	<loc>https://doctoolchain.org/aoc-2022//rules/index.html</loc>
     	<lastmod>2022-12-18</lastmod>
     </url>
 
