@@ -1,0 +1,71 @@
+== Day 18: Boiling Boulders ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+Today was easy, yeah!
+For part 1, simply put all lava points in a set.
+Then, for each lava point, check for each neighbour whether that one is a lava
+point itself.
+If not, count it.
+
+Part 2 was a bit more tricky and I lost some time due to an overflow that I
+didn't notice at first.
+(Note to self: Always run in development mode first and only switch to release
+mode if the speed up is needed because release mode will silently ignore
+overflows.)
+
+I was wondering how to detect air pockets.
+My idea was to repurpose the `A*` algorithm developed for day 12.
+I first extended it to 3 dimensions, which was straightforward.
+Then, I found the smallest cuboid that contains all lava.
+Then, I had `A*` search a path from each block in that cuboid to a block in a
+top corner.
+To ensure that I would always be able to find a path from any block that is
+conncted to the outside, I added one layer of air to each of the 6 sides of the
+cuboid.
+Whenever I could not find a path, all blocks that the algorithm looked at are
+known to be part of air pockets.
+Whenever a path could be found, all blocks that the algorithm looked at are
+known to not be air pockets.
+That helps reduce the number of blocks to look at.
+
+In the end, I fill all air pockets with fake lava and apply the same algorithm
+from part 1 again.
+I guess a breadth first search would have been more applicable, but I already
+had a working pathfinding algorithm, so I repurposed it.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
