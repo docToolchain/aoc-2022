@@ -58,7 +58,7 @@ impl<'a, T> From<&'a [T]> for RingBuffer<'a, T> {
     }
 }
 
-impl<'a, T> RingBuffer<'a, T> {
+impl<T> RingBuffer<'_, T> {
     pub fn next(&mut self) -> &T {
         let v = &self.data[self.pos];
         self.pos = (self.pos + 1) % self.data.len();
@@ -72,7 +72,7 @@ impl<'a, T> RingBuffer<'a, T> {
 // end::ring[]
 
 // tag::chamber[]
-struct Chamber<'a> {
+pub struct Chamber<'a> {
     chamber: Vec<u8>,
     jets: RingBuffer<'a, u8>,
     rocks: RingBuffer<'static, (&'static str, usize)>,
@@ -88,7 +88,7 @@ impl<'a> From<&PuzzleData<'a>> for Chamber<'a> {
     }
 }
 
-impl<'a> Chamber<'a> {
+impl Chamber<'_> {
     const WIDTH: usize = 7;
     const ROCKS: &'static [(&'static str, usize)] = &[
         ("####", 4),
@@ -119,7 +119,10 @@ impl<'a> Chamber<'a> {
         )
     }
 
-    pub fn integrate_rock(&mut self) {
+    pub fn integrate_rock<F>(&mut self, f: F)
+    where
+        F: Fn(&[u8], &[u8], usize, usize, usize),
+    {
         let &(rock, w) = self.rocks.next();
         let rock = rock.as_bytes();
 
@@ -129,6 +132,7 @@ impl<'a> Chamber<'a> {
         let mut stop = false;
 
         while !stop {
+            f(&self.chamber, &rock, x, y, w);
             let &jet = self.jets.next();
             x = if jet == b'<' && x > 0 && self.check(rock, x - 1, y, w) {
                 x - 1
@@ -166,21 +170,22 @@ impl<'a> Chamber<'a> {
 // end::chamber[]
 
 // tag::display[]
-enum RockInChamber<'a> {
+pub enum RockInChamber<'a, 'b> {
     RIC {
         chamber: &'a [u8],
-        rock: &'static [u8],
+        rock: &'b [u8],
         x: usize,
         y: usize,
         w: usize,
     },
 }
 
-impl<'a> RockInChamber<'a> {
-    const PRINT_LIM: usize = 20;
+impl RockInChamber<'_, '_> {
+    const ROCK_PART: usize = 8;
+    const PRINT_LIM: usize = 25 - Self::ROCK_PART;
 }
 
-impl<'a> std::fmt::Display for RockInChamber<'a> {
+impl std::fmt::Display for RockInChamber<'_, '_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             RockInChamber::RIC {
@@ -191,7 +196,7 @@ impl<'a> std::fmt::Display for RockInChamber<'a> {
                 w,
             } => {
                 let h = chamber.len() / Chamber::WIDTH;
-                let y_mx = h.max(y + rock.len() / w);
+                let y_mx = h + Self::ROCK_PART;
                 let y_mn = 0.max(h - Self::PRINT_LIM.min(h));
                 for y_ in (y_mn..y_mx).rev() {
                     '|'.fmt(f)?;
@@ -228,7 +233,7 @@ impl<'a> std::fmt::Display for RockInChamber<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for Chamber<'a> {
+impl std::fmt::Display for Chamber<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         RockInChamber::RIC {
             chamber: &self.chamber,
@@ -247,7 +252,7 @@ pub fn star_1(data: &PuzzleData) -> usize {
     let mut chamber = Chamber::from(data);
 
     for _ in 0..2022 {
-        chamber.integrate_rock();
+        chamber.integrate_rock(|_, _, _, _, _| ());
     }
 
     chamber.height()
@@ -265,7 +270,7 @@ pub fn star_2(data: &PuzzleData) -> usize {
 
     let mut cnt = 0;
     while chamber.height() < rows {
-        chamber.integrate_rock();
+        chamber.integrate_rock(|_, _, _, _, _| ());
         cnt += 1;
     }
 
@@ -279,12 +284,12 @@ pub fn star_2(data: &PuzzleData) -> usize {
 
             let rem = (rounds - cur) % d_round;
             for _ in 0..rem {
-                chamber.integrate_rock();
+                chamber.integrate_rock(|_, _, _, _, _| ());
             }
 
             return chamber.height() + h;
         }
-        chamber.integrate_rock();
+        chamber.integrate_rock(|_, _, _, _, _| ());
     }
 
     unreachable!()
