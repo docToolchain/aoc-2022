@@ -61,3 +61,12 @@ My testing approach was to print various configurations using *very nice* printi
 ----
 include::src/lib.rs[tags=display]
 ----
+
+=== Animation ===
+
+Just for fun, I created an example with a little animation (simulates 2022 rocks using the example data). Run with `cargo run --release --example animate -- <ms>` where `<ms>` is the amount of ms to sleep after each animation step, defaults to `40`.
+
+[source,rust,numbered]
+----
+include::examples/animate.rs[tags=main]
+----
