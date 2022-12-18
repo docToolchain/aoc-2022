@@ -292,6 +292,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_18_kotlin">Day 18: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_18_boiling_boulders">Day 18: Boiling Boulders</a>
+<ul class="sectlevel4">
+<li><a href="#_first_star_15">First Star</a></li>
+<li><a href="#_second_star_15">Second Star</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -2066,6 +2076,157 @@ All directions are multiplied and the highest score will be the result.</p>
 	println("*************************************")
 	println("Solution for part2")
 	println("   $solution2 is its tuning frequency")
+	println()</code></pre>
+</div>
+</div>
+<a id="day18" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_18_kotlin"><a class="anchor" href="#_day_18_kotlin"></a><a class="link" href="#_day_18_kotlin">Day 18: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_18_boiling_boulders"><a class="anchor" href="#_day_18_boiling_boulders"></a><a class="link" href="#_day_18_boiling_boulders">Day 18: Boiling Boulders</a></h4>
+<div class="paragraph">
+<p>This solution is written in Kotlin.</p>
+</div>
+<div class="paragraph">
+<p>The original puzzle can be found at <a href="https://adventofcode.com/2022/day/18" class="bare">https://adventofcode.com/2022/day/18</a></p>
+</div>
+<div class="paragraph">
+<p>Today&#8217;s puzzle for me felt easier than the days before, maybe a contribution to the 4th advent, thank&#8217;s to that I am back in the game :-).</p>
+</div>
+<div class="sect4">
+<h5 id="_first_star_15"><a class="anchor" href="#_first_star_15"></a><a class="link" href="#_first_star_15">First Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>The puzzle input is parsed and for each new line 6 new surfaces are added to the total sum. After that, the current line is compared to all previous ones stored in a list, for each cube already exisiting the manhatten distance is calculated, and if it is one, then two surfaces are remuoved from the total sum. After that, the current line is added to the list of existing cubes. Inside the function also the code for part two is already worked in, so you may find the min/max evaluation, which will be used for part two.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun BoiBou(in1: Int): Int {
+
+	var bouldersList = mutableListOf&lt;Triple&lt;Int, Int, Int&gt;&gt;()
+	var result = 0
+
+	var xMin = 0
+	var xMax = 0
+	var yMin = 0
+	var yMax = 0
+	var zMin = 0
+	var zMax = 0
+
+	File("day2218_puzzle_input.txt").forEachLine {
+		var (x, y, z) = it.split(",").map { it.toString().toInt() }
+
+		// needed for part two
+		xMin = min(xMin, x)
+		xMax = max(xMax, x)
+		yMin = min(yMin, y)
+		yMax = max(yMax, y)
+		zMin = min(zMin, z)
+		zMax = max(zMax, z)
+
+		// for each new cube 6 surface areas are added
+		result += 6
+
+		bouldersList.forEach {
+			// for each already existing cube which is touched by the new cube, two surface areas are removed
+			if (abs(x - it.first) + abs(y - it.second) + abs(z - it.third) == 1) {
+				result -= 2
+			}
+		}
+		bouldersList.add(Triple(x, y, z))
+	}
+
+	// return result for first part
+	if (in1 == 1) {
+		return result
+	}
+
+	// start second part - find all free cubes which are outside
+	var gameEnd = false
+	var freeCubeList = mutableListOf&lt;Triple&lt;Int, Int, Int&gt;&gt;()
+
+	while (!gameEnd) {
+		gameEnd = true
+
+		for (z in zMin - 1..zMax + 1) {
+			for (y in yMin - 1..yMax + 1) {
+				for (x in xMin - 1..xMax + 1) {
+					if (!bouldersList.contains(Triple(x, y, z))) {
+						if (x == xMin || x == xMax || y == yMin || y == yMax || z == zMin || z == zMax) {
+							// set cubes to the outside boundaries
+							if (!freeCubeList.contains(Triple(x, y, z))) {
+								freeCubeList.add(Triple(x, y, z))
+							}
+						} else {
+							// if not outside boundary add a new free cube, if the position is connected to the outside
+							var connected = false
+							freeCubeList.forEach {
+								if (abs(x - it.first) + abs(y - it.second) + abs(z - it.third) == 1) {
+									connected = true
+								}
+							}
+							if (connected &amp;&amp; !freeCubeList.contains(Triple(x, y, z))) {
+								freeCubeList.add(Triple(x, y, z))
+								gameEnd = false
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// count all surfaces of the free cubes connected to a boiling boulder cube
+	result = 0
+	freeCubeList.forEach {
+		var xC = it.first
+		var yC = it.second
+		var zC = it.third
+		bouldersList.forEach {
+			if (abs(xC - it.first) + abs(yC - it.second) + abs(zC - it.third) == 1) {
+				result += 1
+			}
+		}
+	}
+
+	// return result for part 2
+	return result
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_second_star_15"><a class="anchor" href="#_second_star_15"></a><a class="link" href="#_second_star_15">Second Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>For the second part a list of free cubes is created, starting +/- one position from the min and max values of the lava cloud. This list is filled then iteratively with additional cubes inside the box, if the current position is not a lava cube and if it has a connection to all so far found free cubes.</p>
+</div>
+<div class="paragraph">
+<p>After having found all free cubes conneted to the outer frontiers, all surfaces which have a connection to the lava cloud are added up.</p>
+</div>
+<div class="paragraph">
+<p>At the end, both solutions are printed out.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">// print solution for part 1
+	println("********************************")
+	println("--- Day 18: Boiling Boulders ---")
+	println("********************************")
+	println("Solution for part1")
+	println("   $solution1 is the surface area of your scanned lava droplet")
+	println()
+// print solution for part 2
+	println("*******************************")
+	println("Solution for part2")
+	println("   $solution2 is the exterior surface area of your scanned lava droplet")
 	println()</code></pre>
 </div>
 </div>
