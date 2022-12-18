@@ -24,15 +24,26 @@ include::src/lib.rs[tags=star_1]
 
 The approach for part 2 is totally different from the approach for part 1.
 
-I calculate the bounding box containing all cubes and do a breadth first traversal starting from all 8 edges of the bounding box (enlarged by one in each direction) at the same time. The traversal will not exit this enlarged bounding box. 
+I calculate the bounding box containing all cubes of a droplet and do a breadth first traversal starting from all 8 corners of the bounding box (enlarged by one in each direction) at the same time. The traversal will not exit this enlarged bounding box. 
 
-Whenever the traversal hits a cube contained in my list, there is exactly on side facing outwards to be added to the count.
+Whenever the traversal hits a cube contained in the droplet, there is exactly on side facing outwards to be added to the count.
 
 Interestingly, the solution for the second part is calculated faster than the solution for the first part in my case.
 
 [source,rust,numbered]
 ----
 include::src/lib.rs[tags=star_2]
+----
+
+=== Star 1 variant ===
+
+After part 2 was done, I re-created a solution for part 1 based on the same idea. 
+
+This time, I do a breadth first traversal inside the droplet. Since the droplet is not necessarily connected, I need to wrap everything in an additional loop until all cubes are processed. To do so, I replace the `seen` set (which is initially empty) by a `remain` set, which initially contains all cubes, and from which I remove all cubes that are processed.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1_traversal]
 ----
 
 === Tests ===
