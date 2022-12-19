@@ -28,19 +28,6 @@ pub enum WhatToBuild {
     Nothing,
 }
 
-// Allow drawing a random member of the enum.
-impl Distribution<WhatToBuild> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> WhatToBuild {
-        match rng.gen_range(0..=14) {
-            0 | 1 => WhatToBuild::OreR,
-            2 | 3 | 4 => WhatToBuild::ClayR,
-            5 | 6 | 7 | 8 => WhatToBuild::ObsidianR,
-            9 | 10 | 11 | 12 | 13 => WhatToBuild::GeodeR,
-            _ => WhatToBuild::Nothing,
-        }
-    }
-}
-
 impl FromStr for Blueprint {
     type Err = Error;
 
@@ -62,8 +49,9 @@ impl FromStr for Blueprint {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct State {
+    pub time: Size,
     pub ore: Size,
     pub ore_robots: Size,
     pub clay: Size,
@@ -75,55 +63,9 @@ pub struct State {
 }
 
 impl State {
-    pub fn next(&mut self, bp: &Blueprint) {
-        let random_action = rand::random::<WhatToBuild>();
-        // Only perform the drawn operation if we have enough resources for it. Otherwise,
-        // implicitly perform a "nothing" operation.
-        let can_build = match random_action {
-            WhatToBuild::Nothing => false,
-            WhatToBuild::OreR => self.ore >= bp.ore_ore_cost,
-            WhatToBuild::ClayR => self.ore >= bp.clay_ore_cost,
-            WhatToBuild::ObsidianR => {
-                self.ore >= bp.obsidian_ore_cost && self.clay >= bp.obsidian_clay_cost
-            }
-            WhatToBuild::GeodeR => {
-                self.ore >= bp.geode_ore_cost && self.obsidian >= bp.geode_obsidian_cost
-            }
-        };
-        // Materials.
-        self.ore += self.ore_robots;
-        self.clay += self.clay_robots;
-        self.obsidian += self.obsidian_robots;
-        self.geode += self.geode_robots;
-        // New constructions. There can be at most be one robot constructed at a time. I suspect
-        // it's gonna be different for part 2.
-        if can_build {
-            match random_action {
-                WhatToBuild::Nothing => {}
-                WhatToBuild::OreR => {
-                    self.ore_robots += 1;
-                    self.ore -= bp.ore_ore_cost;
-                }
-                WhatToBuild::ClayR => {
-                    self.clay_robots += 1;
-                    self.ore -= bp.clay_ore_cost;
-                }
-                WhatToBuild::ObsidianR => {
-                    self.obsidian_robots += 1;
-                    self.ore -= bp.obsidian_ore_cost;
-                    self.clay -= bp.obsidian_clay_cost;
-                }
-                WhatToBuild::GeodeR => {
-                    self.geode_robots += 1;
-                    self.ore -= bp.geode_ore_cost;
-                    self.obsidian -= bp.geode_obsidian_cost;
-                }
-            }
-        }
-    }
-
-    pub fn start() -> Self {
+    pub fn start(available_time: Size) -> Self {
         Self {
+            time: available_time,
             ore: 0,
             ore_robots: 1,
             clay: 0,
@@ -133,6 +75,70 @@ impl State {
             geode: 0,
             geode_robots: 0,
         }
+    }
+
+    pub fn next(&self, bp: &Blueprint, act: &WhatToBuild) -> Option<Self> {
+        // Only perform the drawn operation if we have enough resources for it. Otherwise,
+        // implicitly perform a "nothing" operation.
+        match act {
+            WhatToBuild::Nothing => {}
+            WhatToBuild::OreR => {
+                if self.ore < bp.ore_ore_cost {
+                    return None;
+                }
+            }
+            WhatToBuild::ClayR => {
+                if self.ore < bp.clay_ore_cost {
+                    return None;
+                }
+            }
+            WhatToBuild::ObsidianR => {
+                if self.ore < bp.obsidian_ore_cost || self.clay < bp.obsidian_clay_cost {
+                    return None;
+                }
+            }
+            WhatToBuild::GeodeR => {
+                if self.ore < bp.geode_ore_cost || self.obsidian < bp.geode_obsidian_cost {
+                    return None;
+                }
+            }
+        }
+        let mut next = Self {
+            time: self.time - 1,
+            // Materials.
+            ore: self.ore + self.ore_robots,
+            clay: self.clay + self.clay_robots,
+            obsidian: self.obsidian + self.obsidian_robots,
+            geode: self.geode + self.geode_robots,
+            ore_robots: self.ore_robots,
+            clay_robots: self.clay_robots,
+            obsidian_robots: self.obsidian_robots,
+            geode_robots: self.geode_robots,
+        };
+
+        match act {
+            WhatToBuild::Nothing => {}
+            WhatToBuild::OreR => {
+                next.ore_robots += 1;
+                next.ore -= bp.ore_ore_cost;
+            }
+            WhatToBuild::ClayR => {
+                next.clay_robots += 1;
+                next.ore -= bp.clay_ore_cost;
+            }
+            WhatToBuild::ObsidianR => {
+                next.obsidian_robots += 1;
+                next.ore -= bp.obsidian_ore_cost;
+                next.clay -= bp.obsidian_clay_cost;
+            }
+            WhatToBuild::GeodeR => {
+                next.geode_robots += 1;
+                next.ore -= bp.geode_ore_cost;
+                next.obsidian -= bp.geode_obsidian_cost;
+            }
+        }
+
+        Some(next)
     }
 }
 // end::data[]

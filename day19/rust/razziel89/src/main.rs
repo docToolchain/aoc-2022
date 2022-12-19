@@ -12,27 +12,44 @@ mod io;
 use anyhow::{Error, Result};
 use std::collections::{HashMap, HashSet};
 // Constants.
-const MAX_TIME: usize = 24;
 
-fn evolve(bp: data::Blueprint) -> data::Size {
-    let mut best = 0;
+fn is_env(var: &str, val: &str, def: &str) -> bool {
+    std::env::var(var).unwrap_or(def.to_string()) == val
+}
 
-    // Perform 1000 optimisations per blueprint.
-    for _ in 0..1_000 {
-        let mut state = data::State::start();
+fn exhaustive_search(
+    state: data::State,
+    bp: &data::Blueprint,
+    actions: &Vec<data::WhatToBuild>,
+    lru: &mut HashMap<data::State, data::Size>,
+) -> data::Size {
+    if state.time == 0 {
+        return state.geode;
+    }
+    if let Some(lru_val) = lru.get(&state) {
+        return *lru_val;
+    }
 
-        for _time in 0..MAX_TIME {
-            state.next(&bp);
-        }
-        if state.geode > best {
-            best = state.geode;
+    let mut best = state.geode;
+
+    for act in actions.iter() {
+        if let Some(next) = state.next(bp, act) {
+            let possible_best = exhaustive_search(next, bp, actions, lru);
+            if possible_best > best {
+                best = possible_best;
+            }
         }
     }
 
-    best
+    // Remember the value we found, but only for early ones.
+    if state.time >= 4 {
+        lru.insert(state, best);
+    }
+
+    return best;
 }
 
-fn solve(file: &str) -> Result<()> {
+fn solve(file: &str, part1: bool) -> Result<()> {
     println!("PROCESSING {}", file);
 
     // Read file and convert into data.
@@ -43,30 +60,74 @@ fn solve(file: &str) -> Result<()> {
         None,
     )?;
 
-    // Part 1.
-    println!("{:?}", blueprints);
-    let mut best = vec![0; blueprints.len()];
+    let actions = vec![
+        data::WhatToBuild::GeodeR,
+        data::WhatToBuild::ObsidianR,
+        data::WhatToBuild::ClayR,
+        data::WhatToBuild::OreR,
+        data::WhatToBuild::Nothing,
+    ];
 
-    loop {
+    if part1 {
+        let mut best_vals = vec![];
+
         for (idx, bp) in blueprints.iter().enumerate() {
-            let possible_best = evolve(bp.clone());
-            if possible_best > best[idx] {
-                best[idx] = possible_best;
-                println!("found better: {} {}", idx, possible_best);
-                let quality_level: data::Size = best
-                    .iter()
-                    .zip(blueprints.iter())
-                    .map(|(val, bp)| bp.id * val)
-                    .sum();
-                println!("the new overall quality level is: {}", quality_level);
-            }
+            let mut lru = HashMap::<data::State, data::Size>::new();
+            let state = data::State::start(24);
+            let best = exhaustive_search(state, bp, &actions, &mut lru);
+            println!("best for {} is {}", idx + 1, best);
+            best_vals.push(best);
         }
+
+        let quality_level = best_vals
+            .into_iter()
+            .zip(blueprints.iter())
+            .map(|(val, bp)| bp.id as usize * val as usize)
+            .sum::<usize>();
+
+        println!("the overall quality level is: {}", quality_level);
+    } else {
+        let mut best_vals = vec![];
+
+        for (idx, bp) in blueprints.iter().take(3).enumerate() {
+            // Sadly, we cannot reuse the LRU cache for other blueprints.
+            let mut lru = HashMap::<data::State, data::Size>::new();
+            if idx == 0 {
+                // We've already managed to compute this one for our input.
+                lru.insert(data::State::start(32), 30);
+            }
+            let state = data::State::start(32);
+            let best = exhaustive_search(state, bp, &actions, &mut lru);
+            println!("best for {} is {}", idx + 1, best);
+            best_vals.push(best);
+        }
+
+        let quality_level = best_vals
+            .into_iter()
+            .map(|el| el as usize)
+            .product::<usize>();
+
+        println!("the overall quality level is: {}", quality_level);
     }
+
+    Ok(())
 }
 
 fn main() -> Result<()> {
-    // solve(SAMPLE1)?;
-    solve(REAL)?;
+    // Run none by default.
+    if is_env("RUN", "0", "") {
+        solve(SAMPLE1, true)?;
+    }
+    if is_env("RUN", "1", "") {
+        solve(REAL, true)?;
+    }
+
+    if is_env("RUN", "2", "") {
+        solve(SAMPLE1, false)?;
+    }
+    if is_env("RUN", "3", "") {
+        solve(REAL, false)?;
+    }
 
     Ok(())
 }
