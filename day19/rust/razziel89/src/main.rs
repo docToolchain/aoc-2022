@@ -12,7 +12,7 @@ mod io;
 use anyhow::{Error, Result};
 use std::collections::{HashMap, HashSet};
 // Constants.
-const LRU_THRESHOLD: data::Size = 4;
+const LRU_THRESHOLD: data::Size = 5;
 
 fn is_env(var: &str, val: &str, def: &str) -> bool {
     std::env::var(var).unwrap_or(def.to_string()) == val
