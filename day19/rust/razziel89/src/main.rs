@@ -31,7 +31,8 @@ fn exhaustive_search(
         if let Some(lru_val) = lru.get(&state) {
             return *lru_val;
         }
-    } else if state.geode + state.time * state.geode_robots + state.time * state.time < *total_best
+    } else if state.geode + state.time * state.geode_robots + (state.time - 1) * (state.time - 1)
+        < *total_best
     {
         // Return early if a very optimistic estimate of what we can still achieve is lower than
         // the best we've already found.
