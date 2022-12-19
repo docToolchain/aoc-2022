@@ -384,6 +384,19 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_19_rust">Day 19: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_19_not_enough_minerals">Day 19: Not Enough Minerals</a>
+<ul class="sectlevel4">
+<li><a href="#_input_19">Input</a></li>
+<li><a href="#_star_1_17">Star 1</a></li>
+<li><a href="#_star_2_17">Star 2</a></li>
+<li><a href="#_tests_20">Tests</a></li>
+<li><a href="#_today_i_learned_8">Today I learned</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -5443,6 +5456,464 @@ mod tests {
     }
 }</code></pre>
 </div>
+</div>
+<a id="day19" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_19_rust"><a class="anchor" href="#_day_19_rust"></a><a class="link" href="#_day_19_rust">Day 19: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_19_not_enough_minerals"><a class="anchor" href="#_day_19_not_enough_minerals"></a><a class="link" href="#_day_19_not_enough_minerals">Day 19: Not Enough Minerals</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/19">AoC|2022|19</a>.</p>
+</div>
+<div class="paragraph">
+<p>Brute force day :(</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Do not run this code. It may overheat your CPU ;)
+</td>
+</tr>
+</table>
+</div>
+<div class="sect4">
+<h5 id="_input_19"><a class="anchor" href="#_input_19"></a><a class="link" href="#_input_19">Input</a></h5>
+<div class="paragraph">
+<p>Lot&#8217;s of structure to help me avoid indexing errors&#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    use crate::Count;
+
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        blueprints: Vec&lt;Blueprint&gt;,
+    }
+
+    impl From&lt;&amp;str&gt; for PuzzleData {
+        /// parse the puzzle input
+        fn from(s: &amp;'_ str) -&gt; Self {
+            Self {
+                blueprints: s.lines().map(Blueprint::from).collect(),
+            }
+        }
+    }
+
+    impl PuzzleData {
+        pub fn blueprints(&amp;self) -&gt; &amp;[Blueprint] {
+            &amp;self.blueprints
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+    pub struct Blueprint {
+        costs: [Count; 6],
+    }
+
+    impl From&lt;&amp;str&gt; for Blueprint {
+        fn from(line: &amp;str) -&gt; Self {
+            let mut costs = [0; 6];
+            let mut words = line.split_ascii_whitespace().skip(6); // blueprint &lt;id&gt;: each ore robot costs
+            costs[Self::ORE_FOR_ORE] = words.next().unwrap().parse().unwrap(); // XX: ore for ore robot
+            let mut words = words.skip(5); // ore. each clay robot costs
+            costs[Self::ORE_FOR_CLAY] = words.next().unwrap().parse().unwrap(); // XX: ore for clay robot
+            let mut words = words.skip(5); // ore. each obsidian robot costs
+            costs[Self::ORE_FOR_OBSIDIAN] = words.next().unwrap().parse().unwrap(); // XX: ore for obsidian robot
+            let mut words = words.skip(2); // ore and
+            costs[Self::CLAY_FOR_OBSIDIAN] = words.next().unwrap().parse().unwrap(); // XX: clay for obsidian robot
+            let mut words = words.skip(5); // clay. each geode robot costs
+            costs[Self::ORE_FOR_GEODE] = words.next().unwrap().parse().unwrap(); // XX: ore for geode robot
+            let mut words = words.skip(2); // ore and
+            costs[Self::OBSIDIAN_FOR_GEODE] = words.next().unwrap().parse().unwrap(); // XX: obsidian for geode robot
+            assert_eq!(Some("obsidian."), words.next());
+            assert_eq!(None, words.next());
+            Self { costs }
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash)]
+    pub enum Material {
+        Ore = 0,
+        Clay = 1,
+        Obsidian = 2,
+        Geode = 3,
+    }
+
+    impl Material {
+        pub const ALL: &amp;[Self] = &amp;[Self::Ore, Self::Clay, Self::Obsidian, Self::Geode];
+    }
+
+    impl&lt;T&gt; From&lt;T&gt; for Material
+    where
+        T: Into&lt;usize&gt;,
+    {
+        fn from(v: T) -&gt; Self {
+            Self::ALL[v.into()]
+        }
+    }
+
+    impl Blueprint {
+        const ORE_FOR_ORE: usize = 0;
+        const ORE_FOR_CLAY: usize = 1;
+        const ORE_FOR_OBSIDIAN: usize = 2;
+        const CLAY_FOR_OBSIDIAN: usize = 3;
+        const ORE_FOR_GEODE: usize = 4;
+        const OBSIDIAN_FOR_GEODE: usize = 5;
+
+        pub fn can_make_robot(&amp;self, inventory: &amp;Inventory, material: Material) -&gt; bool {
+            match material {
+                Material::Ore =&gt; {
+                    inventory.material[Material::Ore as usize] &gt;= self.costs[Self::ORE_FOR_ORE]
+                }
+                Material::Clay =&gt; {
+                    inventory.material[Material::Ore as usize] &gt;= self.costs[Self::ORE_FOR_CLAY]
+                }
+                Material::Obsidian =&gt; {
+                    inventory.material[Material::Ore as usize] &gt;= self.costs[Self::ORE_FOR_OBSIDIAN]
+                        &amp;&amp; inventory.material[Material::Clay as usize]
+                            &gt;= self.costs[Self::CLAY_FOR_OBSIDIAN]
+                }
+                Material::Geode =&gt; {
+                    inventory.material[Material::Ore as usize] &gt;= self.costs[Self::ORE_FOR_GEODE]
+                        &amp;&amp; inventory.material[Material::Obsidian as usize]
+                            &gt;= self.costs[Self::OBSIDIAN_FOR_GEODE]
+                }
+            }
+        }
+
+        pub fn make_robot(&amp;self, inventory: &amp;mut Inventory, material: Material) {
+            match material {
+                Material::Ore =&gt; {
+                    inventory.material[Material::Ore as usize] -= self.costs[Self::ORE_FOR_ORE];
+                    inventory.robots[Material::Ore as usize] += 1;
+                }
+                Material::Clay =&gt; {
+                    inventory.material[Material::Ore as usize] -= self.costs[Self::ORE_FOR_CLAY];
+                    inventory.robots[Material::Clay as usize] += 1;
+                }
+                Material::Obsidian =&gt; {
+                    inventory.material[Material::Ore as usize] -=
+                        self.costs[Self::ORE_FOR_OBSIDIAN];
+                    inventory.material[Material::Clay as usize] -=
+                        self.costs[Self::CLAY_FOR_OBSIDIAN];
+                    inventory.robots[Material::Obsidian as usize] += 1;
+                }
+                Material::Geode =&gt; {
+                    inventory.material[Material::Ore as usize] -= self.costs[Self::ORE_FOR_GEODE];
+                    inventory.material[Material::Obsidian as usize] -=
+                        self.costs[Self::OBSIDIAN_FOR_GEODE];
+                    inventory.robots[Material::Geode as usize] += 1;
+                }
+            }
+        }
+
+        pub fn make_robot_if_possible(
+            &amp;self,
+            inventory: &amp;mut Inventory,
+            material: Material,
+        ) -&gt; bool {
+            if self.can_make_robot(inventory, material) {
+                self.make_robot(inventory, material);
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+    pub struct Inventory {
+        pub robots: [Count; Material::ALL.len()],
+        pub material: [Count; Material::ALL.len()],
+    }
+
+    impl Default for Inventory {
+        fn default() -&gt; Self {
+            let mut robots = [0; Material::ALL.len()];
+            robots[Material::Ore as usize] = 1;
+            Self {
+                robots,
+                material: [0; Material::ALL.len()],
+            }
+        }
+    }
+
+    impl Inventory {
+        pub fn count_geodes(&amp;self) -&gt; Count {
+            self.material[Material::Geode as usize]
+        }
+
+        pub fn count_robots(&amp;self) -&gt; Count {
+            self.robots.iter().sum()
+        }
+
+        pub fn collect_materials(&amp;mut self, prev: &amp;Self) {
+            for &amp;m in Material::ALL {
+                self.material[m as usize] += prev.robots[m as usize];
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_17"><a class="anchor" href="#_star_1_17"></a><a class="link" href="#_star_1_17">Star 1</a></h5>
+<div class="paragraph">
+<p>Breadth first search for part 1</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn produce_robots(blueprint: &amp;Blueprint, inventory: &amp;Inventory) -&gt; Vec&lt;Inventory&gt; {
+    let mut inventories = Vec::from([*inventory]);
+
+    for material in [
+        Material::Geode,
+        Material::Obsidian,
+        Material::Clay,
+        Material::Ore,
+    ] {
+        if blueprint.can_make_robot(inventory, material) {
+            let mut inventory = *inventory;
+            blueprint.make_robot(&amp;mut inventory, material);
+            inventories.push(inventory);
+        }
+    }
+
+    inventories
+}
+
+pub fn simulate(blueprint: &amp;Blueprint, inventory: Inventory, steps: usize) -&gt; Count {
+    let mut queue = VecDeque::from([(inventory, 0)]);
+
+    let mut seen = HashSet::from([inventory]);
+
+    let mut mx = 0;
+    while let Some((inventory, step)) = queue.pop_front() {
+        if step == steps {
+            mx = mx.max(inventory.count_geodes());
+            continue;
+        }
+
+        for mut adjacent in produce_robots(blueprint, &amp;inventory) {
+            adjacent.collect_materials(&amp;inventory);
+            if seen.insert(adjacent) {
+                queue.push_back((adjacent, step + 1));
+            }
+        }
+    }
+
+    println!("{mx} is best for blueprint {blueprint:?}");
+
+    mx
+}
+
+pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    data.blueprints()
+        .iter()
+        .map(|blueprint| simulate(blueprint, Inventory::default(), 24))
+        .enumerate()
+        .fold(0, |sum, (k, m)| sum + (k + 1) * m as usize)
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_17"><a class="anchor" href="#_star_2_17"></a><a class="link" href="#_star_2_17">Star 2</a></h5>
+<div class="paragraph">
+<p>Breadth first search does not finish for part 2. After a while, memory is exhausted on my computer. I do not get errors, but I guess memory starts getting put on disk which makes everything sloooooow.</p>
+</div>
+<div class="paragraph">
+<p>Define sequences of robots being produced. Simulate one sequence after the other to see which one gives the best result. As a small optimization, check how many robots are produced in total for a given sequence and do not re-simulate with modified tail which is not produced anyhow.</p>
+</div>
+<div class="paragraph">
+<p>This produces the correct result for the first and the third blueprint in my data but not (yet) for the 2nd (1 too low, after I increased search space, the program did not yet terminate&#8230;&#8203;)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn simulate_sequence(
+    blueprint: &amp;Blueprint,
+    mut inventory: Inventory,
+    steps: usize,
+    robots: &amp;[Material],
+) -&gt; Inventory {
+    let mut pos = 0;
+
+    for _step in 0..steps {
+        let prev = inventory;
+        if pos &lt; robots.len() &amp;&amp; blueprint.make_robot_if_possible(&amp;mut inventory, robots[pos]) {
+            pos += 1;
+        }
+        inventory.collect_materials(&amp;prev);
+        // println!("Step {_step} from {prev:?} to {inventory:?}");
+    }
+
+    inventory
+}
+
+const BLOCKS_OF_4: usize = 21;
+const BLOCKS_OF_2: usize = 0;
+
+fn robots(k: usize) -&gt; [Material; 32] {
+    [
+        (k &gt;&gt; 40) &amp; 3,
+        (k &gt;&gt; 38) &amp; 3,
+        (k &gt;&gt; 36) &amp; 3,
+        (k &gt;&gt; 34) &amp; 3,
+        (k &gt;&gt; 32) &amp; 3,
+        (k &gt;&gt; 30) &amp; 3,
+        (k &gt;&gt; 28) &amp; 3,
+        (k &gt;&gt; 26) &amp; 3,
+        (k &gt;&gt; 24) &amp; 3,
+        (k &gt;&gt; 22) &amp; 3,
+        (k &gt;&gt; 20) &amp; 3,
+        (k &gt;&gt; 18) &amp; 3,
+        (k &gt;&gt; 16) &amp; 3,
+        (k &gt;&gt; 14) &amp; 3,
+        (k &gt;&gt; 12) &amp; 3,
+        (k &gt;&gt; 10) &amp; 3,
+        (k &gt;&gt; 8) &amp; 3,
+        (k &gt;&gt; 6) &amp; 3,
+        (k &gt;&gt; 4) &amp; 3,
+        (k &gt;&gt; 2) &amp; 3,
+        (k &gt;&gt; 0) &amp; 3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+    ]
+    .map(|v| v.into())
+}
+
+pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let mut prod: usize = 1;
+    for blueprint in data.blueprints().iter().take(3) {
+        let mut best = 0;
+        let mut best_result = Inventory::default();
+        let mut best_k = 0;
+        let mut k = 0;
+        while k &lt; (1 &lt;&lt; (2 * BLOCKS_OF_4 + BLOCKS_OF_2)) {
+            let result = simulate_sequence(blueprint, Inventory::default(), 32, &amp;robots(k));
+            if result.count_geodes() &gt; best {
+                best = result.count_geodes();
+                best_result = result;
+                best_k = k;
+            }
+            let sum = result.count_robots();
+            if sum &lt; BLOCKS_OF_4 {
+                // skip to next robot at failed position
+                k += 1 &lt;&lt; (2 * (BLOCKS_OF_4 - sum) + BLOCKS_OF_2);
+            } else if sum &lt; BLOCKS_OF_4 + BLOCKS_OF_2 {
+                // skip to next robot at failed position
+                k += 1 &lt;&lt; (BLOCKS_OF_4 + BLOCKS_OF_2 - sum);
+            } else {
+                k += 1;
+            }
+        }
+        println!("{best} is best for {blueprint:?} with result {best_result:?} at {best_k:#x}");
+        println!("  {:?}", robots(best_k).map(|m| m as u8));
+        prod *= best as usize;
+    }
+
+    // 2050 is too low (5 41 10)
+    // 2970 is too low (6 45 11)
+    // 3240 is too high (6 45 12)
+    // 3096 is wrong (6 43 12)
+
+    // I guess 6 44 12 -&gt; 3168
+    prod
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_20"><a class="anchor" href="#_tests_20"></a><a class="link" href="#_tests_20">Tests</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
+Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.
+"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_simulate_search() {
+        let data = PuzzleData::from(CONTENT);
+        let blueprint = &amp;data.blueprints()[1];
+        println!("Blueprint: {blueprint:?}");
+        let mx = simulate(blueprint, Inventory::default(), 24);
+        println!("Best is {mx}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(9 * 1 + 12 * 2, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(56 * 62, star_2(&amp;data));
+    }
+
+    #[test]
+    pub fn test_robots() {
+        let k = 1 &lt;&lt; 16;
+        let r_1 = robots(k).map(|r| r as usize);
+        println!("{r_1:?}");
+
+        let k = k + (1 &lt;&lt; (2 * (17 - 10) + 2));
+        let r_2 = robots(k).map(|r| r as usize);
+        println!("{r_2:?}");
+
+        assert_eq!(r_1[9] + 1, r_2[9]);
+        assert!((0..r_1.len()).filter(|&amp;k| k != 9).all(|k| r_1[k] == r_2[k]));
+    }
+
+    #[test]
+    pub fn test_simulate_sequence() {
+        let data = PuzzleData::from(CONTENT);
+        let seq = [
+            0u8, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+        ]
+        .map(|v| Material::from(v));
+        let blueprint = data.blueprints()[0];
+        let result = simulate_sequence(&amp;blueprint, Inventory::default(), 32, &amp;seq);
+        assert_eq!(56, result.count_geodes());
+        println!("{result:?}");
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_today_i_learned_8"><a class="anchor" href="#_today_i_learned_8"></a><a class="link" href="#_today_i_learned_8">Today I learned</a></h5>
+<div class="paragraph">
+<p>Brute force sometimes works but it is no fun, and there is a lot to learn on how to solve these kind of problems &#8230;&#8203;</p>
 </div>
 </div>
 </div>
