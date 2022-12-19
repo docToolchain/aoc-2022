@@ -12,6 +12,7 @@ mod io;
 use anyhow::{Error, Result};
 use std::collections::{HashMap, HashSet};
 // Constants.
+const LRU_THRESHOLD: data::Size = 4;
 
 fn is_env(var: &str, val: &str, def: &str) -> bool {
     std::env::var(var).unwrap_or(def.to_string()) == val
@@ -25,9 +26,10 @@ fn exhaustive_search(
 ) -> data::Size {
     if state.time == 0 {
         return state.geode;
-    }
-    if let Some(lru_val) = lru.get(&state) {
-        return *lru_val;
+    } else if state.time >= LRU_THRESHOLD {
+        if let Some(lru_val) = lru.get(&state) {
+            return *lru_val;
+        }
     }
 
     let mut best = state.geode;
@@ -42,7 +44,7 @@ fn exhaustive_search(
     }
 
     // Remember the value we found, but only for early ones.
-    if state.time >= 4 {
+    if state.time >= LRU_THRESHOLD {
         lru.insert(state, best);
     }
 
@@ -92,13 +94,13 @@ fn solve(file: &str, part1: bool) -> Result<()> {
         for (idx, bp) in blueprints.iter().take(3).enumerate() {
             // Sadly, we cannot reuse the LRU cache for other blueprints.
             let mut lru = HashMap::<data::State, data::Size>::new();
-            if is_env("RUN", "3", "") && idx == 0 {
-                // We've already managed to compute this one for our input.
-                lru.insert(data::State::start(32), 30);
-            } else if is_env("RUN", "3", "") && idx == 1 {
-                // We've already managed to compute this one for our input.
-                lru.insert(data::State::start(32), 21);
-            }
+            // if is_env("RUN", "3", "") && idx == 0 {
+            //     // We've already managed to compute this one for our input.
+            //     lru.insert(data::State::start(32), 30);
+            // } else if is_env("RUN", "3", "") && idx == 1 {
+            //     // We've already managed to compute this one for our input.
+            //     lru.insert(data::State::start(32), 21);
+            // }
             let state = data::State::start(32);
             let best = exhaustive_search(state, bp, &actions, &mut lru);
             println!("best for {} is {}", idx + 1, best);
