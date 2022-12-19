@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
-pub type Size = u8;
+pub type Size = u16;
 
 #[derive(Debug, Clone)]
 pub struct Blueprint {

@@ -12,7 +12,7 @@ mod io;
 use anyhow::{Error, Result};
 use std::collections::{HashMap, HashSet};
 // Constants.
-const LRU_THRESHOLD: data::Size = 5;
+const LRU_THRESHOLD: data::Size = 8;
 
 fn is_env(var: &str, val: &str, def: &str) -> bool {
     std::env::var(var).unwrap_or(def.to_string()) == val
@@ -23,6 +23,7 @@ fn exhaustive_search(
     bp: &data::Blueprint,
     actions: &Vec<data::WhatToBuild>,
     lru: &mut HashMap<data::State, data::Size>,
+    total_best: &mut data::Size,
 ) -> data::Size {
     if state.time == 0 {
         return state.geode;
@@ -30,15 +31,23 @@ fn exhaustive_search(
         if let Some(lru_val) = lru.get(&state) {
             return *lru_val;
         }
+    } else if state.geode + state.time * state.geode_robots + state.time * state.time < *total_best
+    {
+        // Return early if a very optimistic estimate of what we can still achieve is lower than
+        // the best we've already found.
+        return state.geode;
     }
 
     let mut best = state.geode;
 
     for act in actions.iter() {
         if let Some(next) = state.next(bp, act) {
-            let possible_best = exhaustive_search(next, bp, actions, lru);
+            let possible_best = exhaustive_search(next, bp, actions, lru, total_best);
             if possible_best > best {
                 best = possible_best;
+                if best > *total_best {
+                    *total_best = best;
+                }
             }
         }
     }
@@ -76,7 +85,8 @@ fn solve(file: &str, part1: bool) -> Result<()> {
         for (idx, bp) in blueprints.iter().enumerate() {
             let mut lru = HashMap::<data::State, data::Size>::new();
             let state = data::State::start(24);
-            let best = exhaustive_search(state, bp, &actions, &mut lru);
+            let mut best_cache = 0;
+            let best = exhaustive_search(state, bp, &actions, &mut lru, &mut best_cache);
             println!("best for {} is {}", idx + 1, best);
             best_vals.push(best);
         }
@@ -94,6 +104,7 @@ fn solve(file: &str, part1: bool) -> Result<()> {
         for (idx, bp) in blueprints.iter().take(3).enumerate() {
             // Sadly, we cannot reuse the LRU cache for other blueprints.
             let mut lru = HashMap::<data::State, data::Size>::new();
+            let mut best_cache = 0;
             // if is_env("RUN", "3", "") && idx == 0 {
             //     // We've already managed to compute this one for our input.
             //     lru.insert(data::State::start(32), 30);
@@ -102,7 +113,7 @@ fn solve(file: &str, part1: bool) -> Result<()> {
             //     lru.insert(data::State::start(32), 21);
             // }
             let state = data::State::start(32);
-            let best = exhaustive_search(state, bp, &actions, &mut lru);
+            let best = exhaustive_search(state, bp, &actions, &mut lru, &mut best_cache);
             println!("best for {} is {}", idx + 1, best);
             best_vals.push(best);
         }
