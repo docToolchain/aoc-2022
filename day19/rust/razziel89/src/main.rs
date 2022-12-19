@@ -105,13 +105,6 @@ fn solve(file: &str, part1: bool) -> Result<()> {
             // Sadly, we cannot reuse the LRU cache for other blueprints.
             let mut lru = HashMap::<data::State, data::Size>::new();
             let mut best_cache = 0;
-            // if is_env("RUN", "3", "") && idx == 0 {
-            //     // We've already managed to compute this one for our input.
-            //     lru.insert(data::State::start(32), 30);
-            // } else if is_env("RUN", "3", "") && idx == 1 {
-            //     // We've already managed to compute this one for our input.
-            //     lru.insert(data::State::start(32), 21);
-            // }
             let state = data::State::start(32);
             let best = exhaustive_search(state, bp, &actions, &mut lru, &mut best_cache);
             println!("best for {} is {}", idx + 1, best);
