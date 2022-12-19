@@ -342,6 +342,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_19_rust">Day 19: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_19_not_enough_minerals">Day 19: Not Enough Minerals</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_17">Oveview</a></li>
+<li><a href="#_solution_18">Solution</a></li>
+<li><a href="#_how_to_run_19">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -6155,6 +6166,384 @@ impl Eq for Node {}</code></pre>
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_18"><a class="anchor" href="#_how_to_run_18"></a><a class="link" href="#_how_to_run_18">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day19" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_19_rust"><a class="anchor" href="#_day_19_rust"></a><a class="link" href="#_day_19_rust">Day 19: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_19_not_enough_minerals"><a class="anchor" href="#_day_19_not_enough_minerals"></a><a class="link" href="#_day_19_not_enough_minerals">Day 19: Not Enough Minerals</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_17"><a class="anchor" href="#_oveview_17"></a><a class="link" href="#_oveview_17">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_18"><a class="anchor" href="#_solution_18"></a><a class="link" href="#_solution_18">Solution</a></h5>
+<div class="paragraph">
+<p>Today, I first went on a wild goose chase because I had a fancy idea, which
+totally didn&#8217;t work out but cost quite a bit of time.
+My second attempt was thus a straightforward implementation of the instructions
+with a cache because state values often reapeat themselves.
+The cache associates each world state with its best geode value.
+Note that a state includes the remaining simulation time.
+Thus, if we find a value that&#8217;s in the cache, we can avoid go compute the same
+world progression again because the state uniquely identifies how the world will
+progress from that point on.</p>
+</div>
+<div class="paragraph">
+<p>In my input for part 1, there was one blueprint that didn&#8217;t work out with a
+straightforward implementation of the cache.
+That is, the cache grew so large that my computer ran out of RAM.
+Thus, I only cached values until some time steps before the end.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::{HashMap, HashSet};
+// Constants.
+const LRU_THRESHOLD: data::Size = 8;
+
+fn is_env(var: &amp;str, val: &amp;str, def: &amp;str) -&gt; bool {
+    std::env::var(var).unwrap_or(def.to_string()) == val
+}
+
+fn exhaustive_search(
+    state: data::State,
+    bp: &amp;data::Blueprint,
+    actions: &amp;Vec&lt;data::WhatToBuild&gt;,
+    lru: &amp;mut HashMap&lt;data::State, data::Size&gt;,
+    total_best: &amp;mut data::Size,
+) -&gt; data::Size {
+    if state.time == 0 {
+        return state.geode;
+    } else if state.time &gt;= LRU_THRESHOLD {
+        if let Some(lru_val) = lru.get(&amp;state) {
+            return *lru_val;
+        }
+    } else if state.geode + state.time * state.geode_robots + state.time * state.time &lt; *total_best
+    {
+        // Return early if a very optimistic estimate of what we can still achieve is lower than
+        // the best we've already found.
+        return state.geode;
+    }
+
+    let mut best = state.geode;
+
+    for act in actions.iter() {
+        if let Some(next) = state.next(bp, act) {
+            let possible_best = exhaustive_search(next, bp, actions, lru, total_best);
+            if possible_best &gt; best {
+                best = possible_best;
+                if best &gt; *total_best {
+                    *total_best = best;
+                }
+            }
+        }
+    }
+
+    // Remember the value we found, but only for early ones.
+    if state.time &gt;= LRU_THRESHOLD {
+        lru.insert(state, best);
+    }
+
+    return best;
+}
+
+fn solve(file: &amp;str, part1: bool) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let blueprints = io::parse_chunks_to_data::&lt;data::Blueprint&gt;(
+        io::read_lines_from_file(file, 1)?,
+        "blueprint",
+        None,
+        None,
+    )?;
+
+    let actions = vec![
+        data::WhatToBuild::GeodeR,
+        data::WhatToBuild::ObsidianR,
+        data::WhatToBuild::ClayR,
+        data::WhatToBuild::OreR,
+        data::WhatToBuild::Nothing,
+    ];
+
+    if part1 {
+        let mut best_vals = vec![];
+
+        for (idx, bp) in blueprints.iter().enumerate() {
+            let mut lru = HashMap::&lt;data::State, data::Size&gt;::new();
+            let state = data::State::start(24);
+            let mut best_cache = 0;
+            let best = exhaustive_search(state, bp, &amp;actions, &amp;mut lru, &amp;mut best_cache);
+            println!("best for {} is {}", idx + 1, best);
+            best_vals.push(best);
+        }
+
+        let quality_level = best_vals
+            .into_iter()
+            .zip(blueprints.iter())
+            .map(|(val, bp)| bp.id as usize * val as usize)
+            .sum::&lt;usize&gt;();
+
+        println!("the overall quality level is: {}", quality_level);
+    } else {
+        let mut best_vals = vec![];
+
+        for (idx, bp) in blueprints.iter().take(3).enumerate() {
+            // Sadly, we cannot reuse the LRU cache for other blueprints.
+            let mut lru = HashMap::&lt;data::State, data::Size&gt;::new();
+            let mut best_cache = 0;
+            let state = data::State::start(32);
+            let best = exhaustive_search(state, bp, &amp;actions, &amp;mut lru, &amp;mut best_cache);
+            println!("best for {} is {}", idx + 1, best);
+            best_vals.push(best);
+        }
+
+        let quality_level = best_vals
+            .into_iter()
+            .map(|el| el as usize)
+            .product::&lt;usize&gt;();
+
+        println!("the overall quality level is: {}", quality_level);
+    }
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    // Run none by default.
+    if is_env("RUN", "0", "") {
+        solve(SAMPLE1, true)?;
+    }
+    if is_env("RUN", "1", "") {
+        solve(REAL, true)?;
+    }
+
+    if is_env("RUN", "2", "") {
+        solve(SAMPLE1, false)?;
+    }
+    if is_env("RUN", "3", "") {
+        solve(REAL, false)?;
+    }
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use rand::distributions::{Distribution, Standard};
+use rand::Rng;
+use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
+use std::str::FromStr;
+
+pub type Size = u16;
+
+#[derive(Debug, Clone)]
+pub struct Blueprint {
+    pub id: Size,
+    pub ore_ore_cost: Size,
+    pub clay_ore_cost: Size,
+    pub obsidian_ore_cost: Size,
+    pub obsidian_clay_cost: Size,
+    pub geode_ore_cost: Size,
+    pub geode_obsidian_cost: Size,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WhatToBuild {
+    OreR,
+    ClayR,
+    ObsidianR,
+    GeodeR,
+    Nothing,
+}
+
+impl FromStr for Blueprint {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+            ["Blueprint", id, "Each", "ore", "robot", "costs", ore_ore_cost, "ore.", "Each", "clay", "robot", "costs", clay_ore_cost, "ore.", "Each", "obsidian", "robot", "costs", obsidian_ore_cost, "ore", "and", obsidian_clay_cost, "clay.", "Each", "geode", "robot", "costs", geode_ore_cost, "ore", "and", geode_obsidian_cost, "obsidian."] =&gt; {
+                Ok(Self {
+                    id: id.trim_end_matches(":").parse()?,
+                    ore_ore_cost: ore_ore_cost.parse()?,
+                    clay_ore_cost: clay_ore_cost.parse()?,
+                    obsidian_ore_cost: obsidian_ore_cost.parse()?,
+                    obsidian_clay_cost: obsidian_clay_cost.parse()?,
+                    geode_ore_cost: geode_ore_cost.parse()?,
+                    geode_obsidian_cost: geode_obsidian_cost.parse()?,
+                })
+            }
+            _ =&gt; Err(Error::msg("cannot parse blueprint")),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub struct State {
+    pub time: Size,
+    pub ore: Size,
+    pub ore_robots: Size,
+    pub clay: Size,
+    pub clay_robots: Size,
+    pub obsidian: Size,
+    pub obsidian_robots: Size,
+    pub geode: Size,
+    pub geode_robots: Size,
+}
+
+impl State {
+    pub fn start(available_time: Size) -&gt; Self {
+        Self {
+            time: available_time,
+            ore: 0,
+            ore_robots: 1,
+            clay: 0,
+            clay_robots: 0,
+            obsidian: 0,
+            obsidian_robots: 0,
+            geode: 0,
+            geode_robots: 0,
+        }
+    }
+
+    pub fn next(&amp;self, bp: &amp;Blueprint, act: &amp;WhatToBuild) -&gt; Option&lt;Self&gt; {
+        // Only perform the drawn operation if we have enough resources for it. Otherwise,
+        // implicitly perform a "nothing" operation.
+        match act {
+            WhatToBuild::Nothing =&gt; {
+                Some(Self {
+                    time: self.time - 1,
+                    // Materials.
+                    ore: self.ore + self.ore_robots,
+                    clay: self.clay + self.clay_robots,
+                    obsidian: self.obsidian + self.obsidian_robots,
+                    geode: self.geode + self.geode_robots,
+                    // Robots.
+                    ore_robots: self.ore_robots,
+                    clay_robots: self.clay_robots,
+                    obsidian_robots: self.obsidian_robots,
+                    geode_robots: self.geode_robots,
+                })
+            }
+            WhatToBuild::OreR =&gt; {
+                if self.ore &lt; bp.ore_ore_cost {
+                    None
+                } else {
+                    Some(Self {
+                        time: self.time - 1,
+                        // Materials.
+                        ore: self.ore + self.ore_robots - bp.ore_ore_cost,
+                        clay: self.clay + self.clay_robots,
+                        obsidian: self.obsidian + self.obsidian_robots,
+                        geode: self.geode + self.geode_robots,
+                        // Robots.
+                        ore_robots: self.ore_robots + 1,
+                        clay_robots: self.clay_robots,
+                        obsidian_robots: self.obsidian_robots,
+                        geode_robots: self.geode_robots,
+                    })
+                }
+            }
+            WhatToBuild::ClayR =&gt; {
+                if self.ore &lt; bp.clay_ore_cost {
+                    None
+                } else {
+                    Some(Self {
+                        time: self.time - 1,
+                        // Materials.
+                        ore: self.ore + self.ore_robots - bp.clay_ore_cost,
+                        clay: self.clay + self.clay_robots,
+                        obsidian: self.obsidian + self.obsidian_robots,
+                        geode: self.geode + self.geode_robots,
+                        // Robots.
+                        ore_robots: self.ore_robots,
+                        clay_robots: self.clay_robots + 1,
+                        obsidian_robots: self.obsidian_robots,
+                        geode_robots: self.geode_robots,
+                    })
+                }
+            }
+            WhatToBuild::ObsidianR =&gt; {
+                if self.ore &lt; bp.obsidian_ore_cost || self.clay &lt; bp.obsidian_clay_cost {
+                    None
+                } else {
+                    Some(Self {
+                        time: self.time - 1,
+                        // Materials.
+                        ore: self.ore + self.ore_robots - bp.obsidian_ore_cost,
+                        clay: self.clay + self.clay_robots - bp.obsidian_clay_cost,
+                        obsidian: self.obsidian + self.obsidian_robots,
+                        geode: self.geode + self.geode_robots,
+                        // Robots.
+                        ore_robots: self.ore_robots,
+                        clay_robots: self.clay_robots,
+                        obsidian_robots: self.obsidian_robots + 1,
+                        geode_robots: self.geode_robots,
+                    })
+                }
+            }
+            WhatToBuild::GeodeR =&gt; {
+                if self.ore &lt; bp.geode_ore_cost || self.obsidian &lt; bp.geode_obsidian_cost {
+                    None
+                } else {
+                    Some(Self {
+                        time: self.time - 1,
+                        // Materials.
+                        ore: self.ore + self.ore_robots - bp.geode_ore_cost,
+                        clay: self.clay + self.clay_robots,
+                        obsidian: self.obsidian + self.obsidian_robots - bp.geode_obsidian_cost,
+                        geode: self.geode + self.geode_robots,
+                        // Robots.
+                        ore_robots: self.ore_robots,
+                        clay_robots: self.clay_robots,
+                        obsidian_robots: self.obsidian_robots,
+                        geode_robots: self.geode_robots + 1,
+                    })
+                }
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_19"><a class="anchor" href="#_how_to_run_19"></a><a class="link" href="#_how_to_run_19">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
