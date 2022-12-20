@@ -74,8 +74,9 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
             // does in the example because it is cyclic anyway.
             if move_me.1 < 0 {
                 // Move to the left. Here, we iterate through the vector backwards.
-                let prev_elem = file
+                let prev_elem_pos = file
                     .iter()
+                    .enumerate()
                     // Reverse the iterator's direction here.
                     .rev()
                     // Turn it into an inifinte iterator. Thus, we won't have to care about
@@ -91,22 +92,17 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
                     // Get the next element in the iterator, which is the element that is currently
                     // just before the position we want our removed element to occupy.
                     .next()
-                    .ok_or(Error::msg("this should be infinite"))?;
-
-                // Find the actual position of that element.
-                let prev_elem_pos = file
-                    .iter()
-                    .enumerate()
-                    .find_map(|(idx, el)| if el == prev_elem { Some(idx) } else { None })
-                    .ok_or(Error::msg("cannot find previous element"))?;
+                    .ok_or(Error::msg("this should be infinite"))?
+                    .0;
 
                 // Insert after the element we just found. Thanks, Rust, that `insert` also works
                 // if the position where we want to insert is one past the end.
                 file.insert((prev_elem_pos + 1).rem_euclid(file.len()), move_me);
             } else if move_me.1 > 0 {
                 // Move to the right. Here, we iterate in forward direction.
-                let next_elem = file
+                let next_elem_pos = file
                     .iter()
+                    .enumerate()
                     // Turn it into an inifinte iterator. Thus, we won't have to care about
                     // wrap-arounds.
                     .cycle()
@@ -120,14 +116,8 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
                     // Get the next element, which is the element that is currently at the position
                     // we want our removed element to occupy.
                     .next()
-                    .ok_or(Error::msg("this should be infinite"))?;
-
-                // Find the actual position of that element.
-                let next_elem_pos = file
-                    .iter()
-                    .enumerate()
-                    .find_map(|(idx, el)| if el == next_elem { Some(idx) } else { None })
-                    .ok_or(Error::msg("cannot find next element"))?;
+                    .ok_or(Error::msg("this should be infinite"))?
+                    .0;
 
                 // Insert at the position of the element we just found.
                 file.insert(next_elem_pos, move_me);
@@ -140,7 +130,7 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
     // Extract the desired sum in a lazy way. Simply iterate 1, 2 and 3 thousand times over an ever
     // repeating instance of our iterator.
     //
-    // Find the index of 0 first.
+    // Find the index of 0 first. This helps with debugging in case 0 is removed by accident.
     let start_idx = file
         .iter()
         .enumerate()
@@ -159,7 +149,7 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
         .skip(start_idx)
         // Find current indices.
         .enumerate()
-        // Take oly every 1000'th element after zero. Note that 0 also passes here.
+        // Take only every 1000'th element after zero. Note that 0 also passes here.
         .filter_map(|(idx, el)| if idx % 1000 == 0 { Some(el) } else { None })
         // We take 4 here because the first one fulfilling the condition will be zero.
         .take(4)
