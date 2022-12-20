@@ -169,14 +169,17 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
         .skip(1)
         .sum::<data::Size>();
 
-    println!("solution is: {}\n", grove_coords);
+    println!(
+        "solution for {} mix(es) and a key of {} is {}",
+        mixes, decryption_key, grove_coords
+    );
 
     Ok(())
 }
 
 fn main() -> Result<()> {
-    // solve(SAMPLE1, 1, 1)?;
-    // solve(REAL, 1, 1)?;
+    solve(SAMPLE1, 1, 1)?;
+    solve(REAL, 1, 1)?;
 
     solve(SAMPLE1, 10, 811_589_153)?;
     solve(REAL, 10, 811_589_153)?;
