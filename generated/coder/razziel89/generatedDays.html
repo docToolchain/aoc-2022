@@ -353,6 +353,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_20_rust">Day 20: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_20_grove_positioning_system">Day 20: Grove Positioning System</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_18">Oveview</a></li>
+<li><a href="#_solution_19">Solution</a></li>
+<li><a href="#_how_to_run_20">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -367,10 +378,10 @@
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">image:[][]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="image"><img src="https://avatars.githubusercontent.com/u/10134766?v=4" alt="10134766?v=4"></span></p></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>razziel89</strong><br>
-<span class="icon"><i class="fa fa-github"></i></span>: [][razziel89]</p>
+<span class="icon"><i class="fa fa-github"></i></span>: <a href="https://github.com/razziel89">razziel89</a></p>
 </div></div></td>
 </tr>
 </tbody>
@@ -6244,7 +6255,8 @@ fn exhaustive_search(
         if let Some(lru_val) = lru.get(&amp;state) {
             return *lru_val;
         }
-    } else if state.geode + state.time * state.geode_robots + state.time * state.time &lt; *total_best
+    } else if state.geode + state.time * state.geode_robots + (state.time - 1) * (state.time - 1)
+        &lt; *total_best
     {
         // Return early if a very optimistic estimate of what we can still achieve is lower than
         // the best we've already found.
@@ -6336,18 +6348,17 @@ fn solve(file: &amp;str, part1: bool) -&gt; Result&lt;()&gt; {
 }
 
 fn main() -&gt; Result&lt;()&gt; {
-    // Run none by default.
-    if is_env("RUN", "0", "") {
+    if is_env("RUN", "0", "0") {
         solve(SAMPLE1, true)?;
     }
-    if is_env("RUN", "1", "") {
+    if is_env("RUN", "1", "1") {
         solve(REAL, true)?;
     }
 
-    if is_env("RUN", "2", "") {
+    if is_env("RUN", "2", "2") {
         solve(SAMPLE1, false)?;
     }
-    if is_env("RUN", "3", "") {
+    if is_env("RUN", "3", "3") {
         solve(REAL, false)?;
     }
 
@@ -6544,6 +6555,275 @@ impl State {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_19"><a class="anchor" href="#_how_to_run_19"></a><a class="link" href="#_how_to_run_19">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day20" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_20_rust"><a class="anchor" href="#_day_20_rust"></a><a class="link" href="#_day_20_rust">Day 20: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_20_grove_positioning_system"><a class="anchor" href="#_day_20_grove_positioning_system"></a><a class="link" href="#_day_20_grove_positioning_system">Day 20: Grove Positioning System</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_18"><a class="anchor" href="#_oveview_18"></a><a class="link" href="#_oveview_18">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_19"><a class="anchor" href="#_solution_19"></a><a class="link" href="#_solution_19">Solution</a></h5>
+<div class="paragraph">
+<p>Today was both frustrating and nice.
+At first, I came up with a complex approach that used an index map and its
+reverse to keep track of where an element was originally and where it is right
+now.
+But then I realised that rust&#8217;s vectors have an <code>insert</code> and a <code>remove</code> method
+that does just what was needed here.
+Luckily, I discarded my first idea pretty quickly.</p>
+</div>
+<div class="paragraph">
+<p>Furthermore, as I discovered during one of the previous days, an iterator over a
+vector in rust can be made infinite via the <code>cyclic</code> method.
+Thus, for part 1, I didn&#8217;t have to care about the cyclic nature of the problem.
+In fact, the vector I get in the end doesn&#8217;t look like the one online, but it
+also doesn&#8217;t have to.
+It&#8217;s just that each element has to have the same neighbours as in the example,
+which they do.</p>
+</div>
+<div class="paragraph">
+<p>What I do is I keep a vector that consists of a tuple of the actual number and
+its original index.
+I use that original index to find the number in the vector when it&#8217;s its turn to
+be mixed.
+That&#8217;s basically part 1.
+At first, I made a stupid mistake when extracting the three numbers that make up
+the grove coordinates and took the first three in steps of one thousand but
+<em>including</em> zero.
+Unfortunately, I tried for quite a bit to apply a fix to the wrong location.</p>
+</div>
+<div class="paragraph">
+<p>Part 2 was just like part 1 but with some modulo operations applied.
+You just need to be careful to take the modulus with respect to the length of
+the file reduced by one.
+For more details, please see the code.
+I added extensive comments.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+// Constants.
+
+fn solve(file: &amp;str, mixes: usize, decryption_key: data::Size) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data. We use a custom struct here just so we can continue using
+    // our parser function.
+    let nums = io::parse_chunks_to_data::&lt;data::Num&gt;(
+        io::read_lines_from_file(file, 1)?,
+        "blueprint",
+        None,
+        None,
+    )?;
+
+    // Convert custom struct into vector of primitive types.
+    let mut file = nums
+        .iter()
+        // For part 1, the decryption_key is 1.
+        .map(|el| el.num() * decryption_key)
+        // Remember the index in the original list. This is used to find the data point later on
+        // based on its index in the original input.
+        .enumerate()
+        .collect::&lt;Vec&lt;_&gt;&gt;();
+
+    // Two convenience values that will be used further down.
+    // Let's always remember how many values there were originally.
+    let len = file.len();
+    // After removing an element from the vector, this is gonna be its length. Thus, this is the
+    // value with respect to which we need to take the modulus when deciding how many cycles to
+    // skip.
+    let mod_me = file.len() - 1;
+
+    // We will be mixing `mixes` times.
+    for _ in 0..mixes {
+        // We will keep mixing in the originalorder.
+        for org_idx in 0..len {
+            // Find the element that was at `org_idx` in the initial input and remember its value
+            // and current index.
+            let move_me_data = file
+                .iter()
+                .position(|&amp;el| el.0 == org_idx)
+                .ok_or(Error::msg("cannot find element"))?;
+
+            // Zero doesn't move so we skip it.
+            if file[move_me_data].1 == 0 {
+                continue;
+            }
+
+            // Remove the element from the vector. When imagining the cyclic list, it becomes clear
+            // that a number will never encounter itself. Thus, it is the same as if we were
+            // moving through an infinite vector that doesn't contain the number.
+            let move_me = file.remove(move_me_data);
+            // Below, we use a nice feature of Rust's iterators over vectors, namely that they can
+            // be cyclic. Thus, we don't actually care whether our resulting vector looks as it
+            // does in the example because it is cyclic anyway.
+            if move_me.1 &lt; 0 {
+                // Move to the left. Here, we iterate through the vector backwards.
+                let prev_elem_pos = file
+                    .iter()
+                    .enumerate()
+                    // Reverse the iterator's direction here.
+                    .rev()
+                    // Turn it into an inifinte iterator. Thus, we won't have to care about
+                    // wrap-arounds.
+                    .cycle()
+                    // Skip as many elements until we are at the location of the element we just
+                    // removed. Doing so when moving backwards is a bit of a hassle but it works.
+                    .skip(file.len() - move_me_data)
+                    // Skip as often as we need to according to the value of the number.
+                    // Make this efficient by taking the modulus with respect to the current length
+                    // of the vector.
+                    .skip((move_me.1.abs() as usize) % mod_me)
+                    // Get the next element in the iterator, which is the element that is currently
+                    // just before the position we want our removed element to occupy.
+                    .next()
+                    .ok_or(Error::msg("this should be infinite"))?
+                    .0;
+
+                // Insert after the element we just found. Thanks, Rust, that `insert` also works
+                // if the position where we want to insert is one past the end.
+                file.insert((prev_elem_pos + 1).rem_euclid(file.len()), move_me);
+            } else if move_me.1 &gt; 0 {
+                // Move to the right. Here, we iterate in forward direction.
+                let next_elem_pos = file
+                    .iter()
+                    .enumerate()
+                    // Turn it into an inifinte iterator. Thus, we won't have to care about
+                    // wrap-arounds.
+                    .cycle()
+                    // Skip as many elements until we are at the location of the element we just
+                    // removed.
+                    .skip(move_me_data)
+                    // Skip as often as we need to according to the value of the number.
+                    // Make this efficient by taking the modulus with respect to the current length
+                    // of the vector.
+                    .skip((move_me.1.abs() as usize) % mod_me)
+                    // Get the next element, which is the element that is currently at the position
+                    // we want our removed element to occupy.
+                    .next()
+                    .ok_or(Error::msg("this should be infinite"))?
+                    .0;
+
+                // Insert at the position of the element we just found.
+                file.insert(next_elem_pos, move_me);
+            } else {
+                unreachable!("there are no more numbers");
+            }
+        }
+    }
+
+    // Extract the desired sum in a lazy way. Simply iterate 1, 2 and 3 thousand times over an ever
+    // repeating instance of our iterator.
+    //
+    // Find the index of 0 first. This helps with debugging in case 0 is removed by accident.
+    let start_idx = file
+        .iter()
+        .enumerate()
+        .find_map(|(idx, (_, num))| if num == &amp;0 { Some(idx) } else { None })
+        .ok_or(Error::msg("cannot find zero"))?;
+    // Then take the sum.
+    let grove_coords = file
+        .into_iter()
+        // Take apart so that we only keep the data. We no longer care about original indices.
+        .map(|(_idx, el)| el)
+        .collect::&lt;Vec&lt;_&gt;&gt;()
+        .into_iter()
+        // Infinite iterators again.
+        .cycle()
+        // Skip until we are at the location of 0.
+        .skip(start_idx)
+        // Find current indices.
+        .enumerate()
+        // Take only every 1000'th element after zero. Note that 0 also passes here.
+        .filter_map(|(idx, el)| if idx % 1000 == 0 { Some(el) } else { None })
+        // We take 4 here because the first one fulfilling the condition will be zero.
+        .take(4)
+        // Skip zero.
+        .skip(1)
+        .sum::&lt;data::Size&gt;();
+
+    println!(
+        "solution for {} mix(es) and a key of {} is {}",
+        mixes, decryption_key, grove_coords
+    );
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1, 1, 1)?;
+    solve(REAL, 1, 1)?;
+
+    solve(SAMPLE1, 10, 811_589_153)?;
+    solve(REAL, 10, 811_589_153)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+
+pub type Size = i64;
+
+#[derive(Debug)]
+pub struct Num(Size);
+
+impl Num {
+    pub fn num(&amp;self) -&gt; Size {
+        self.0
+    }
+}
+
+impl FromStr for Num {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        Ok(Self(s.parse()?))
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_20"><a class="anchor" href="#_how_to_run_20"></a><a class="link" href="#_how_to_run_20">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
