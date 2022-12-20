@@ -1,0 +1,52 @@
+== Day 20: Grove Positioning System ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/20[AoC|2022|20].
+
+Looked simple but was more tricky than expected.
+
+The example data turned out to be too _friendly_ for me.
+
+=== Input ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== General Solution ===
+
+I decided to store the data in a kind of doubly linked list. I implemented this by creating a list of indices to the predecessor and successor of each number. The numbers themselves are stored in a vec which is unchanged all the time (this is useful since we need to process along the initial order of the numbers)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=mix]
+----
+
+The key is to perform a single mix step correctly. I failed to do so in all possible ways. To be able to test this properly, I put it into a separate function and created my own test cases for it (see below).
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=step]
+----
+
+=== Star 1 ===
+
+Just call the mix function with `times = 1`.
+
+=== Star 2 ===
+
+Call the mix function with numbers multiplied by the decryption key and `times = 10`:
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+The most difficult part today: create `test_mix_step` and make it pass.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
