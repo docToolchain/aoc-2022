@@ -1,0 +1,71 @@
+== Day 20: Grove Positioning System ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+Today was both frustrating and nice.
+At first, I came up with a complex approach that used an index map and its
+reverse to keep track of where an element was originally and where it is right
+now.
+But then I realised that rust's vectors have an `insert` and a `remove` method
+that does just what was needed here.
+Luckily, I discarded my first idea pretty quickly.
+
+Furthermore, as I discovered during one of the previous days, an iterator over a
+vector in rust can be made infinite via the `cyclic` method.
+Thus, for part 1, I didn't have to care about the cyclic nature of the problem.
+In fact, the vector I get in the end doesn't look like the one online, but it
+also doesn't have to.
+It's just that each element has to have the same neighbours as in the example,
+which they do.
+
+What I do is I keep a vector that consists of a tuple of the actual number and
+its original index.
+I use that original index to find the number in the vector when it's its turn to
+be mixed.
+That's basically part 1.
+At first, I made a stupid mistake when extracting the three numbers that make up
+the grove coordinates and took the first three in steps of one thousand but
+_including_ zero.
+Unfortunately, I tried for quite a bit to apply a fix to the wrong location.
+
+Part 2 was just like part 1 but with some modulo operations applied.
+You just need to be careful to take the modulus with respect to the length of
+the file reduced by one.
+For more details, please see the code.
+I added extensive comments.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
