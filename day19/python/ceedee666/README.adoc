@@ -1,0 +1,21 @@
+== Day 19
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+I didn't really have an idea for today. Brute force seemed to be to slow. With some inspiration from
+reddit I was able to finally solve today.
+
+=== What did I learn
+
+
+=== How to run
+
+Run using:
+`$ python day_19.py --help`

@@ -170,64 +170,63 @@ impl Chamber<'_> {
 // end::chamber[]
 
 // tag::display[]
-pub enum RockInChamber<'a, 'b> {
-    RIC {
-        chamber: &'a [u8],
-        rock: &'b [u8],
-        x: usize,
-        y: usize,
-        w: usize,
-    },
+pub struct RockInChamber<'a, 'b> {
+    pub chamber: &'a [u8],
+    pub rock: &'b [u8],
+    pub x: usize,
+    pub y: usize,
+    pub w: usize,
+    pub rock_part: usize,
+    pub print_lim: usize,
 }
 
-impl RockInChamber<'_, '_> {
-    const ROCK_PART: usize = 8;
-    const PRINT_LIM: usize = 25 - Self::ROCK_PART;
+impl Default for RockInChamber<'_, '_> {
+    fn default() -> Self {
+        Self {
+            chamber: &[],
+            rock: &[],
+            x: 0,
+            y: 0,
+            w: 1,
+            rock_part: 8,
+            print_lim: 17,
+        }
+    }
 }
 
 impl std::fmt::Display for RockInChamber<'_, '_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RockInChamber::RIC {
-                chamber,
-                rock,
-                x,
-                y,
-                w,
-            } => {
-                let h = chamber.len() / Chamber::WIDTH;
-                let y_mx = h + Self::ROCK_PART;
-                let y_mn = 0.max(h - Self::PRINT_LIM.min(h));
-                for y_ in (y_mn..y_mx).rev() {
-                    '|'.fmt(f)?;
-                    for x_ in 0..Chamber::WIDTH {
-                        if x_ >= *x
-                            && x_ < *x + w
-                            && y_ >= *y
-                            && y_ < *y + rock.len() / *w
-                            && rock[x_ - *x + (y_ - *y) * *w] == b'#'
-                        {
-                            '@'.fmt(f)?;
-                        } else if y_ < h {
-                            (chamber[x_ + y_ * Chamber::WIDTH] as char).fmt(f)?;
-                        } else {
-                            '.'.fmt(f)?;
-                        }
-                    }
-                    "|\n".fmt(f)?;
-                }
-                if y_mn == 0 {
-                    '+'.fmt(f)?;
-                    for _ in 0..Chamber::WIDTH {
-                        '-'.fmt(f)?;
-                    }
-                    "+\n".fmt(f)?;
+        let h = self.chamber.len() / Chamber::WIDTH;
+        let y_mx = h + self.rock_part;
+        let y_mn = 0.max(h - self.print_lim.min(h));
+        for y_ in (y_mn..y_mx).rev() {
+            '|'.fmt(f)?;
+            for x_ in 0..Chamber::WIDTH {
+                if x_ >= self.x
+                    && x_ < self.x + self.w
+                    && y_ >= self.y
+                    && y_ < self.y + self.rock.len() / self.w
+                    && self.rock[x_ - self.x + (y_ - self.y) * self.w] == b'#'
+                {
+                    '@'.fmt(f)?;
+                } else if y_ < h {
+                    (self.chamber[x_ + y_ * Chamber::WIDTH] as char).fmt(f)?;
                 } else {
-                    "|~y=".fmt(f)?;
-                    (y_mn - 1).fmt(f)?;
-                    "~".fmt(f)?;
+                    '.'.fmt(f)?;
                 }
             }
+            "|\n".fmt(f)?;
+        }
+        if y_mn == 0 {
+            '+'.fmt(f)?;
+            for _ in 0..Chamber::WIDTH {
+                '-'.fmt(f)?;
+            }
+            "+".fmt(f)?;
+        } else {
+            "|~y=".fmt(f)?;
+            (y_mn - 1).fmt(f)?;
+            "~".fmt(f)?;
         }
         Ok(())
     }
@@ -235,12 +234,9 @@ impl std::fmt::Display for RockInChamber<'_, '_> {
 
 impl std::fmt::Display for Chamber<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        RockInChamber::RIC {
+        RockInChamber {
             chamber: &self.chamber,
-            rock: &[],
-            x: 0,
-            y: 0,
-            w: 1,
+            ..RockInChamber::default()
         }
         .fmt(f)
     }

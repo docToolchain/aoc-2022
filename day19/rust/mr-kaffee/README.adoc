@@ -1,0 +1,49 @@
+== Day 19: Not Enough Minerals ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/19[AoC|2022|19].
+
+Brute force day :(
+
+WARNING: Do not run this code. It may overheat your CPU ;)
+
+=== Input ===
+
+Lot's of structure to help me avoid indexing errors...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+Breadth first search for part 1
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Breadth first search does not finish for part 2. After a while, memory is exhausted on my computer. I do not get errors, but I guess memory starts getting put on disk which makes everything sloooooow.
+
+Define sequences of robots being produced. Simulate one sequence after the other to see which one gives the best result. As a small optimization, check how many robots are produced in total for a given sequence and do not re-simulate with modified tail which is not produced anyhow.
+
+This produces the correct result for the first and the third blueprint in my data but not (yet) for the 2nd (1 too low, after I increased search space, the program did not yet terminate...)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+=== Today I learned ===
+
+Brute force sometimes works but it is no fun, and there is a lot to learn on how to solve these kind of problems ...

@@ -120,6 +120,47 @@ pub fn star_1(data: &PuzzleData) -> usize {
         timer: usize,
     }
 
+    impl State {
+        fn create(
+            pressure: usize,
+            flow: usize,
+            idx: usize,
+            opened: u64,
+            timer: usize,
+            data: &PuzzleData,
+            max_flow: usize,
+        ) -> Self {
+            let mut potential = pressure;
+            let mut flow_ = 0;
+            if timer >= 1 {
+                // in next step, pressure will be increased by flow
+                flow_ += flow;
+                potential += flow_;
+            }
+            if timer >= 2 {
+                // in the 2nd step, pressure will at most be increased by flow
+                // of current valve. If it is not opened in the next step
+                // (agent moves instead), the flow will not change
+                if opened & 1 << idx == 0 {
+                    flow_ += data.get(idx).flow;
+                }
+                potential += flow_;
+
+                // upper bound for subsequent steps: all valves open
+                potential += (timer - 2) * max_flow;
+            }
+
+            Self {
+                potential,
+                pressure,
+                flow,
+                idx,
+                opened,
+                timer,
+            }
+        }
+    }
+
     // all valves opened / max flow
     let (all_opened, max_flow) = data
         .valves()
@@ -131,14 +172,7 @@ pub fn star_1(data: &PuzzleData) -> usize {
     let timer: usize = 30;
 
     // start at root, no valves open
-    let start = State {
-        potential: max_flow * timer,
-        pressure: 0,
-        flow: 0,
-        idx: data.root().idx,
-        opened: 0,
-        timer,
-    };
+    let start = State::create(0, 0, data.root().idx, 0, timer, data, max_flow);
 
     // the queue for searching
     let mut queue = BinaryHeap::new();
@@ -164,20 +198,15 @@ pub fn star_1(data: &PuzzleData) -> usize {
         {
             let opened = s.opened | if o { 1 << adj.idx } else { 0 };
             let flow = s.flow + if o { adj.flow } else { 0 };
-            let next = State {
-                potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
-                // pressure is
-                // - actual pressure in previous step: s.pressure - s.flow * s.timer
-                // - plus everything added in this step: s.flow
-                // - plus everything added until timer elapsed: flow * (s.timer - 1)
-                pressure: s.pressure + s.flow,
+            let next = State::create(
+                s.pressure + s.flow,
                 flow,
-                // indices are sorted to avoid exploring the same state multiple times
-                idx: adj.idx,
+                adj.idx,
                 opened,
-                // decrement timer
-                timer: s.timer - 1,
-            };
+                s.timer - 1,
+                data,
+                max_flow,
+            );
             let v = seen.entry((next.idx, next.opened)).or_insert(0);
             if next.potential.gt(v) {
                 *v = next.potential;
@@ -188,7 +217,6 @@ pub fn star_1(data: &PuzzleData) -> usize {
 
     unreachable!();
 }
-
 // end::star_1[]
 
 // tag::star_2[]
@@ -210,6 +238,49 @@ pub fn star_2(data: &PuzzleData) -> usize {
         timer: usize,
     }
 
+    impl State {
+        fn create(
+            pressure: usize,
+            flow: usize,
+            idx: [usize; 2],
+            opened: u64,
+            timer: usize,
+            data: &PuzzleData,
+            max_flow: usize,
+        ) -> Self {
+            let mut potential = pressure;
+            let mut flow_ = 0;
+            if timer >= 1 {
+                // in next step, pressure will be increased by flow
+                flow_ += flow;
+                potential += flow_;
+            }
+            if timer >= 2 {
+                // in the 2nd step, pressure will at most be increased by flow
+                // of current valves. If they are not opened in the next step
+                // (agents move instead), the flow will not change
+                for idx_ in idx {
+                    if opened & 1 << idx_ == 0 {
+                        flow_ += data.get(idx_).flow;
+                    }
+                }
+                potential += flow_;
+
+                // upper bound for subsequent steps: all valves open
+                potential += (timer - 2) * max_flow;
+            }
+
+            Self {
+                potential,
+                pressure,
+                flow,
+                idx,
+                opened,
+                timer,
+            }
+        }
+    }
+
     // all valves opened / max flow
     let (all_opened, max_flow) = data
         .valves()
@@ -221,14 +292,7 @@ pub fn star_2(data: &PuzzleData) -> usize {
     let timer: usize = 26;
 
     // start at root, no valves open
-    let start = State {
-        potential: max_flow * timer,
-        pressure: 0,
-        flow: 0,
-        idx: [data.root().idx; 2],
-        opened: 0,
-        timer,
-    };
+    let start = State::create(0, 0, [data.root().idx; 2], 0, timer, data, max_flow);
 
     // the queue for searching
     let mut queue = BinaryHeap::new();
@@ -263,20 +327,15 @@ pub fn star_2(data: &PuzzleData) -> usize {
                     | if o_2 { 1 << adj_2.idx } else { 0 };
                 let flow =
                     s.flow + if o_1 { adj_1.flow } else { 0 } + if o_2 { adj_2.flow } else { 0 };
-                let next = State {
-                    potential: s.pressure + s.flow + (s.timer - 1) * max_flow,
-                    // pressure is
-                    // - actual pressure in previous step: s.pressure - s.flow * s.timer
-                    // - plus everything added in this step: s.flow
-                    // - plus everything added until timer elapsed: flow * (s.timer - 1)
-                    pressure: s.pressure + s.flow,
+                let next = State::create(
+                    s.pressure + s.flow,
                     flow,
-                    // indices are sorted to avoid exploring the same state multiple times
-                    idx: [adj_1.idx.min(adj_2.idx), adj_1.idx.max(adj_2.idx)],
+                    [adj_1.idx.min(adj_2.idx), adj_1.idx.max(adj_2.idx)],
                     opened,
-                    // decrement timer
-                    timer: s.timer - 1,
-                };
+                    s.timer - 1,
+                    data,
+                    max_flow,
+                );
                 let v = seen.entry((next.idx, next.opened)).or_insert(0);
                 if next.potential.gt(v) {
                     *v = next.potential;
