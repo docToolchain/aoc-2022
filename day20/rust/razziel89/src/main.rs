@@ -27,18 +27,19 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
     let mut file = nums
         .iter()
         // Multiply by the decyption key.
-        .map(|el| {
-            let possible = (el.num() * decryption_key) % (nums.len() as data::Size - 1);
-            if el.num() != 0 && possible == 0 {
-                nums.len() as data::Size
-            } else {
-                possible
-            }
-        })
+        // .map(|el| {
+        //     let possible = (el.num() * decryption_key) % (nums.len() as data::Size - 1);
+        //     if el.num() != 0 && possible == 0 {
+        //         nums.len() as data::Size
+        //     } else {
+        //         possible
+        //     }
+        // })
+        .map(|el| el.num() * decryption_key)
         .enumerate()
         .collect::<Vec<_>>();
     let len = file.len();
-    // let mod_me = file.len() - 1;
+    let mod_me = file.len();
 
     // println!("{:?}", file.iter().map(|el| el.1).collect::<Vec<_>>());
 
@@ -62,6 +63,7 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
             }
 
             let move_me = file.remove(move_me_data.0);
+            println!("{} {} {} {}", move_me.1, move_me_data.0, org_idx, mix);
             if move_me.1 < 0 {
                 // Move to the left.
                 let prev_elem = file
@@ -69,10 +71,10 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
                     // Reverse the iterator's direction here.
                     .rev()
                     .cycle()
-                    .skip(file.len() - move_me_data.0)
+                    .skip(file.len() - (move_me_data.0 % mod_me))
                     // Skip as often as we need to according to the value of the number. The -1 is here
                     // because we have basically already taken one step.
-                    .skip(move_me.1.abs() as usize)
+                    .skip((move_me.1.abs() as usize) % file.len())
                     .next()
                     .ok_or(Error::msg("this should be infinite"))?;
 
@@ -89,10 +91,10 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
                     .iter()
                     .cycle()
                     // Skip until we are at the element that was located behind the one we removed.
-                    .skip(move_me_data.0)
+                    .skip(move_me_data.0 % mod_me)
                     // Skip as often as we need to according to the value of the number. The -1 is here
                     // because we have basically already taken one step.
-                    .skip(move_me.1.abs() as usize)
+                    .skip((move_me.1.abs() as usize) % file.len())
                     .next()
                     .ok_or(Error::msg("this should be infinite"))?;
 
@@ -106,18 +108,8 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
             } else {
                 unreachable!("there are no more numbers");
             }
-
-            // println!("{} {}", move_me.1, mix);
-            // if file.len() < 100 {
-            //     println!("{:?}", file.iter().map(|el| el.1).collect::<Vec<_>>());
-            // }
         }
     }
-
-    // println!(
-    //     "final: {:?}",
-    //     file.iter().map(|el| el.1).collect::<Vec<_>>()
-    // );
 
     // Extract the desired sum in a lazy way. Simply iterate 1, 2 and 3 thousand times over an ever
     // repeating instance of our iterator.
@@ -130,6 +122,7 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
         .into_iter()
         .map(|(idx, _el)| idx)
         .map(|el| nums[el].num() * decryption_key)
+        // .map(|el| nums[el].num() * 1)
         .collect::<Vec<_>>()
         .into_iter()
         .cycle()
@@ -157,7 +150,7 @@ fn main() -> Result<()> {
     // solve(REAL, 1, 1)?;
 
     solve(SAMPLE1, 10, 811_589_153)?;
-    // solve(REAL, 10, 811_589_153)?;
+    solve(REAL, 10, 811_589_153)?;
 
     Ok(())
 }
