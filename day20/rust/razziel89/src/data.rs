@@ -1,12 +1,8 @@
 // tag::data[]
 use anyhow::{Error, Result};
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
-use std::collections::HashSet;
-use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
-pub type Size = isize;
+pub type Size = i64;
 
 #[derive(Debug)]
 pub struct Num(Size);
