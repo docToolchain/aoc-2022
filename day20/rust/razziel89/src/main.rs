@@ -83,11 +83,10 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
                     .cycle()
                     // Skip as many elements until we are at the location of the element we just
                     // removed. Doing so when moving backwards is a bit of a hassle but it works.
+                    .skip(file.len() - move_me_data.0)
+                    // Skip as often as we need to according to the value of the number.
                     // Make this efficient by taking the modulus with respect to the current length
                     // of the vector.
-                    .skip(file.len() - (move_me_data.0 % mod_me))
-                    // Skip as often as we need to according to the value of the number. Take the
-                    // mod again.
                     .skip((move_me.1.abs() as usize) % mod_me)
                     // Get the next element in the iterator, which is the element that is currently
                     // just before the position we want our removed element to occupy.
@@ -113,11 +112,10 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
                     .cycle()
                     // Skip as many elements until we are at the location of the element we just
                     // removed.
+                    .skip(move_me_data.0)
+                    // Skip as often as we need to according to the value of the number.
                     // Make this efficient by taking the modulus with respect to the current length
                     // of the vector.
-                    .skip(move_me_data.0 % mod_me)
-                    // Skip as often as we need to according to the value of the number. Take the
-                    // mod again.
                     .skip((move_me.1.abs() as usize) % mod_me)
                     // Get the next element, which is the element that is currently at the position
                     // we want our removed element to occupy.
