@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
-pub type Size = i16;
+pub type Size = isize;
 
 #[derive(Debug)]
 pub struct Num(Size);
