@@ -50,25 +50,18 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
             // and current index.
             let move_me_data = file
                 .iter()
-                .enumerate()
-                .find_map(|(idx, el)| {
-                    if el.0 == org_idx {
-                        Some((idx, el.1))
-                    } else {
-                        None
-                    }
-                })
+                .position(|&el| el.0 == org_idx)
                 .ok_or(Error::msg("cannot find element"))?;
 
             // Zero doesn't move so we skip it.
-            if file[move_me_data.0].1 == 0 {
+            if file[move_me_data].1 == 0 {
                 continue;
             }
 
             // Remove the element from the vector. When imagining the cyclic list, it becomes clear
             // that a number will never encounter itself. Thus, it is the same as if we were
             // moving through an infinite vector that doesn't contain the number.
-            let move_me = file.remove(move_me_data.0);
+            let move_me = file.remove(move_me_data);
             // Below, we use a nice feature of Rust's iterators over vectors, namely that they can
             // be cyclic. Thus, we don't actually care whether our resulting vector looks as it
             // does in the example because it is cyclic anyway.
@@ -84,7 +77,7 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
                     .cycle()
                     // Skip as many elements until we are at the location of the element we just
                     // removed. Doing so when moving backwards is a bit of a hassle but it works.
-                    .skip(file.len() - move_me_data.0)
+                    .skip(file.len() - move_me_data)
                     // Skip as often as we need to according to the value of the number.
                     // Make this efficient by taking the modulus with respect to the current length
                     // of the vector.
@@ -108,7 +101,7 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
                     .cycle()
                     // Skip as many elements until we are at the location of the element we just
                     // removed.
-                    .skip(move_me_data.0)
+                    .skip(move_me_data)
                     // Skip as often as we need to according to the value of the number.
                     // Make this efficient by taking the modulus with respect to the current length
                     // of the vector.
