@@ -34,8 +34,8 @@ fn solve(file: &str, mixes: usize, decryption_key: data::Size) -> Result<()> {
         .enumerate()
         .collect::<Vec<_>>();
 
-    // Three convenience values that will be used further down.
-    // So that we always know how many values there were originally.
+    // Two convenience values that will be used further down.
+    // Let's always remember how many values there were originally.
     let len = file.len();
     // After removing an element from the vector, this is gonna be its length. Thus, this is the
     // value with respect to which we need to take the modulus when deciding how many cycles to
