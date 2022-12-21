@@ -4,7 +4,7 @@ use input::*;
 use mr_kaffee_aoc::{Puzzle, Star};
 
 /// the puzzle
-pub fn puzzle() -> Puzzle<'static, PuzzleData<'static>, isize, isize, usize, usize> {
+pub fn puzzle() -> Puzzle<'static, PuzzleData<'static>, isize, isize, isize, isize> {
     Puzzle {
         year: 2022,
         day: 21,
@@ -17,7 +17,7 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData<'static>, isize, isize, usize, usi
         star2: Some(Star {
             name: "Star 2",
             f: &star_2,
-            exp: None,
+            exp: Some(3_375_719_472_770),
         }),
     }
 }
@@ -26,21 +26,21 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData<'static>, isize, isize, usize, usi
 pub mod input {
     use std::collections::HashMap;
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum Yell<'a> {
         Operation(&'a str, &'a str, &'a str),
         Number(isize),
+        Unknown, // required for part 2
     }
 
     pub fn parse_yell<'a>(line: &'a str) -> (&'a str, Yell<'a>) {
         let mut words = line.split_ascii_whitespace();
         let name = words.next().unwrap().trim_end_matches(':');
-        let a = words.next().unwrap();
-        let b = a.as_bytes()[0];
-        let yell = if (b as char).is_ascii_digit() {
-            Yell::Number(a.parse().unwrap())
+        let word = words.next().unwrap();
+        let yell = if (word.as_bytes()[0] as char).is_ascii_digit() {
+            Yell::Number(word.parse().unwrap())
         } else {
-            Yell::Operation(a, words.next().unwrap(), words.next().unwrap())
+            Yell::Operation(word, words.next().unwrap(), words.next().unwrap())
         };
         (name, yell)
     }
@@ -71,11 +71,11 @@ pub fn get_result(monkeys: &HashMap<&str, Yell<'_>>, monkey: &str) -> isize {
                 "-" => lhs - rhs,
                 "*" => lhs * rhs,
                 "/" => lhs / rhs,
-                _ => panic!(),
+                _ => panic!("Unknown operation: {op}"),
             }
         }
         Some(Yell::Number(v)) => *v,
-        _ => panic!(),
+        yell => panic!("Can't get result for monkey {monkey} => {yell:?}"),
     }
 }
 
@@ -86,8 +86,67 @@ pub fn star_1(data: &PuzzleData) -> isize {
 // end::star_1[]
 
 // tag::star_2[]
-pub fn star_2(_data: &PuzzleData) -> usize {
-    0
+#[derive(Debug)]
+pub enum YellRec<'a> {
+    Operation(Box<(YellRec<'a>, &'a str, YellRec<'a>)>),
+    Number(isize),
+    Unknown,
+}
+
+pub fn reduce<'a>(monkeys: &HashMap<&str, Yell<'a>>, monkey: &str) -> YellRec<'a> {
+    match monkeys.get(monkey) {
+        Some(Yell::Operation(lhs, op, rhs)) => {
+            let lhs = reduce(monkeys, lhs);
+            let rhs = reduce(monkeys, rhs);
+            match (lhs, rhs) {
+                (YellRec::Number(lhs), YellRec::Number(rhs)) => match *op {
+                    "+" => YellRec::Number(lhs + rhs),
+                    "-" => YellRec::Number(lhs - rhs),
+                    "*" => YellRec::Number(lhs * rhs),
+                    "/" => YellRec::Number(lhs / rhs),
+                    _ => panic!("Unknown operation: {op}"),
+                },
+                (lhs, rhs) => YellRec::Operation((lhs, *op, rhs).into()),
+            }
+        }
+        Some(Yell::Number(v)) => YellRec::Number(*v),
+        Some(Yell::Unknown) => YellRec::Unknown,
+        yell => panic!("Can't get result for monkey {monkey} => {yell:?}"),
+    }
+}
+
+pub fn solve(yell: &YellRec, tar: isize) -> isize {
+    match yell {
+        YellRec::Operation(b) => match (&b.0, b.1, &b.2) {
+            (lhs, op, YellRec::Number(rhs)) => match op {
+                "+" => solve(lhs, tar - *rhs), // lhs + rhs = tar
+                "-" => solve(lhs, tar + *rhs), // lhs - rhs = tar
+                "*" => solve(lhs, tar / *rhs), // lhs * rhs = tar
+                "/" => solve(lhs, tar * *rhs), // lhs / rhs = tar
+                _ => panic!("Unknown operation: {op}"),
+            },
+            (YellRec::Number(lhs), op, rhs) => match op {
+                "+" => solve(rhs, tar - *lhs), // lhs + rhs = tar
+                "-" => solve(rhs, *lhs - tar), // lhs - rhs = tar
+                "*" => solve(rhs, tar / *lhs), // lhs * rhs = tar
+                "/" => solve(rhs, *lhs / tar), // lhs / rhs = tar
+                _ => panic!("Unknown operation: {op}"),
+            },
+            _ => panic!("solve expects either rhs or lhs to be a number"),
+        },
+        YellRec::Unknown => tar,
+        YellRec::Number(_) => panic!("Can't solve a number"),
+    }
+}
+
+pub fn star_2(data: &PuzzleData) -> isize {
+    let mut monkeys = data.monkeys.clone();
+
+    let Some(Yell::Operation(lhs, _, rhs)) = monkeys.get("root") else {panic!()};
+    monkeys.insert("root", Yell::Operation(lhs, "-", rhs));
+    monkeys.insert("humn", Yell::Unknown);
+
+    solve(&reduce(&monkeys, "root"), 0)
 }
 // end::star_2[]
 
@@ -96,8 +155,21 @@ pub fn star_2(_data: &PuzzleData) -> usize {
 mod tests {
     use super::*;
 
-    const CONTENT: &str = r#"Hello World!
-Advent of Code 2022
+    const CONTENT: &str = r#"root: pppw + sjmn
+dbpl: 5
+cczh: sllz + lgvd
+zczc: 2
+ptdq: humn - dvpt
+dvpt: 3
+lfqf: 4
+humn: 5
+ljgn: 2
+sjmn: drzm * dbpl
+sllz: 4
+pppw: cczh / lfqf
+lgvd: ljgn * ptdq
+drzm: hmdt - zczc
+hmdt: 32
 "#;
 
     #[test]
