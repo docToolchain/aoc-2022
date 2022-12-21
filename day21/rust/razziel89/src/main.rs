@@ -30,7 +30,7 @@ fn do_op(op: char, val1: &isize, val2: &isize) -> isize {
     }
 }
 
-fn monkeys_again(monkeys: Vec<data::Monkey>, human: Option<isize>) -> isize {
+fn monkeys_again(monkeys: &Vec<data::Monkey>, human: Option<isize>) -> isize {
     // A map from monkey names to their numbers for those monkeys that already know them.
     let mut known = monkeys
         .iter()
@@ -87,18 +87,31 @@ fn solve(file: &str) -> Result<()> {
 
     // Read file and convert into data. We use a custom struct here just so we can continue using
     // our parser function.
-    let mut monkeys = io::parse_chunks_to_data::<data::Monkey>(
+    let monkeys = io::parse_chunks_to_data::<data::Monkey>(
         io::read_lines_from_file(file, 1)?,
         "monkey",
         None,
         None,
     )?;
 
-    let root_val = monkeys_again(monkeys, None);
+    let root_val = monkeys_again(&monkeys, None);
 
     println!("root's value is {}\n", root_val);
 
     // Part 2.
+    for check in 0..std::isize::MAX {
+        if check % 500 == 0 {
+            println!("checking {}", check);
+        }
+        if monkeys_again(&monkeys, Some(check)) == 1 {
+            println!("we need to shout +{}\n", check);
+            break;
+        }
+        if monkeys_again(&monkeys, Some(-check)) == 1 {
+            println!("we need to shout -{}\n", check);
+            break;
+        }
+    }
 
     Ok(())
 }
