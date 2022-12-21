@@ -410,6 +410,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_21_rust">Day 21: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_21_todo">Day 21: <em>TODO</em></a>
+<ul class="sectlevel4">
+<li><a href="#_input_21">Input</a></li>
+<li><a href="#_star_1_19">Star 1</a></li>
+<li><a href="#_star_2_19">Star 2</a></li>
+<li><a href="#_tests_22">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -5556,7 +5568,7 @@ mod tests {
 <p>Do not simulate every minute but rather decide which robot to build next and simulate as many minutes as required to build that robot at once</p>
 </li>
 <li>
-<p>Understand that only one robot can be made per minute, which implies that there is no point in having more Ore, Clay or Obsidian collecting robots that required to produce any other robot</p>
+<p>Understand that only one robot can be made per minute, which implies that there is no point in having more Ore, Clay or Obsidian collecting robots than the maximum Ore, Clay or Obsidian required to produce a single robot of any kind</p>
 </li>
 <li>
 <p>Do a depth first search to have terminal states quickly and discard all branches for which an upper bound can be calculated which is below the current optimum (this is kind of an A* idea)</p>
@@ -5664,9 +5676,9 @@ mod tests {
                         Some((blueprint[m + 3 * r] - materials[m] + robots[m] - 1) / robots[m])
                     }
                 })
-                .fold(Some(0), |s_max, s| match s {
-                    Some(s) =&gt; s_max.map(|s_max| s_max.max(s)),
-                    None =&gt; None,
+                .fold(Some(0), |s_max, s| match (s_max, s) {
+                    (Some(s_max), Some(s)) =&gt; Some(s_max.max(s)),
+                    _ =&gt; None,
                 }) else {
                     // can't build robot
                     continue
@@ -6061,6 +6073,205 @@ mod tests {
     pub fn test_star_2() {
         let data = PuzzleData::from(CONTENT);
         assert_eq!(1_623_178_306, star_2(&amp;data));
+    }
+}</code></pre>
+</div>
+</div>
+<a id="day21" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_21_rust"><a class="anchor" href="#_day_21_rust"></a><a class="link" href="#_day_21_rust">Day 21: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_21_todo"><a class="anchor" href="#_day_21_todo"></a><a class="link" href="#_day_21_todo">Day 21: <em>TODO</em></a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/21">AoC|2022|21</a>.</p>
+</div>
+<div class="paragraph">
+<p>Primary school math today&#8230;&#8203;</p>
+</div>
+<div class="sect4">
+<h5 id="_input_21"><a class="anchor" href="#_input_21"></a><a class="link" href="#_input_21">Input</a></h5>
+<div class="paragraph">
+<p>I parse the input into a map with monkey names as keys and <code>Yell</code> enums as values. A <code>Yell</code> is either a <code>Number</code> or an <code>Operation</code> referencing other monkey by name. The <code>Unknown</code> variant is required for star 2.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    use std::collections::HashMap;
+
+    #[derive(Debug, Clone)]
+    pub enum Yell&lt;'a&gt; {
+        Operation(&amp;'a str, &amp;'a str, &amp;'a str),
+        Number(isize),
+        Unknown, // required for part 2
+    }
+
+    pub fn parse_yell&lt;'a&gt;(line: &amp;'a str) -&gt; (&amp;'a str, Yell&lt;'a&gt;) {
+        let mut words = line.split_ascii_whitespace();
+        let name = words.next().unwrap().trim_end_matches(':');
+        let word = words.next().unwrap();
+        let yell = if (word.as_bytes()[0] as char).is_ascii_digit() {
+            Yell::Number(word.parse().unwrap())
+        } else {
+            Yell::Operation(word, words.next().unwrap(), words.next().unwrap())
+        };
+        (name, yell)
+    }
+
+    #[derive(Debug)]
+    pub struct PuzzleData&lt;'a&gt; {
+        pub monkeys: HashMap&lt;&amp;'a str, Yell&lt;'a&gt;&gt;,
+    }
+
+    impl&lt;'a&gt; From&lt;&amp;'a str&gt; for PuzzleData&lt;'a&gt; {
+        /// parse the puzzle input
+        fn from(s: &amp;'a str) -&gt; Self {
+            Self {
+                monkeys: s.lines().map(parse_yell).collect(),
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_19"><a class="anchor" href="#_star_1_19"></a><a class="link" href="#_star_1_19">Star 1</a></h5>
+<div class="paragraph">
+<p>This is a trivial recursive <code>get_result</code> function.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;PuzzleData) -&gt; isize {
+    get_result(&amp;data.monkeys, "root")
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_19"><a class="anchor" href="#_star_2_19"></a><a class="link" href="#_star_2_19">Star 2</a></h5>
+<div class="paragraph">
+<p>For the second part, I update the map so that the value for key <code>"humn"</code> is <code>Unknown</code> and the operation for key <code>"root"</code> is <code>-</code>, so that I can solve the root value for <code>0</code>.</p>
+</div>
+<div class="paragraph">
+<p>I put the yells in a recursive tree enum <code>YellRec</code> reducing branches of the tree that do not contain <code>Unknown</code> on the fly with a <code>reduce</code> function.</p>
+</div>
+<div class="paragraph">
+<p>Then I solve for the <code>Unknown</code> inverting operations one by one. This works if the <code>Unknown</code> appears in exactly one of the right hand side or left hand side arguments, which is the case for my input (and I guess for every one else&#8217;s input as well) and for the example data.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[derive(Debug)]
+pub enum YellRec&lt;'a&gt; {
+    Operation(Box&lt;(YellRec&lt;'a&gt;, &amp;'a str, YellRec&lt;'a&gt;)&gt;),
+    Number(isize),
+    Unknown,
+}
+
+pub fn reduce&lt;'a&gt;(monkeys: &amp;HashMap&lt;&amp;str, Yell&lt;'a&gt;&gt;, monkey: &amp;str) -&gt; YellRec&lt;'a&gt; {
+    match monkeys.get(monkey) {
+        Some(Yell::Operation(lhs, op, rhs)) =&gt; {
+            let lhs = reduce(monkeys, lhs);
+            let rhs = reduce(monkeys, rhs);
+            match (lhs, rhs) {
+                (YellRec::Number(lhs), YellRec::Number(rhs)) =&gt; match *op {
+                    "+" =&gt; YellRec::Number(lhs + rhs),
+                    "-" =&gt; YellRec::Number(lhs - rhs),
+                    "*" =&gt; YellRec::Number(lhs * rhs),
+                    "/" =&gt; YellRec::Number(lhs / rhs),
+                    _ =&gt; panic!("Unknown operation: {op}"),
+                },
+                (lhs, rhs) =&gt; YellRec::Operation((lhs, *op, rhs).into()),
+            }
+        }
+        Some(Yell::Number(v)) =&gt; YellRec::Number(*v),
+        Some(Yell::Unknown) =&gt; YellRec::Unknown,
+        yell =&gt; panic!("Can't get result for monkey {monkey} =&gt; {yell:?}"),
+    }
+}
+
+pub fn solve(yell: &amp;YellRec, tar: isize) -&gt; isize {
+    match yell {
+        YellRec::Operation(b) =&gt; match (&amp;b.0, b.1, &amp;b.2) {
+            (lhs, op, YellRec::Number(rhs)) =&gt; match op {
+                "+" =&gt; solve(lhs, tar - *rhs), // lhs + rhs = tar
+                "-" =&gt; solve(lhs, tar + *rhs), // lhs - rhs = tar
+                "*" =&gt; solve(lhs, tar / *rhs), // lhs * rhs = tar
+                "/" =&gt; solve(lhs, tar * *rhs), // lhs / rhs = tar
+                _ =&gt; panic!("Unknown operation: {op}"),
+            },
+            (YellRec::Number(lhs), op, rhs) =&gt; match op {
+                "+" =&gt; solve(rhs, tar - *lhs), // lhs + rhs = tar
+                "-" =&gt; solve(rhs, *lhs - tar), // lhs - rhs = tar
+                "*" =&gt; solve(rhs, tar / *lhs), // lhs * rhs = tar
+                "/" =&gt; solve(rhs, *lhs / tar), // lhs / rhs = tar
+                _ =&gt; panic!("Unknown operation: {op}"),
+            },
+            _ =&gt; panic!("solve expects either rhs or lhs to be a number"),
+        },
+        YellRec::Unknown =&gt; tar,
+        YellRec::Number(_) =&gt; panic!("Can't solve a number"),
+    }
+}
+
+pub fn star_2(data: &amp;PuzzleData) -&gt; isize {
+    let mut monkeys = data.monkeys.clone();
+
+    let Some(Yell::Operation(lhs, _, rhs)) = monkeys.get("root") else {panic!()};
+    monkeys.insert("root", Yell::Operation(lhs, "-", rhs));
+    monkeys.insert("humn", Yell::Unknown);
+
+    solve(&amp;reduce(&amp;monkeys, "root"), 0)
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_22"><a class="anchor" href="#_tests_22"></a><a class="link" href="#_tests_22">Tests</a></h5>
+<div class="paragraph">
+<p>I only created tests today, because my template contains them. I actually did not use them before submitting the result&#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"root: pppw + sjmn
+dbpl: 5
+cczh: sllz + lgvd
+zczc: 2
+ptdq: humn - dvpt
+dvpt: 3
+lfqf: 4
+humn: 5
+ljgn: 2
+sjmn: drzm * dbpl
+sllz: 4
+pppw: cczh / lfqf
+lgvd: ljgn * ptdq
+drzm: hmdt - zczc
+hmdt: 32
+"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(152, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(301, star_2(&amp;data));
     }
 }</code></pre>
 </div>
