@@ -1,0 +1,35 @@
+==  Day 21: Monkey Math  ==
+
+This solution is written in Kotlin.
+
+The original puzzle can be found at https://adventofcode.com/2022/day/21
+
+
+=== First Star
+
+How does it work: +
+
+Inside function _day2221_1_ the puzzle input is read line by line, processed and stored into a map. After that I iterate through the map and replace all possible variables by its numbers and calculate already the formulars, if two values are in. After some iterations, the key root contains the value searched for.
+[source, kotlin, numbered]
+....
+include::day2221_1_2.kt[tags=day2221_1]
+....
+
+
+=== Second Star
+
+How does it work: +
+
+Inside function _day2221_2_ oncde more the puzzle input is read line by line, processed and stored into a map. If key is root, then the instruction is changed to _=_, and if key is _humn_ the instruction is changed to _humn_. After that I iterate through the map and replace all possible variables by its numbers and calculate already the formulars, if two values are in. Here I did not have the time to generate a stop critieria, so I simply took 100 iterations to make sure every value is resolved. This for sure could have done better. After that, I iterate step by step through the formula at root, resolve it to have only the variable on one side and then replace it by the formula of this variable, until only _humn_ remains, then on the other side of the equation you find the value which is searched for.
+[source, kotlin, numbered]
+....
+include::day2221_1_2.kt[tags=day2221_2]
+....
+
+
+
+At the end, both solutions are printed out. 
+[source, kotlin, numbered]
+....
+include::day2221_1_2.kt[tags=output]
+....
