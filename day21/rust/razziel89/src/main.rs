@@ -13,28 +13,24 @@ use anyhow::{Error, Result};
 use std::collections::HashMap;
 // Constants.
 
-fn do_op(op: char, val1: &isize, val2: &isize) -> Result<isize> {
+fn do_op(op: char, val1: &isize, val2: &isize) -> isize {
     match op {
-        '+' => Ok(val1 + val2),
-        '-' => Ok(val1 - val2),
-        '*' => Ok(val1 * val2),
-        '/' => Ok(val1 / val2),
-        _ => Err(Error::msg("unknown op")),
+        '+' => val1 + val2,
+        '-' => val1 - val2,
+        '*' => val1 * val2,
+        '/' => val1 / val2,
+        '=' => {
+            if val1 == val2 {
+                1
+            } else {
+                0
+            }
+        }
+        _ => panic!("unknown op"),
     }
 }
 
-fn solve(file: &str) -> Result<()> {
-    println!("PROCESSING {}", file);
-
-    // Read file and convert into data. We use a custom struct here just so we can continue using
-    // our parser function.
-    let monkeys = io::parse_chunks_to_data::<data::Monkey>(
-        io::read_lines_from_file(file, 1)?,
-        "monkey",
-        None,
-        None,
-    )?;
-
+fn monkeys_again(monkeys: Vec<data::Monkey>, human: Option<isize>) -> isize {
     // A map from monkey names to their numbers for those monkeys that already know them.
     let mut known = monkeys
         .iter()
@@ -59,12 +55,21 @@ fn solve(file: &str) -> Result<()> {
         .collect::<HashMap<_, _>>();
 
     let root_name = "root".to_string();
+
+    if let Some(val) = human {
+        known.insert("humn".to_string(), val);
+        let old_root = unknown
+            .remove(&root_name)
+            .expect("why do we have that already");
+        unknown.insert(root_name.clone(), (old_root.0, old_root.1, &'='));
+    }
+
     while unknown.contains_key(&root_name) {
         let mut moved = vec![];
         for (name, (mon1, mon2, &op)) in unknown.iter() {
             if let Some(val1) = known.get(mon1.as_str()) {
                 if let Some(val2) = known.get(mon2.as_str()) {
-                    known.insert(name.clone(), do_op(op, val1, val2)?);
+                    known.insert(name.clone(), do_op(op, val1, val2));
                     moved.push(name.clone());
                 }
             }
@@ -74,11 +79,26 @@ fn solve(file: &str) -> Result<()> {
         }
     }
 
-    println!("{:?}\n", known.get(&root_name));
+    *known.get(&root_name).expect("I though we found it")
+}
 
-    // println!("{:?}\n", monkeys);
-    // println!("{:?}\n", known);
-    // println!("{:?}\n", unknown);
+fn solve(file: &str) -> Result<()> {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data. We use a custom struct here just so we can continue using
+    // our parser function.
+    let mut monkeys = io::parse_chunks_to_data::<data::Monkey>(
+        io::read_lines_from_file(file, 1)?,
+        "monkey",
+        None,
+        None,
+    )?;
+
+    let root_val = monkeys_again(monkeys, None);
+
+    println!("root's value is {}\n", root_val);
+
+    // Part 2.
 
     Ok(())
 }
