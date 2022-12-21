@@ -364,6 +364,17 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_21_rust">Day 21: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_21_monkey_math">Day 21: Monkey Math</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_19">Oveview</a></li>
+<li><a href="#_solution_20">Solution</a></li>
+<li><a href="#_how_to_run_21">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -378,10 +389,10 @@
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="image"><img src="https://avatars.githubusercontent.com/u/10134766?v=4" alt="10134766?v=4"></span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">image:[][]</p></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>razziel89</strong><br>
-<span class="icon"><i class="fa fa-github"></i></span>: <a href="https://github.com/razziel89">razziel89</a></p>
+<span class="icon"><i class="fa fa-github"></i></span>: [][razziel89]</p>
 </div></div></td>
 </tr>
 </tbody>
@@ -6824,6 +6835,336 @@ impl FromStr for Num {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_20"><a class="anchor" href="#_how_to_run_20"></a><a class="link" href="#_how_to_run_20">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day21" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_21_rust"><a class="anchor" href="#_day_21_rust"></a><a class="link" href="#_day_21_rust">Day 21: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_21_monkey_math"><a class="anchor" href="#_day_21_monkey_math"></a><a class="link" href="#_day_21_monkey_math">Day 21: Monkey Math</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_19"><a class="anchor" href="#_oveview_19"></a><a class="link" href="#_oveview_19">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_20"><a class="anchor" href="#_solution_20"></a><a class="link" href="#_solution_20">Solution</a></h5>
+<div class="paragraph">
+<p>No time to explain, barely enough time to implement.</p>
+</div>
+<div class="paragraph">
+<p>Part 1 is straightforward, simply fill in all monkey values that you can each
+round until you found the value for <code>root</code>.</p>
+</div>
+<div class="paragraph">
+<p>Part 2 was more tricky.
+Looking at the data, it becomes clear that only one side of the equation depends
+on the human&#8217;s value while the other one is constant.
+My code determines that side automatically.</p>
+</div>
+<div class="paragraph">
+<p>Furthermore, you need to realise that the value of the other side changes
+monotonically depending on the human&#8217;s value.
+Then, it&#8217;s a simple search over the available parameter space.
+I opted for a search with more steps than a binary search and it works well
+enough for my inputs.
+I also assume that the number we need to shout is positive since all monkeys
+shout positive values themselves.
+That might not hold for all inputs.</p>
+</div>
+<div class="paragraph">
+<p>My solytion might not work for all inputs but it should be easy to fix.
+I added some checks that panic if they fail in orer to catch edge cases but
+those didn&#8217;t occur for me.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::cmp::Ordering;
+use std::collections::HashMap;
+// Constants.
+
+fn do_op(op: char, val1: &amp;isize, val2: &amp;isize) -&gt; (isize, isize) {
+    match op {
+        '+' =&gt; (val1 + val2, 0),
+        '-' =&gt; (val1 - val2, 0),
+        '*' =&gt; (val1 * val2, 0),
+        '/' =&gt; (val1 / val2, val1 % val2),
+        _ =&gt; panic!("unknown op"),
+    }
+}
+
+fn do_op_str(op: char, str1: &amp;str, str2: &amp;str) -&gt; String {
+    match op {
+        '*' =&gt; format!("{}*{}", str1, str2),
+        '+' =&gt; format!("({}+{})", str1, str2),
+        '-' =&gt; format!("({}-{})", str1, str2),
+        '/' =&gt; format!("({}/{})", str1, str2),
+        _ =&gt; panic!("unknown op"),
+    }
+}
+
+fn monkeys_again(
+    monkeys: &amp;Vec&lt;data::Monkey&gt;,
+    human: isize,
+    part1: bool,
+) -&gt; Result&lt;(isize, isize, char, isize, bool)&gt; {
+    // A map from monkey names to their numbers for those monkeys that already know them.
+    let mut known = monkeys
+        .iter()
+        .filter_map(|el| {
+            if let data::Action::Shout(num) = el.action {
+                Some((el.name.clone(), num))
+            } else {
+                None
+            }
+        })
+        .collect::&lt;HashMap&lt;_, _&gt;&gt;();
+    if !part1 {
+        known.insert("humn".to_string(), human);
+    }
+
+    // We use this to determine which side of part 2's root equation is independent of the human
+    // value.
+    let mut known_str = monkeys
+        .iter()
+        .filter_map(|el| {
+            if let data::Action::Shout(num) = el.action {
+                Some((el.name.clone(), format!("{}", num)))
+            } else {
+                None
+            }
+        })
+        .collect::&lt;HashMap&lt;_, _&gt;&gt;();
+    known_str.insert("humn".to_string(), "humn".to_string());
+
+    // A map from monkey names to their ops for those monkeys that don't yet know their numbers.
+    let mut unknown = monkeys
+        .iter()
+        .filter_map(|el| {
+            if let data::Action::Op(mon1, mon2, op) = &amp;el.action {
+                if !known.contains_key(&amp;el.name) {
+                    Some((el.name.clone(), (mon1, mon2, op)))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect::&lt;HashMap&lt;_, _&gt;&gt;();
+
+    let root_name = "root".to_string();
+    let mut largest_remainder = 0;
+
+    while unknown.len() &gt; 0 {
+        let mut moved = vec![];
+        for (name, (mon1, mon2, &amp;op)) in unknown.iter() {
+            if let Some(val1) = known.get(mon1.as_str()) {
+                if let Some(val2) = known.get(mon2.as_str()) {
+                    if name == &amp;root_name {
+                        // We've reached the end.
+                        if !part1 {
+                            return Ok((*val1, *val2, op, largest_remainder, false));
+                        } else {
+                            let str1 = known_str.get(mon1.as_str()).expect("mon1 not found");
+                            let str2 = known_str.get(mon2.as_str()).expect("mon2 not found");
+
+                            let left_has_human = if !str1.contains("humn") &amp;&amp; str2.contains("humn")
+                            {
+                                false
+                            } else if str1.contains("humn") &amp;&amp; !str2.contains("humn") {
+                                true
+                            } else {
+                                return Err(Error::msg("neither side depends on the human"));
+                            };
+                            return Ok((*val1, *val2, op, largest_remainder, left_has_human));
+                        }
+                    } else {
+                        let result = do_op(op, val1, val2);
+                        if result.1.abs() &gt; largest_remainder {
+                            largest_remainder = result.1.abs();
+                        }
+                        known.insert(name.clone(), result.0);
+                        // Handle string representation.
+                        if part1 {
+                            let str1 = known_str.get(mon1.as_str()).expect("mon1 not found");
+                            let str2 = known_str.get(mon2.as_str()).expect("mon2 not found");
+                            known_str.insert(name.clone(), do_op_str(op, str1, str2));
+                        }
+                        // We will remove the ones in thos vector from the map of unknown values.
+                        moved.push(name.clone());
+                    }
+                }
+            }
+        }
+        for now_known in moved {
+            unknown.remove(&amp;now_known);
+        }
+    }
+
+    Err(Error::msg("we didn't find the root monkey"))
+}
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data. We use a custom struct here just so we can continue using
+    // our parser function.
+    let monkeys = io::parse_chunks_to_data::&lt;data::Monkey&gt;(
+        io::read_lines_from_file(file, 1)?,
+        "monkey",
+        None,
+        None,
+    )?;
+
+    let (left_root_val, right_root_val, root_op, largest_remainder, left_has_human) =
+        monkeys_again(&amp;monkeys, 0, true)?;
+
+    assert_eq!(largest_remainder, 0, "remainder is zero");
+    assert!(
+        left_has_human,
+        "right value is constant, swap left and right values if it isn't"
+    );
+    let (root_val, _) = do_op(root_op, &amp;left_root_val, &amp;right_root_val);
+
+    println!("root's value is {}", root_val);
+
+    let start = 0;
+    let end = std::isize::MAX;
+    let mut step = 1_000_000_000_000;
+
+    // This is hacky but it works. We assume a certain ordering for the left and right values at
+    // zero. If the ordering is not what we expect, we simply multiply both sides by -1, which
+    // "fixes" the ordering.
+    let (zero_left_root_val, zero_right_root_val, _, _, _) = monkeys_again(&amp;monkeys, 0, false)?;
+    let inv = if zero_left_root_val &gt; zero_right_root_val {
+        1
+    } else {
+        -1
+    };
+
+    // Part 2.
+    // We assume the number we need to shout is positive.
+    let mut check = start;
+    let mut found = false;
+    while !found &amp;&amp; end - step &gt; check {
+        let (left_root_val, right_root_val, _, largest_remainder, _) =
+            monkeys_again(&amp;monkeys, check, false)?;
+
+        // println!("{} == {}", left_root_val, right_root_val);
+        match (inv * left_root_val).cmp(&amp;(inv * right_root_val)) {
+            Ordering::Equal =&gt; {
+                if largest_remainder == 0 {
+                    found = true;
+                    println!("we need to shout {}\n", check);
+                } else {
+                    panic!("we found a non-zero remainder");
+                }
+            }
+            Ordering::Less =&gt; {
+                check -= step;
+                step /= 10;
+                if step == 0 {
+                    step = 1;
+                }
+            }
+            Ordering::Greater =&gt; {
+                check += step;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1)?;
+    solve(REAL)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::HashMap;
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub struct Monkey {
+    pub name: String,
+    pub action: Action,
+}
+
+#[derive(Debug)]
+pub enum Action {
+    Shout(isize),
+    Op(String, String, char),
+}
+
+impl FromStr for Monkey {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s.split_whitespace().collect::&lt;Vec&lt;_&gt;&gt;().as_slice() {
+            [name, num] =&gt; Ok(Self {
+                name: name.trim_end_matches(":").to_string(),
+                action: Action::Shout(num.parse()?),
+            }),
+            [name, mon1, op, mon2] =&gt; {
+                if op.len() == 1 {
+                    Ok(Self {
+                        name: name.trim_end_matches(":").to_string(),
+                        action: Action::Op(
+                            mon1.to_string(),
+                            mon2.to_string(),
+                            op.chars().next().ok_or(Error::msg("empty op detected"))?,
+                        ),
+                    })
+                } else {
+                    Err(Error::msg("multi-char op detected"))
+                }
+            }
+            _ =&gt; Err(Error::msg("cannot parse monkey")),
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_21"><a class="anchor" href="#_how_to_run_21"></a><a class="link" href="#_how_to_run_21">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
