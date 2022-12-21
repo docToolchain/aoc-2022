@@ -1,0 +1,45 @@
+== Day 21: _TODO_ ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/21[AoC|2022|21].
+
+Primary school math today...
+
+=== Input ===
+
+I parse the input into a map with monkey names as keys and `Yell` enums as values. A `Yell` is either a `Number` or an `Operation` referencing other monkey by name. The `Unknown` variant is required for star 2.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+This is a trivial recursive `get_result` function.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+For the second part, I update the map so that the value for key `"humn"` is `Unknown` and the operation for key `"root"` is `-`, so that I can solve the root value for `0`.
+
+I put the yells in a recursive tree enum `YellRec` reducing branches of the tree that do not contain `Unknown` on the fly with a `reduce` function.
+
+Then I solve for the `Unknown` inverting operations one by one. This works if the `Unknown` appears in exactly one of the right hand side or left hand side arguments, which is the case for my input (and I guess for every one else's input as well) and for the example data.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+I only created tests today, because my template contains them. I actually did not use them before submitting the result...
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
