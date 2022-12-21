@@ -302,6 +302,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_21_kotlin">Day 21: kotlin</a>
+<ul class="sectlevel3">
+<li><a href="#_day_21_monkey_math">Day 21: Monkey Math</a>
+<ul class="sectlevel4">
+<li><a href="#_first_star_16">First Star</a></li>
+<li><a href="#_second_star_16">Second Star</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -316,10 +326,10 @@
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">image:[][]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="image"><img src="https://avatars.githubusercontent.com/u/44948239?v=4" alt="44948239?v=4"></span></p></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>RJPlog</strong><br>
-<span class="icon"><i class="fa fa-github"></i></span>: [][RJPlog]</p>
+<span class="icon"><i class="fa fa-github"></i></span>: <a href="https://github.com/RJPlog">RJPlog</a></p>
 </div></div></td>
 </tr>
 </tbody>
@@ -2227,6 +2237,204 @@ All directions are multiplied and the highest score will be the result.</p>
 	println("*******************************")
 	println("Solution for part2")
 	println("   $solution2 is the exterior surface area of your scanned lava droplet")
+	println()</code></pre>
+</div>
+</div>
+<a id="day21" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_21_kotlin"><a class="anchor" href="#_day_21_kotlin"></a><a class="link" href="#_day_21_kotlin">Day 21: kotlin</a></h3>
+<div class="sect3">
+<h4 id="_day_21_monkey_math"><a class="anchor" href="#_day_21_monkey_math"></a><a class="link" href="#_day_21_monkey_math">Day 21: Monkey Math</a></h4>
+<div class="paragraph">
+<p>This solution is written in Kotlin.</p>
+</div>
+<div class="paragraph">
+<p>The original puzzle can be found at <a href="https://adventofcode.com/2022/day/21" class="bare">https://adventofcode.com/2022/day/21</a></p>
+</div>
+<div class="sect4">
+<h5 id="_first_star_16"><a class="anchor" href="#_first_star_16"></a><a class="link" href="#_first_star_16">First Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>Inside function <em>day2221_1</em> the puzzle input is read line by line, processed and stored into a map. After that I iterate through the map and replace all possible variables by its numbers and calculate already the formulars, if two values are in. After some iterations, the key root contains the value searched for.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun day2221_1(): String {
+
+	var monkeyMap = mutableMapOf&lt;String, String&gt;()
+	File("day2221_puzzle_input.txt").forEachLine {
+		var instruction = it.split(": ")
+		monkeyMap.put(instruction[0], instruction[1])
+	}
+
+	// replace all placeholders by numbers and calculat formulas until key root contains only a number
+	while (monkeyMap.getValue("root").contains(" ")) {
+		for ((key, value) in monkeyMap) {
+			if (value.contains(" ")) {
+				var instruction = value.split(" ")
+				if (instruction[0][0].isDigit() &amp;&amp; instruction[2][0].isDigit()) {
+					when (instruction[1]) {
+						"+" -&gt; monkeyMap.put(key, (instruction[0].toLong() + instruction[2].toLong()).toString())
+						"-" -&gt; monkeyMap.put(key, (instruction[0].toLong() - instruction[2].toLong()).toString())
+						"*" -&gt; monkeyMap.put(key, (instruction[0].toLong() * instruction[2].toLong()).toString())
+						"/" -&gt; monkeyMap.put(key, (instruction[0].toLong() / instruction[2].toLong()).toString())
+					}
+				} else if (!instruction[0][0].isDigit()) {
+					if (!monkeyMap.getValue(instruction[0]).contains(" ")) {
+						monkeyMap.put(
+							key,
+							monkeyMap.getValue(instruction[0]) + " " + instruction[1] + " " + instruction[2]
+						)
+					}
+				} else if (!instruction[2][0].isDigit()) {
+					if (!monkeyMap.getValue(instruction[2]).contains(" ")) {
+						monkeyMap.put(
+							key,
+							instruction[0] + " " + instruction[1] + " " + monkeyMap.getValue(instruction[2])
+						)
+					}
+				}
+			}
+		}
+	}
+	return monkeyMap.getValue("root")
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_second_star_16"><a class="anchor" href="#_second_star_16"></a><a class="link" href="#_second_star_16">Second Star</a></h5>
+<div class="paragraph">
+<p>How does it work:<br></p>
+</div>
+<div class="paragraph">
+<p>Inside function <em>day2221_2</em> oncde more the puzzle input is read line by line, processed and stored into a map. If key is root, then the instruction is changed to <em>=</em>, and if key is <em>humn</em> the instruction is changed to <em>humn</em>. After that I iterate through the map and replace all possible variables by its numbers and calculate already the formulars, if two values are in. Here I did not have the time to generate a stop critieria, so I simply took 100 iterations to make sure every value is resolved. This for sure could have done better. After that, I iterate step by step through the formula at root, resolve it to have only the variable on one side and then replace it by the formula of this variable, until only <em>humn</em> remains, then on the other side of the equation you find the value which is searched for.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">fun day2221_2(): String {
+
+	var monkeyMap = mutableMapOf&lt;String, String&gt;()
+
+	File("day2221_puzzle_input.txt").forEachLine {
+		var instruction = it.split(": ")
+		if (instruction[0] == "root") {
+			var operation = instruction[1].split(" ")
+			monkeyMap.put(instruction[0], operation[0] + " = " + operation[2])
+		} else if (instruction[0] == "humn") {
+			monkeyMap.put(instruction[0], "humn")
+		} else {
+			monkeyMap.put(instruction[0], instruction[1])
+		}
+
+	}
+
+	// try do resolve as much as possible of the formulars analog to part 1
+	for (i in 0..100) {  // for shure this is not a good solution, but today I had not time to do some additional work in AoC :-)
+		for ((key, value) in monkeyMap) {
+			if (value.contains(" ")) {
+				var instruction = value.split(" ")
+				if (instruction[0][0].isDigit() &amp;&amp; instruction[2][0].isDigit()) {
+					when (instruction[1]) {
+						"+" -&gt; monkeyMap.put(key, (instruction[0].toLong() + instruction[2].toLong()).toString())
+						"-" -&gt; monkeyMap.put(key, (instruction[0].toLong() - instruction[2].toLong()).toString())
+						"*" -&gt; monkeyMap.put(key, (instruction[0].toLong() * instruction[2].toLong()).toString())
+						"/" -&gt; monkeyMap.put(key, (instruction[0].toLong() / instruction[2].toLong()).toString())
+					}
+				} else {
+					if (!instruction[0][0].isDigit()) {
+						if (!monkeyMap.getValue(instruction[0]).contains(" ")) {
+							monkeyMap.put(
+								key,
+								monkeyMap.getValue(instruction[0]) + " " + instruction[1] + " " + instruction[2]
+							)
+						}
+					}
+					if (!instruction[2][0].isDigit()) {
+						if (!monkeyMap.getValue(instruction[2]).contains(" ")) {
+							monkeyMap.put(
+								key,
+								instruction[0] + " " + instruction[1] + " " + monkeyMap.getValue(instruction[2])
+							)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// calculate step by step the remaining formulas until only open placeholder is "humn"
+	while (!monkeyMap.getValue("root").contains("humn")) {
+		var instruction = monkeyMap.getValue("root").split(" = ")
+		if (!instruction[0][0].isDigit()) {
+			var operation = monkeyMap.getValue(instruction[0]).split(" ")
+			if (!operation[0][0].isDigit()) {
+				when (operation[1]) {
+					"+" -&gt; monkeyMap.put(
+						"root",
+						operation[0] + " = " + (instruction[1].toLong() - operation[2].toLong()).toString()
+					)
+					"-" -&gt; monkeyMap.put(
+						"root",
+						operation[0] + " = " + (instruction[1].toLong() + operation[2].toLong()).toString()
+					)
+					"*" -&gt; monkeyMap.put(
+						"root",
+						operation[0] + " = " + (instruction[1].toLong() / operation[2].toLong()).toString()
+					)
+					"/" -&gt; monkeyMap.put(
+						"root",
+						operation[0] + " = " + (instruction[1].toLong() * operation[2].toLong()).toString()
+					)
+				}
+			} else if (!operation[2][0].isDigit()) {
+				when (operation[1]) {
+					"+" -&gt; monkeyMap.put(
+						"root",
+						operation[2] + " = " + (instruction[1].toLong() - operation[0].toLong()).toString()
+					)
+					"-" -&gt; monkeyMap.put(
+						"root",
+						operation[2] + " = " + (operation[0].toLong() - instruction[1].toLong()).toString()
+					)
+					"*" -&gt; monkeyMap.put(
+						"root",
+						operation[2] + " = " + (instruction[1].toLong() / operation[0].toLong()).toString()
+					)
+					"/" -&gt; monkeyMap.put(
+						"root",
+						operation[2] + " = " + (operation[0].toLong() / instruction[1].toLong()).toString()
+					)
+				}
+			}
+			monkeyMap.remove(instruction[0])
+		}  // else if (!instuction[2][0].isDigit())  --&gt; not need for my puzzle input, would have been copy and apdapt of the upper part
+	}
+	return monkeyMap.getValue("root")
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>At the end, both solutions are printed out.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-kotlin" data-lang="kotlin">// print solution for part 1
+	println("***************************")
+	println("--- Day 21: Monkey Math ---")
+	println("***************************")
+	println("Solution for part1")
+	println("   $solution1 will the monkey named root yell")
+	println()
+// print solution for part 2
+	println("***************************")
+	println("Solution for part2")
+	println("   $solution2 do you yell to pass root's equality test")
 	println()</code></pre>
 </div>
 </div>
