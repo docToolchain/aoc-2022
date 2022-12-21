@@ -117,15 +117,15 @@ pub fn reduce<'a>(monkeys: &HashMap<&str, Yell<'a>>, monkey: &str) -> YellRec<'a
 
 pub fn solve(yell: &YellRec, tar: isize) -> isize {
     match yell {
-        YellRec::Operation(b) => match (&b.0, b.1, &b.2) {
-            (lhs, op, YellRec::Number(rhs)) => match op {
+        YellRec::Operation(b) => match b.as_ref() {
+            (lhs, op, YellRec::Number(rhs)) => match *op {
                 "+" => solve(lhs, tar - *rhs), // lhs + rhs = tar
                 "-" => solve(lhs, tar + *rhs), // lhs - rhs = tar
                 "*" => solve(lhs, tar / *rhs), // lhs * rhs = tar
                 "/" => solve(lhs, tar * *rhs), // lhs / rhs = tar
                 _ => panic!("Unknown operation: {op}"),
             },
-            (YellRec::Number(lhs), op, rhs) => match op {
+            (YellRec::Number(lhs), op, rhs) => match *op {
                 "+" => solve(rhs, tar - *lhs), // lhs + rhs = tar
                 "-" => solve(rhs, *lhs - tar), // lhs - rhs = tar
                 "*" => solve(rhs, tar / *lhs), // lhs * rhs = tar
