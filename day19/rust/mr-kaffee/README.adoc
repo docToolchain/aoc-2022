@@ -9,7 +9,7 @@ After I had a working solution, I looked for help in the https://www.reddit.com/
 There are three main elements that lead to acceptable solution time:
 
 1. Do not simulate every minute but rather decide which robot to build next and simulate as many minutes as required to build that robot at once 
-2. Understand that only one robot can be made per minute, which implies that there is no point in having more Ore, Clay or Obsidian collecting robots that required to produce any other robot
+2. Understand that only one robot can be made per minute, which implies that there is no point in having more Ore, Clay or Obsidian collecting robots than the maximum Ore, Clay or Obsidian required to produce a single robot of any kind
 3. Do a depth first search to have terminal states quickly and discard all branches for which an upper bound can be calculated which is below the current optimum (this is kind of an A* idea)
 
 === Input ===

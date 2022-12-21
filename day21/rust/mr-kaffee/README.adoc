@@ -1,0 +1,31 @@
+== Day 21: _TODO_ ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/21[AoC|2022|21].
+
+=== Input ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----

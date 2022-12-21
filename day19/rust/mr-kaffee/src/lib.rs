@@ -113,9 +113,9 @@ pub fn max_geodes(blueprint: &[usize], steps: usize) -> usize {
                         Some((blueprint[m + 3 * r] - materials[m] + robots[m] - 1) / robots[m])
                     }
                 })
-                .fold(Some(0), |s_max, s| match s {
-                    Some(s) => s_max.map(|s_max| s_max.max(s)),
-                    None => None,
+                .fold(Some(0), |s_max, s| match (s_max, s) {
+                    (Some(s_max), Some(s)) => Some(s_max.max(s)),
+                    _ => None,
                 }) else {
                     // can't build robot
                     continue
