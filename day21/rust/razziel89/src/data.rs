@@ -1,5 +1,6 @@
 // tag::data[]
 use anyhow::{Error, Result};
+use std::collections::HashMap;
 use std::str::FromStr;
 
 #[derive(Debug)]
