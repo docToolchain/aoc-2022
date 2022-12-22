@@ -1,0 +1,22 @@
+== Day 21
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+Implemented something similar to a binary search. The main idea was to increase the
+steps in each iteration and change directions when the sign of the difference between the result and
+the expected value changes.
+
+
+=== What did I learn
+
+=== How to run
+
+Run using:
+`$ python day_21.py --help`
