@@ -40,8 +40,50 @@ pub struct Neighbours {
 
 #[derive(Debug)]
 pub struct Actor {
-    pos: Point,
-    dir: Direction,
+    pub pos: Point,
+    pub dir: Direction,
+}
+
+impl Actor {
+    pub fn peek(&self, neigh: &Neighbours) -> Point {
+        match self.dir {
+            Direction::Left => neigh.left.clone(),
+            Direction::Right => neigh.right.clone(),
+            Direction::Up => neigh.up.clone(),
+            Direction::Down => neigh.down.clone(),
+        }
+    }
+
+    pub fn mv(&mut self, neigh: &Neighbours) {
+        self.pos = self.peek(neigh);
+    }
+
+    pub fn right(&mut self) {
+        self.dir = match self.dir {
+            Direction::Left => Direction::Up,
+            Direction::Up => Direction::Right,
+            Direction::Right => Direction::Down,
+            Direction::Down => Direction::Left,
+        };
+    }
+
+    pub fn left(&mut self) {
+        self.dir = match self.dir {
+            Direction::Left => Direction::Down,
+            Direction::Up => Direction::Left,
+            Direction::Right => Direction::Up,
+            Direction::Down => Direction::Right,
+        };
+    }
+
+    pub fn num(&self) -> isize {
+        match self.dir {
+            Direction::Left => 2,
+            Direction::Right => 0,
+            Direction::Up => 3,
+            Direction::Down => 1,
+        }
+    }
 }
 
 pub const UP: Point = Point { x: 0, y: -1 };

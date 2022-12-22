@@ -34,7 +34,7 @@ fn find(
                 .find_map(|y| {
                     let pos = data::Point::new(x, y);
                     if let Some(tile) = occ_map.get(&pos) {
-                        if tile == &data::Tile::Free {
+                        if tile != &data::Tile::None {
                             Some((pos, tile.clone()))
                         } else {
                             None
@@ -49,7 +49,7 @@ fn find(
                 .find_map(|y| {
                     let pos = data::Point::new(x, y);
                     if let Some(tile) = occ_map.get(&pos) {
-                        if tile == &data::Tile::Free {
+                        if tile != &data::Tile::None {
                             Some((pos, tile.clone()))
                         } else {
                             None
@@ -73,7 +73,7 @@ fn find(
                 .find_map(|x| {
                     let pos = data::Point::new(x, y);
                     if let Some(tile) = occ_map.get(&pos) {
-                        if tile == &data::Tile::Free {
+                        if tile != &data::Tile::None {
                             Some((pos, tile.clone()))
                         } else {
                             None
@@ -87,7 +87,7 @@ fn find(
                 .find_map(|x| {
                     let pos = data::Point::new(x, y);
                     if let Some(tile) = occ_map.get(&pos) {
-                        if tile == &data::Tile::Free {
+                        if tile != &data::Tile::None {
                             Some((pos, tile.clone()))
                         } else {
                             None
@@ -192,6 +192,37 @@ fn make_neigh_map(
         .collect::<HashMap<data::Point, data::Neighbours>>()
 }
 
+fn render(occ_map: &HashMap<data::Point, data::Tile>, max: &data::Point, actor: &data::Actor) {
+    for y in 0..=max.y {
+        for x in 0..=max.x {
+            let pos = data::Point::new(x, y);
+            let char = if pos == actor.pos {
+                match actor.dir {
+                    data::Direction::Left => '<',
+                    data::Direction::Right => '>',
+                    data::Direction::Up => '^',
+                    data::Direction::Down => 'v',
+                }
+            } else {
+                match occ_map.get(&pos) {
+                    None => ' ',
+                    Some(data::Tile::None) => ' ',
+                    Some(data::Tile::Free) => '.',
+                    Some(data::Tile::Wall) => '#',
+                }
+            };
+            // if x == 0 && y == 4 {
+            //     print!("X");
+            // } else {
+            print!("{}", char);
+            // }
+        }
+        println!("");
+    }
+    println!("{:?}\n", actor);
+    std::io::stdin().lines().next();
+}
+
 fn solve(file: &str) -> Result<()> {
     println!("PROCESSING {}", file);
 
@@ -218,33 +249,57 @@ fn solve(file: &str) -> Result<()> {
 
     // println!("{:?}", occupation_map);
     // println!("{:?}", actions);
-    println!("{:?}", start);
-    println!("{:?}", neigh_map);
-    println!("{:?}", neigh_map.get(&data::Point::new(0, 4)));
+    // println!("{:?}", start);
+    // println!("{:?}", neigh_map);
+    // println!("{:?}", neigh_map.get(&data::Point::new(3, 7)));
 
-    for y in 0..=max.y {
-        for x in 0..=max.x {
-            let char = match occ_map.get(&data::Point::new(x, y)) {
-                None => ' ',
-                Some(data::Tile::None) => ' ',
-                Some(data::Tile::Free) => '.',
-                Some(data::Tile::Wall) => '#',
-            };
-            // if x == 0 && y == 4 {
-            //     print!("X");
-            // } else {
-            print!("{}", char);
-            // }
+    // Play the game.
+    let mut actor = data::Actor {
+        pos: start,
+        dir: data::Direction::Right,
+    };
+    // render(&occ_map, &max, &actor);
+    for action in actions {
+        match action {
+            data::Action::Left => {
+                actor.left();
+                // render(&occ_map, &max, &actor);
+            }
+            data::Action::Right => {
+                actor.right();
+                // render(&occ_map, &max, &actor);
+            }
+            data::Action::Move(val) => {
+                for _ in 0..val {
+                    let neigh = neigh_map
+                        .get(&actor.pos)
+                        .expect("we should not move off the board");
+                    let next_tile = occ_map
+                        .get(&actor.peek(neigh))
+                        .expect("all neighbours are on the map");
+                    if next_tile == &data::Tile::Free {
+                        actor.mv(neigh);
+                        // render(&occ_map, &max, &actor);
+                    } else {
+                        break;
+                    }
+                }
+            }
         }
-        println!("");
     }
+    // render(&occ_map, &max, &actor);
+    println!("{:?}", actor);
+    println!(
+        "{}",
+        1000 * (actor.pos.y + 1) + 4 * (actor.pos.x + 1) + actor.num()
+    );
 
     Ok(())
 }
 
 fn main() -> Result<()> {
     solve(SAMPLE1)?;
-    // solve(REAL)?;
+    solve(REAL)?;
 
     Ok(())
 }
