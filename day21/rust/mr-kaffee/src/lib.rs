@@ -17,7 +17,7 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData<'static>, isize, isize, isize, isi
         star2: Some(Star {
             name: "Star 2",
             f: &star_2,
-            exp: Some(3_375_719_472_770),
+            exp: Some(3375719472776), // Some(3_375_719_472_770),
         }),
     }
 }
@@ -117,15 +117,15 @@ pub fn reduce<'a>(monkeys: &HashMap<&str, Yell<'a>>, monkey: &str) -> YellRec<'a
 
 pub fn solve(yell: &YellRec, tar: isize) -> isize {
     match yell {
-        YellRec::Operation(b) => match (&b.0, b.1, &b.2) {
-            (lhs, op, YellRec::Number(rhs)) => match op {
+        YellRec::Operation(b) => match b.as_ref() {
+            (lhs, op, YellRec::Number(rhs)) => match *op {
                 "+" => solve(lhs, tar - *rhs), // lhs + rhs = tar
                 "-" => solve(lhs, tar + *rhs), // lhs - rhs = tar
                 "*" => solve(lhs, tar / *rhs), // lhs * rhs = tar
                 "/" => solve(lhs, tar * *rhs), // lhs / rhs = tar
                 _ => panic!("Unknown operation: {op}"),
             },
-            (YellRec::Number(lhs), op, rhs) => match op {
+            (YellRec::Number(lhs), op, rhs) => match *op {
                 "+" => solve(rhs, tar - *lhs), // lhs + rhs = tar
                 "-" => solve(rhs, *lhs - tar), // lhs - rhs = tar
                 "*" => solve(rhs, tar / *lhs), // lhs * rhs = tar
@@ -149,6 +149,54 @@ pub fn star_2(data: &PuzzleData) -> isize {
     solve(&reduce(&monkeys, "root"), 0)
 }
 // end::star_2[]
+
+/// alternative solution based on bisection
+///
+/// This solution produces a different but still valid solution compared to [`star_2`].
+pub fn star_2_bisection(data: &PuzzleData) -> isize {
+    let mut monkeys = data.monkeys.clone();
+
+    let Some(Yell::Operation(lhs, _, rhs)) = monkeys.get("root") else {panic!()};
+    monkeys.insert("root", Yell::Operation(lhs, "-", rhs));
+
+    let mut get_for_value = |value| {
+        monkeys.insert("humn", Yell::Number(value));
+        get_result(&monkeys, "root")
+    };
+
+    let mut a = 1;
+    let mut v_a = get_for_value(a);
+    if v_a == 0 {
+        return a;
+    }
+
+    let mut b = 1;
+    let mut v_b = v_a;
+    while v_a.signum() == v_b.signum() {
+        b <<= 1;
+        v_b = get_for_value(b);
+        if v_b == 0 {
+            return b;
+        }
+    }
+
+    while b > a {
+        let m = (a + b) / 2;
+        let v = get_for_value(m);
+        if v == 0 {
+            return m;
+        }
+
+        if v.signum() != v_a.signum() {
+            b = m;
+        } else {
+            a = m;
+            v_a = v;
+        }
+    }
+
+    panic!();
+}
 
 // tag::tests[]
 #[cfg(test)]
@@ -188,6 +236,27 @@ hmdt: 32
     pub fn test_star_2() {
         let data = PuzzleData::from(CONTENT);
         assert_eq!(301, star_2(&data));
+    }
+
+    #[test]
+    pub fn test_solution_range() {
+        let data = PuzzleData::from(include_str!("../input.txt"));
+
+        let sol_a = star_2(&data);
+        let sol_b = star_2_bisection(&data);
+
+        let sol_rg = sol_a.min(sol_b)..=sol_a.max(sol_b);
+        println!("Solution range: {sol_rg:?}");
+
+
+        let mut monkeys = data.monkeys.clone();
+        let Some(Yell::Operation(lhs, _, rhs)) = monkeys.get("root") else {panic!()};
+        monkeys.insert("root", Yell::Operation(lhs, "-", rhs));
+
+        for sol in sol_rg {
+            monkeys.insert("humn", Yell::Number(sol));
+            assert_eq!(0, get_result(&monkeys, "root"));
+        }
     }
 }
 // end::tests[]

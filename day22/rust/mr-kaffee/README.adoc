@@ -1,0 +1,45 @@
+== Day 22: Monkey Map ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/22[AoC|2022|22].
+
+Geometry! Cube layouts ... what looked simple turned out to be very tedious
+
+=== Input ===
+
+Nothing special here today. I decided to make the lines of the grid equal length (padded with spaced) for easier processing.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+I used an iterator to move forward. Looks much nicer that for loops ;)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+I did not see the cubes come when working on part 1. 
+
+This turned out to be much more complicated than what I first thought.
+
+There is quite a bit of repetition in my code which multiplies the opportunities for mistakes. I used a lot of the opportunities and made a lot of them. And I had no efficient way for debugging. Which branch of the code is actually used, depends a lot on the cube layout. Since this is different for the example and the real data, the example was not good enough to fix all the issues.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+Tests were very necessary today to come up with a solution. I created several additional simple test cases.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
