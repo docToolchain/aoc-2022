@@ -17,7 +17,7 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData, usize, usize, usize, usize> {
         star2: Some(Star {
             name: "Star 2",
             f: &star_2,
-            exp: None,
+            exp: Some(179_091),
         }),
     }
 }
@@ -196,8 +196,8 @@ pub fn sol_2(data: &PuzzleData, f_width: usize) -> usize {
 
     // println!("{face_grid:?}");
     // println!("{faces:?}");
-    let mut path: HashMap<usize, usize> = HashMap::new();
-    path.insert(pos, d);
+    // let mut path: HashMap<usize, usize> = HashMap::new();
+    // path.insert(pos, d);
 
     for step in &data.steps {
         // println!("Processing {step:?} ...");
@@ -240,7 +240,7 @@ pub fn sol_2(data: &PuzzleData, f_width: usize) -> usize {
                             if y_dir_ == y_dir && x_dir_ == (n_dir + 3) % 6 {
                                 (0, y, HEAD_RIGHT)
                             } else if y_dir_ == (y_dir + 3) % 6 && x_dir_ == n_dir {
-                                (f_width - 1, f_width - 1 - y_dir, HEAD_LEFT)
+                                (f_width - 1, f_width - 1 - y, HEAD_LEFT)
                             } else if x_dir_ == y_dir && y_dir_ == n_dir {
                                 (y, f_width - 1, HEAD_UP)
                             } else if x_dir_ == (y_dir + 3) % 6 && y_dir_ == (n_dir + 3) % 6 {
@@ -311,7 +311,7 @@ pub fn sol_2(data: &PuzzleData, f_width: usize) -> usize {
                     x_dir = x_dir_;
                     y_dir = y_dir_;
 
-                    path.insert(x + col * f_width + (y + row * f_width) * data.width, d);
+                    // path.insert(x + col * f_width + (y + row * f_width) * data.width, d);
                 }
             }
             Step::Left => d = (d + 3) % 4,
@@ -322,39 +322,39 @@ pub fn sol_2(data: &PuzzleData, f_width: usize) -> usize {
         //     x + col * f_width,
         //     y + row * f_width
         // );
-        path.insert(x + col * f_width + (y + row * f_width) * data.width, d);
+        // path.insert(x + col * f_width + (y + row * f_width) * data.width, d);
     }
 
-    for y in 0..data.grid.len() / data.width {
-        for x in 0..data.width {
-            let p = x + y * data.width;
-            match (path.get(&p), data.grid[p]) {
-                (Some(0), b'.') => {
-                    print!(">");
-                }
-                (Some(1), b'.') => {
-                    print!("v");
-                }
-                (Some(2), b'.') => {
-                    print!("<");
-                }
-                (Some(3), b'.') => {
-                    print!("^");
-                }
-                (None, b'#') => {
-                    print!("#");
-                }
-                (None, b'.') => {
-                    print!(".");
-                }
-                (None, b' ') => {
-                    print!(" ");
-                }
-                (a, b) => panic!("Unexpected {a:?}, {}", b as char),
-            }
-        }
-        println!();
-    }
+    // for y in 0..data.grid.len() / data.width {
+    //     for x in 0..data.width {
+    //         let p = x + y * data.width;
+    //         match (path.get(&p), data.grid[p]) {
+    //             (Some(0), b'.') => {
+    //                 print!(">");
+    //             }
+    //             (Some(1), b'.') => {
+    //                 print!("v");
+    //             }
+    //             (Some(2), b'.') => {
+    //                 print!("<");
+    //             }
+    //             (Some(3), b'.') => {
+    //                 print!("^");
+    //             }
+    //             (None, b'#') => {
+    //                 print!("#");
+    //             }
+    //             (None, b'.') => {
+    //                 print!(".");
+    //             }
+    //             (None, b' ') => {
+    //                 print!(" ");
+    //             }
+    //             (a, b) => panic!("Unexpected {a:?}, {}", b as char),
+    //         }
+    //     }
+    //     println!();
+    // }
     
     // println!(
     //     "{col}-{x} -> {}, {row}-{y} -> {}, {d}",
@@ -411,16 +411,7 @@ mod tests {
         assert_eq!(5_031, sol_2(&data, 4));
 
         let data = PuzzleData::from(include_str!("../input_1.txt"));
-        assert_eq!(1_033, sol_2(&data, 5));
-
-        let data = PuzzleData::from(include_str!("../input_2.txt"));
-        assert_eq!(1_033, sol_2(&data, 5));
-
-        let data = PuzzleData::from(include_str!("../input_3.txt"));
-        assert_eq!(12_013, sol_2(&data, 5));
-
-        let data = PuzzleData::from(include_str!("../input_4.txt"));
-        assert_eq!(12_013, sol_2(&data, 50));
+        assert_eq!(3_028, sol_2(&data, 5));
     }
 }
 // end::tests[]
