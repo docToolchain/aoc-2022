@@ -9,3 +9,7 @@ edition = "2021"
 [dependencies]
 
 mr-kaffee-aoc = { path = "./aoc/" }
+
+[features]
+
+print-path = []
