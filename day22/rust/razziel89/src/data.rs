@@ -2,7 +2,7 @@
 use anyhow::{Error, Result};
 use std::str::FromStr;
 
-#[derive(Debug, Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct Point {
     pub x: isize,
     pub y: isize,
@@ -23,11 +23,19 @@ pub enum Direction {
     Right,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Tile {
     Free,
     Wall,
     None,
+}
+
+#[derive(Debug)]
+pub struct Neighbours {
+    pub up: Point,
+    pub down: Point,
+    pub left: Point,
+    pub right: Point,
 }
 
 #[derive(Debug)]
@@ -36,10 +44,10 @@ pub struct Actor {
     dir: Direction,
 }
 
-const UP: Point = Point { x: 0, y: 1 };
-const DOWN: Point = Point { x: 0, y: -1 };
-const LEFT: Point = Point { x: -1, y: 0 };
-const RIGHT: Point = Point { x: 1, y: 0 };
+pub const UP: Point = Point { x: 0, y: -1 };
+pub const DOWN: Point = Point { x: 0, y: 1 };
+pub const LEFT: Point = Point { x: -1, y: 0 };
+pub const RIGHT: Point = Point { x: 1, y: 0 };
 
 impl Point {
     pub fn new(x: isize, y: isize) -> Self {

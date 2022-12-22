@@ -67,12 +67,14 @@ pub fn parse_chars_to_data<T>(
     type_name: &str,
     filter: Option<Predicate>,
     transform: Option<Transform>,
-) -> Result<HashMap<data::Point, T>>
+) -> Result<(HashMap<data::Point, T>, isize, isize)>
 where
     T: FromStr<Err = Error>,
 {
     let mut errs: Vec<String> = vec![];
     let mut data = HashMap::<data::Point, T>::new();
+    let mut max_x = 0;
+    let mut max_y = 0;
 
     let filter_fn = filter.unwrap_or(|_| true);
     let transformer = transform.unwrap_or(|el| el);
@@ -94,6 +96,12 @@ where
                     // We should never exceed the data range of i64 here.
                     let col: isize = col_idx.try_into()?;
                     let lin: isize = line_idx.try_into()?;
+                    if col > max_x {
+                        max_x = col;
+                    }
+                    if lin > max_y {
+                        max_y = lin;
+                    }
                     data.insert(data::Point::new(col, lin), val);
                 }
                 Err(err) => {
@@ -104,7 +112,7 @@ where
     }
 
     if errs.len() == 0 {
-        Ok(data)
+        Ok((data, max_x, max_y))
     } else {
         // Concatenate errors into one giant error message in case there were any in the file.
         Err(Error::msg(errs.join("\n------------------\n")))
