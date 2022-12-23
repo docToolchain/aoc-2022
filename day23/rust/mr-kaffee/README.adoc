@@ -4,26 +4,28 @@ https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/23[AoC
 
 Elves extend in a space, open in all directions. 
 
-So the usual question: shall I use hash sets / hash maps or do a probably more efficient grid based solution?
+So the usual question: shall I use hash sets / hash maps or a more efficient grid based solution?
 
-I decided to go with sets and maps and I am not happy with that choice. Started doing a grid based solution ... maybe to be continued later.
+I decided to go with sets and maps first and I was not happy with that choice. It solved part 1 in about 20ms and part 2 in a bit more than 1s. 
+
+In a second attempt, I implemented a grid based solution which solves part 1 in less than 2ms and part 2 in about 80ms. There is certainly potential to do even better...
 
 === Input ===
 
-For now, I parse the input in a hash set.
+The input is directly parsed into a grid.
+
+The most important part of the implementation is the `increase_to_gap` function which is used to grow the grid to make space for the elves moving.
 
 [source,rust,numbered]
 ----
-include::src/lib.rs[tags=input]
+include::src/lib.rs[tags=grid]
 ----
 
 === Star 1 ===
 
-The interesting part is in the `simulate_round` and `calc_proposal` functions. 
+The interesting part is in the `simulate_round` function. 
 
-In each round, I do two passes: calculate proposals and perform the actual update. In the first pass, I create a map counting proposals per coordinate. In the second part, I create a set with the actual new coordinates.
-
-There is certainly space for improvement.
+In each round, I first iterate over all elves and identify potential targets which are stored in the `targets` vec. Then I iterate over the targets and move the elves if applicable.
 
 [source,rust,numbered]
 ----
@@ -33,8 +35,6 @@ include::src/lib.rs[tags=star_1]
 === Star 2 ===
 
 Just simulate rounds until nothing more happens.
-
-I take "there are no proposals" as a condition for "nothing more happens". This should be ok since there will not be a situation where the elves are stuck blocking each other - they will always continue to extend towards free space.
 
 [source,rust,numbered]
 ----
@@ -49,5 +49,3 @@ Kind of visual tests today for the simple example. Just compared my output to th
 ----
 include::src/lib.rs[tags=tests]
 ----
-
-I think I used the `move` keyword for the first time. Not quite sure why I need it in the `PuzzleData::from` function, since `usize` has `Copy` semantics...
