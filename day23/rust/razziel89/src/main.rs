@@ -61,12 +61,9 @@ fn game_of_elves(
     // Second half. Only update to those positions that have been suggested exactly once.
     for (elf, prop) in props {
         if prop_count.get(&prop).unwrap() == &1 {
-            // println!("moving {:?} to {:?}", elf, prop);
             elves.remove(&elf);
             elves.insert(prop);
             was_moved = true;
-            // } else {
-            //     println!("not moving {:?} to {:?}", elf, prop);
         }
     }
 
@@ -101,8 +98,6 @@ fn solve(file: &str) -> Result<()> {
         proposals.next().expect("inf it");
     }
 
-    // println!("{:?}", elves);
-
     let min_x = elves.iter().map(|el| el.x).min().expect("no min x");
     let max_x = elves.iter().map(|el| el.x).max().expect("no max x");
     let min_y = elves.iter().map(|el| el.y).min().expect("no min y");
@@ -117,14 +112,14 @@ fn solve(file: &str) -> Result<()> {
         }
     }
 
-    println!("count is {}", count);
+    println!("free field count is {}", count);
 
     let mut round_count = 10;
     while game_of_elves(&mut elves, &mut proposals) {
         proposals.next().expect("inf it");
         round_count += 1;
     }
-    println!("round count is {}", round_count + 1);
+    println!("final round count is {}", round_count + 1);
 
     Ok(())
 }
