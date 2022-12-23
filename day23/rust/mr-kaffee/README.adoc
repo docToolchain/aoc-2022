@@ -1,0 +1,53 @@
+== Day 23: Unstable Diffusion ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/23[AoC|2022|23].
+
+Elves extend in a space, open in all directions. 
+
+So the usual question: shall I use hash sets / hash maps or do a probably more efficient grid based solution?
+
+I decided to go with sets and maps and I am not happy with that choice. Started doing a grid based solution ... maybe to be continued later.
+
+=== Input ===
+
+For now, I parse the input in a hash set.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+The interesting part is in the `simulate_round` and `calc_proposal` functions. 
+
+In each round, I do two passes: calculate proposals and perform the actual update. In the first pass, I create a map counting proposals per coordinate. In the second part, I create a set with the actual new coordinates.
+
+There is certainly space for improvement.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Just simulate rounds until nothing more happens.
+
+I take "there are no proposals" as a condition for "nothing more happens". This should be ok since there will not be a situation where the elves are stuck blocking each other - they will always continue to extend towards free space.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+Kind of visual tests today for the simple example. Just compared my output to the one on the website manually.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
+
+I think I used the `move` keyword for the first time. Not quite sure why I need it in the `PuzzleData::from` function, since `usize` has `Copy` semantics...
