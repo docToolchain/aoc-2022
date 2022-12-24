@@ -11,41 +11,37 @@ import (
 )
 
 func main() {
-	a()
+	b()
 }
 
-type Compartment []rune
+type Group [3]Rucksack
 
-type Rucksack struct {
-	Left  Compartment
-	Right Compartment
-}
+type Rucksack []rune
 
-func a() {
+func b() {
 	puzzleInput, _ := ioutil.ReadFile("./input.txt")
-	rucksacks := parseInput(string(puzzleInput))
+	groups := parseInput(string(puzzleInput))
 	sum := 0
-	for _, rucksack := range rucksacks {
-		duplicate, error := findDuplicateItem(rucksack)
+	for _, group := range groups {
+		badge, error := findBadge(group)
 		if error != nil {
 			fmt.Println(error)
 		} else {
-			sum += calculatePriority(duplicate)
+			sum += calculatePriority(badge)
 		}
 	}
 	fmt.Println(sum)
 }
 
-func findDuplicateItem(rucksack Rucksack) (rune, error) {
-	for _, item := range rucksack.Left {
-		if funk.Contains(rucksack.Right, item) {
+func findBadge(group Group) (rune, error) {
+	for _, item := range group[0] {
+		if funk.Contains(group[1], item) && funk.Contains(group[2], item) {
 			return item, nil
 		}
 	}
-
-	return 0, errors.New("No dupliacte item found in Rucksack " + fmt.Sprint(rucksack))
-
+	return '0', errors.New("Found no badge in group " + fmt.Sprint(group))
 }
+
 func calculatePriority(item rune) int {
 	if item >= 'a' && item <= 'z' {
 		return int(item - 'a' + 1)
@@ -55,22 +51,22 @@ func calculatePriority(item rune) int {
 
 }
 
-func parseInput(input string) []Rucksack {
-	rucksacks := []Rucksack{}
+func parseInput(input string) []Group {
+	groups := []Group{}
 	scanner := bufio.NewScanner(strings.NewReader(input))
+	lineNumber := 0
+	var nextGroup Group
 	for scanner.Scan() {
 		line := scanner.Text()
-		numberOfItems := len(line)
-		rucksack := Rucksack{
-			parseCompartment(line[0 : numberOfItems/2]),
-			parseCompartment(line[numberOfItems/2 : numberOfItems]),
+		nextGroup[lineNumber%3] = parseRucksack(line)
+		lineNumber++
+		if lineNumber%3 == 0 {
+			groups = append(groups, nextGroup)
 		}
-		rucksacks = append(rucksacks, rucksack)
-
 	}
-	return rucksacks
+	return groups
 }
 
-func parseCompartment(input string) Compartment {
-	return Compartment([]rune(input))
+func parseRucksack(input string) Rucksack {
+	return []rune(input)
 }
