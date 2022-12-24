@@ -446,6 +446,18 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_24_rust">Day 24: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_24_blizzard_basin">Day 24: Blizzard Basin</a>
+<ul class="sectlevel4">
+<li><a href="#_input_24">Input</a></li>
+<li><a href="#_star_1_22">Star 1</a></li>
+<li><a href="#_star_2_22">Star 2</a></li>
+<li><a href="#_tests_25">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -7229,6 +7241,383 @@ mod tests {
 ..##.
 .....
 "#;
+}</code></pre>
+</div>
+</div>
+<a id="day24" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_24_rust"><a class="anchor" href="#_day_24_rust"></a><a class="link" href="#_day_24_rust">Day 24: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_24_blizzard_basin"><a class="anchor" href="#_day_24_blizzard_basin"></a><a class="link" href="#_day_24_blizzard_basin">Day 24: Blizzard Basin</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/24">AoC|2022|24</a>.</p>
+</div>
+<div class="paragraph">
+<p>Another day of path finding.</p>
+</div>
+<div class="sect4">
+<h5 id="_input_24"><a class="anchor" href="#_input_24"></a><a class="link" href="#_input_24">Input</a></h5>
+<div class="paragraph">
+<p>I store blizzards separately by direction in a grid (stored as flat vec) which will never change over time. For each direction, there is an row / column offset (modulo width / hight) added depending on when we look at them later on.</p>
+</div>
+<div class="paragraph">
+<p>The blizzards just contain the inner portion of the basin for easier wrapping around.</p>
+</div>
+<div class="paragraph">
+<p>In addition, I store the position of the entry and the exit on the first and last row.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub mod input {
+    #[derive(Debug)]
+    pub struct PuzzleData {
+        pub blizzards_r: Vec&lt;bool&gt;,
+        pub blizzards_u: Vec&lt;bool&gt;,
+        pub blizzards_l: Vec&lt;bool&gt;,
+        pub blizzards_d: Vec&lt;bool&gt;,
+        pub width: usize,
+        pub height: usize,
+        pub entry: usize,
+        pub exit: usize,
+    }
+
+    impl From&lt;&amp;str&gt; for PuzzleData {
+        /// parse the puzzle input
+        fn from(s: &amp;str) -&gt; Self {
+            let b = s.as_bytes();
+
+            let width = b.iter().position(|&amp;b| b == b'\n').unwrap() - 2;
+            let entry = b.iter().position(|&amp;b| b == b'.').unwrap() - 1;
+            let exit = width
+                - b.iter()
+                    .rev()
+                    .filter(|&amp;&amp;b| b != b'\n')
+                    .position(|&amp;b| b == b'.')
+                    .unwrap();
+
+            let blizzards_r: Vec&lt;bool&gt; = b
+                .iter()
+                .skip(width + 3)
+                .take(b.len() - 2 * width - 6)
+                .filter(|&amp;&amp;b| b != b'\n' &amp;&amp; b != b'#')
+                .map(|&amp;b| b == b'&gt;')
+                .collect();
+            let blizzards_l = b
+                .iter()
+                .skip(width + 3)
+                .take(b.len() - 2 * width - 6)
+                .filter(|&amp;&amp;b| b != b'\n' &amp;&amp; b != b'#')
+                .map(|&amp;b| b == b'&lt;')
+                .collect();
+            let blizzards_u = b
+                .iter()
+                .skip(width + 3)
+                .take(b.len() - 2 * width - 6)
+                .filter(|&amp;&amp;b| b != b'\n' &amp;&amp; b != b'#')
+                .map(|&amp;b| b == b'^')
+                .collect();
+            let blizzards_d = b
+                .iter()
+                .skip(width + 3)
+                .take(b.len() - 2 * width - 6)
+                .filter(|&amp;&amp;b| b != b'\n' &amp;&amp; b != b'#')
+                .map(|&amp;b| b == b'v')
+                .collect();
+
+            let height = blizzards_r.len() / width;
+
+            Self {
+                blizzards_r,
+                blizzards_l,
+                blizzards_u,
+                blizzards_d,
+                width,
+                height,
+                entry,
+                exit,
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_1_22"><a class="anchor" href="#_star_1_22"></a><a class="link" href="#_star_1_22">Star 1</a></h5>
+<div class="paragraph">
+<p>I implemented a function <code>is_blizzard</code> which checks whether there is a blizzard at a given position and a given time.</p>
+</div>
+<div class="paragraph">
+<p>With this, I implement a <code>A*</code> style search (since the graph is unweighted, nodes are immediately settled once reached and no decrease key or similar is required)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">impl PuzzleData {
+    pub fn is_blizzard_r(&amp;self, (col, row): (usize, usize), time: usize) -&gt; bool {
+        self.blizzards_r[(col + self.width - time % self.width) % self.width + self.width * row]
+    }
+
+    pub fn is_blizzard_u(&amp;self, (col, row): (usize, usize), time: usize) -&gt; bool {
+        self.blizzards_u[col + self.width * ((row + time) % self.height)]
+    }
+
+    pub fn is_blizzard_l(&amp;self, (col, row): (usize, usize), time: usize) -&gt; bool {
+        self.blizzards_l[(col + time) % self.width + self.width * row]
+    }
+
+    pub fn is_blizzard_d(&amp;self, (col, row): (usize, usize), time: usize) -&gt; bool {
+        self.blizzards_d
+            [col + self.width * ((row + self.height - time % self.height) % self.height)]
+    }
+
+    pub fn is_blizzard(&amp;self, pos: (usize, usize), time: usize) -&gt; bool {
+        self.is_blizzard_r(pos, time)
+            || self.is_blizzard_u(pos, time)
+            || self.is_blizzard_l(pos, time)
+            || self.is_blizzard_d(pos, time)
+    }
+
+    pub fn print(&amp;self, col: usize, row: usize, time: usize) {
+        // first row
+        print!("#");
+        for col_ in 0..self.width {
+            if col_ != self.entry {
+                print!("#");
+            } else if col_ == col &amp;&amp; row == 0 {
+                print!("E");
+            } else {
+                print!(".");
+            }
+        }
+        println!("#");
+
+        for row_ in 0..self.height {
+            print!("#");
+            for col_ in 0..self.width {
+                let r = self.is_blizzard_r((col_, row_), time) as u8;
+                let u = self.is_blizzard_u((col_, row_), time) as u8;
+                let l = self.is_blizzard_l((col_, row_), time) as u8;
+                let d = self.is_blizzard_d((col_, row_), time) as u8;
+                if (r + u + l + d) &gt; 1 {
+                    print!("{}", r + u + l + d);
+                } else if r &gt; 0 {
+                    print!("&gt;");
+                } else if u &gt; 0 {
+                    print!("^");
+                } else if l &gt; 0 {
+                    print!("&lt;");
+                } else if d &gt; 0 {
+                    print!("v");
+                } else if row_ + 1 == row &amp;&amp; col_ == col {
+                    print!("E");
+                } else {
+                    print!(".");
+                }
+            }
+            println!("#");
+        }
+
+        // last row
+        print!("#");
+        for col_ in 0..self.width {
+            if col_ != self.exit {
+                print!("#");
+            } else if col_ == col &amp;&amp; row == self.height + 1 {
+                print!("E");
+            } else {
+                print!(".");
+            }
+        }
+        println!("#");
+    }
+
+    pub fn shortest_path(
+        &amp;self,
+        start: (usize, usize),
+        target: (usize, usize),
+        start_time: usize,
+    ) -&gt; usize {
+        let w = self.width;
+        let h = self.height;
+
+        let mut queue = BinaryHeap::new();
+
+        // items on the queue are
+        // - lower bound of time to target (Manhattan distance)
+        // - time used so far
+        // - current position (row, col)
+        queue.push((
+            !(self.entry.max(self.exit) - self.entry.min(self.exit) + h + 1),
+            !start_time,
+            start,
+        ));
+
+        // do not visit nodes twice
+        let mut seen = HashSet::from([(start_time % (w * h), start)]);
+
+        while let Some((_n_bound, n_time, (col, row))) = queue.pop() {
+            let time = !n_time;
+            if (col, row) == target {
+                return time;
+            }
+
+            let time_upd = time + 1;
+
+            let mut enqueue = |(c, r), t| {
+                if (r == 0 || r == h + 1 || !self.is_blizzard((c, r - 1), t))
+                    &amp;&amp; seen.insert((t % (w * h), (c, r)))
+                {
+                    let bound =
+                        target.0.max(c) - target.0.min(c) + target.1.max(r) - target.1.min(r) + t;
+                    queue.push((!bound, !t, (c, r)))
+                }
+            };
+
+            // move to entry
+            if row == 1 &amp;&amp; col == self.entry {
+                enqueue((self.entry, 0), time_upd);
+            }
+            // move to exit
+            if row == h &amp;&amp; col == self.exit {
+                enqueue((self.exit, h + 1), time_upd);
+            }
+            // don't move at entry or exit or any position where there is no blizzard
+            enqueue((col, row), time_upd);
+            // move left (not in entry / exit rows)
+            if row != 0 &amp;&amp; row != h + 1 &amp;&amp; col &gt; 0 {
+                enqueue((col - 1, row), time_upd);
+            }
+            // move up (not in entry row and row immediately below)
+            if row &gt; 1 {
+                enqueue((col, row - 1), time_upd);
+            }
+            // move right (not in entry / exit rows)
+            if row != 0 &amp;&amp; row != h + 1 &amp;&amp; col &lt; w - 1 {
+                enqueue((col + 1, row), time_upd);
+            }
+            // move down (not in exit row and row immediately above)
+            if row &lt; h {
+                enqueue((col, row + 1), time_upd);
+            }
+        }
+
+        panic!(
+            "I've seen {} nodes but did not find a path from {start:?} at t = {start_time} to {target:?}",
+            seen.len()
+        );
+    }
+}
+
+pub fn star_1(data: &amp;PuzzleData) -&gt; usize {
+    data.shortest_path((data.entry, 0), (data.exit, data.height + 1), 0)
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_star_2_22"><a class="anchor" href="#_star_2_22"></a><a class="link" href="#_star_2_22">Star 2</a></h5>
+<div class="paragraph">
+<p>My initial implementation was not quite generic (I never went back to the entry and actually stopped the search one step before the exit). Making it bi-directional was a simple extension.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_2(data: &amp;PuzzleData) -&gt; usize {
+    let start = (data.entry, 0);
+    let target = (data.exit, data.height + 1);
+    let m1 = data.shortest_path(start, target, 0);
+    let m2 = data.shortest_path(target, start, m1);
+    data.shortest_path(start, target, m2)
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_25"><a class="anchor" href="#_tests_25"></a><a class="link" href="#_tests_25">Tests</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"#.######
+#&gt;&gt;.&lt;^&lt;#
+#.&lt;..&lt;&lt;#
+#&gt;v.&gt;&lt;&gt;#
+#&lt;^v^^&gt;#
+######.#
+"#;
+
+    const CONTENT_SIMPLE: &amp;str = r#"#.#####
+#.....#
+#&gt;....#
+#.....#
+#...v.#
+#.....#
+#####.#
+"#;
+
+    #[test]
+    pub fn test_from() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(24, data.blizzards_r.len());
+        assert_eq!(24, data.blizzards_u.len());
+        assert_eq!(24, data.blizzards_l.len());
+        assert_eq!(24, data.blizzards_d.len());
+        assert_eq!(6, data.width);
+        assert_eq!(0, data.entry);
+        assert_eq!(5, data.exit);
+        println!("{data:?}");
+    }
+
+    #[test]
+    pub fn test_blizzards_move() {
+        let data = PuzzleData::from(CONTENT_SIMPLE);
+
+        for time in 0..=12 {
+            println!("t = {time}");
+            data.print(data.entry, 0, time);
+        }
+    }
+
+    #[test]
+    pub fn test_blizzards_is_blizzard() {
+        let data = PuzzleData::from(CONTENT);
+        println!(
+            "entry: ({}, 0), exit: ({}, {})",
+            data.entry,
+            data.exit,
+            data.height + 1
+        );
+
+        let steps_col = [0, 0, 0, 0, 1, 1, 0, -1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0];
+        let steps_row = [1, 1, 0, -1, 0, 0, 1, 0, -1, 0, 0, 1, 1, 0, 0, 0, 1, 1];
+        let mut time = 0;
+        let mut col: usize = 0;
+        let mut row: usize = 0;
+        for k in 0..steps_col.len() {
+            col = col.wrapping_add_signed(steps_col[k]);
+            row = row.wrapping_add_signed(steps_row[k]);
+            time += 1;
+            println!("t = {time}: ({col}, {row})");
+            data.print(col, row, time);
+            assert!(row == data.height + 1 || !data.is_blizzard((col, row - 1), time));
+        }
+    }
+
+    #[test]
+    pub fn test_star_1() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(18, star_1(&amp;data));
+    }
+
+    #[test]
+    pub fn test_star_2() {
+        let data = PuzzleData::from(CONTENT);
+        assert_eq!(54, star_2(&amp;data));
+    }
 }</code></pre>
 </div>
 </div>
