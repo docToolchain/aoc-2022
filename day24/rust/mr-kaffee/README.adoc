@@ -1,0 +1,45 @@
+== Day 24: Blizzard Basin ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/24[AoC|2022|24].
+
+Another day of path finding.
+
+=== Input ===
+
+I store blizzards separately by direction in a grid (stored as flat vec) which will never change over time. For each direction, there is an row / column offset (modulo width / hight) added depending on when we look at them later on.
+
+The blizzards just contain the inner portion of the basin for easier wrapping around.
+
+In addition, I store the position of the entry and the exit on the first and last row.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=input]
+----
+
+=== Star 1 ===
+
+I implemented a function `is_blizzard` which checks whether there is a blizzard at a given position and a given time.
+
+With this, I implement a `A*` style search (since the graph is unweighted, nodes are immediately settled once reached and no decrease key or similar is required)
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+My initial implementation was not quite generic (I never went back to the entry and actually stopped the search one step before the exit). Making it bi-directional was a simple extension.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
