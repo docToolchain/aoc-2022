@@ -1,20 +1,13 @@
 use clap::Parser;
 use itertools::Itertools;
-use mr_kaffee_aoc::{
-    err::PuzzleError,
-    puzzle_io::PuzzleIO,
-    template::{upd_files, write_files},
-    GenericPuzzle,
-};
-use std::{error::Error, fs, path::PathBuf, time::Instant};
+use mr_kaffee_aoc::GenericPuzzle;
+use std::{error::Error, time::Instant};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // parse command line
     let cli = cli::Cli::parse();
     match cli.command {
         Some(cli::Commands::Run(run)) => exec_run(run),
-        Some(cli::Commands::Init(init)) => exec_init(init)?,
-        Some(cli::Commands::Submit(submit)) => exec_submit(submit)?,
         None => exec_run(cli::Run {
             years: cli::Filter::Range(2015..=2022),
             days: cli::Filter::Range(0..=25),
@@ -28,6 +21,20 @@ fn puzzles() -> Vec<Box<dyn GenericPuzzle>> {
     let mut puzzles: Vec<Box<dyn GenericPuzzle>> = vec![
         Box::new(mr_kaffee_2022_0::puzzle()),
         // INCLUDE_PUZZLES:START
+        Box::new(mr_kaffee_2022_25::puzzle()),
+        Box::new(mr_kaffee_2022_24::puzzle()),
+        Box::new(mr_kaffee_2022_23::puzzle()),
+        Box::new(mr_kaffee_2022_22::puzzle()),
+        Box::new(mr_kaffee_2022_21::puzzle()),
+        Box::new(mr_kaffee_2022_20::puzzle()),
+        Box::new(mr_kaffee_2022_19::puzzle()),
+        Box::new(mr_kaffee_2022_18::puzzle()),
+        Box::new(mr_kaffee_2022_17::puzzle()),
+        Box::new(mr_kaffee_2022_16::puzzle()),
+        Box::new(mr_kaffee_2022_15::puzzle()),
+        Box::new(mr_kaffee_2022_14::puzzle()),
+        Box::new(mr_kaffee_2022_13::puzzle()),
+        Box::new(mr_kaffee_2022_12::puzzle()),
         Box::new(mr_kaffee_2022_11::puzzle()),
         Box::new(mr_kaffee_2022_10::puzzle()),
         Box::new(mr_kaffee_2022_9::puzzle()),
@@ -73,76 +80,11 @@ fn exec_run(run: cli::Run) {
     println!("\n====> Solved {oks} out of {cnt} puzzles in {d:?}");
 }
 
-fn read_config() -> String {
-    let config_path = PathBuf::from("template.json");
-    if config_path.is_file() {
-        match fs::read_to_string(config_path.as_path()) {
-            Ok(v) => v,
-            Err(err) => {
-                println!(
-                    "Could not read config from file {}: {err}",
-                    config_path.to_string_lossy()
-                );
-                "{}".to_string()
-            }
-        }
-    } else {
-        "{}".to_string()
-    }
-}
-
-fn exec_init(init: cli::Init) -> Result<(), PuzzleError> {
-    let input_provider = PuzzleIO::try_from(PathBuf::from("session.cookie").as_path())?;
-    let config = read_config();
-
-    write_files(
-        &init.target_path,
-        &input_provider,
-        || &config,
-        init.year,
-        init.day,
-        init.force,
-    )?;
-
-    if let Some(runner_path) = init.runner_path {
-        upd_files(runner_path.as_path(), || &config, init.year, init.day)?;
-    }
-
-    Ok(())
-}
-
-fn exec_submit(submit: cli::Submit) -> Result<(), Box<dyn Error>> {
-    let puzzles = puzzles();
-    let puzzle = puzzles
-        .iter()
-        .find(|puzzle| puzzle.year() == submit.year && puzzle.day() == submit.day);
-    if let Some(puzzle) = puzzle {
-        let (level, result) = match submit.part {
-            1 => (1, puzzle.solve_star_1()?),
-            2 => (2, puzzle.solve_star_2()?),
-            v => return Err(format!("Illegal part: {v}").into()),
-        };
-        if let Some(result) = result {
-            let puzzle_io = PuzzleIO::try_from(PathBuf::from("session.cookie").as_path())?;
-            puzzle_io.submit_result(submit.year, submit.day, level, &result)?;
-        } else {
-            println!(
-                "Part {} not implemented for {}/{}",
-                submit.part, submit.year, submit.day
-            );
-        }
-    } else {
-        println!("No puzzle for {}/{}", submit.year, submit.day);
-    }
-
-    Ok(())
-}
-
 mod cli {
     use clap::{Args, Parser, Subcommand};
     use lazy_static::lazy_static;
     use regex::Regex;
-    use std::{ops::RangeInclusive, path::PathBuf, str::FromStr};
+    use std::{ops::RangeInclusive, str::FromStr};
 
     #[derive(Parser, Debug)]
     #[command(author, version, about, long_about = None, propagate_version = true)]
@@ -155,12 +97,6 @@ mod cli {
     pub(crate) enum Commands {
         /// runs puzzles
         Run(Run),
-
-        /// initializes a new puzzle from a template
-        Init(Init),
-
-        /// submits puzzle solution
-        Submit(Submit),
     }
 
     #[derive(Args, Debug)]
@@ -170,34 +106,6 @@ mod cli {
 
         #[arg(long, short, value_parser = parse_filter_non_empty, default_value_t = Filter::Range(0..=25))]
         pub(crate) days: Filter,
-    }
-
-    #[derive(Args, Debug)]
-    pub(crate) struct Init {
-        #[arg(short, long)]
-        pub(crate) target_path: PathBuf,
-
-        #[arg(short, long, value_parser = clap::value_parser!(u16).range(2015..=2022))]
-        pub(crate) year: u16,
-
-        #[arg(short, long, value_parser = clap::value_parser!(u16).range(1..=25))]
-        pub(crate) day: u16,
-
-        #[arg(short, long)]
-        pub(crate) force: bool,
-
-        #[arg(short, long)]
-        pub(crate) runner_path: Option<PathBuf>,
-    }
-
-    #[derive(Args, Debug)]
-    pub(crate) struct Submit {
-        #[arg(short, long, value_parser = clap::value_parser!(u16).range(2015..=2022))]
-        pub(crate) year: u16,
-        #[arg(short, long, value_parser = clap::value_parser!(u16).range(1..=25))]
-        pub(crate) day: u16,
-        #[arg(short, long, value_parser = clap::value_parser!(u16).range(1..=2))]
-        pub(crate) part: u16,
     }
 
     fn parse_filter_non_empty(s: &str) -> Result<Filter, String> {

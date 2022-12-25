@@ -12,7 +12,7 @@ edition = "2021"
 
 [dependencies]
 
-mr-kaffee-aoc = { path = "aoc", features = ["template", "io"] }
+mr-kaffee-aoc = { path = "aoc/" }
 
 itertools = "0.10.*"
 clap = { version = "4.*", features = ["derive"] }
@@ -20,6 +20,20 @@ regex = "1.*"
 lazy_static = "1.*"
 
 # INCLUDE_PUZZLES:START
+mr-kaffee-2022-25 = { path = "../../../day25/rust/mr-kaffee/" }
+mr-kaffee-2022-24 = { path = "../../../day24/rust/mr-kaffee/" }
+mr-kaffee-2022-23 = { path = "../../../day23/rust/mr-kaffee/" }
+mr-kaffee-2022-22 = { path = "../../../day22/rust/mr-kaffee/" }
+mr-kaffee-2022-21 = { path = "../../../day21/rust/mr-kaffee/" }
+mr-kaffee-2022-20 = { path = "../../../day20/rust/mr-kaffee/" }
+mr-kaffee-2022-19 = { path = "../../../day19/rust/mr-kaffee/" }
+mr-kaffee-2022-18 = { path = "../../../day18/rust/mr-kaffee/" }
+mr-kaffee-2022-17 = { path = "../../../day17/rust/mr-kaffee/" }
+mr-kaffee-2022-16 = { path = "../../../day16/rust/mr-kaffee/" }
+mr-kaffee-2022-15 = { path = "../../../day15/rust/mr-kaffee/" }
+mr-kaffee-2022-14 = { path = "../../../day14/rust/mr-kaffee/" }
+mr-kaffee-2022-13 = { path = "../../../day13/rust/mr-kaffee/" }
+mr-kaffee-2022-12 = { path = "../../../day12/rust/mr-kaffee/" }
 mr-kaffee-2022-11 = { path = "../../../day11/rust/mr-kaffee/" }
 mr-kaffee-2022-10 = { path = "../../../day10/rust/mr-kaffee/" }
 mr-kaffee-2022-9 = { path = "../../../day09/rust/mr-kaffee/" }
