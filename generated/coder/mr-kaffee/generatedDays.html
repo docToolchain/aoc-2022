@@ -458,6 +458,16 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_25_rust">Day 25: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_25_full_of_hot_air">Day 25: Full of Hot Air</a>
+<ul class="sectlevel4">
+<li><a href="#_star_1_23">Star 1</a></li>
+<li><a href="#_tests_26">Tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -7617,6 +7627,102 @@ mod tests {
     pub fn test_star_2() {
         let data = PuzzleData::from(CONTENT);
         assert_eq!(54, star_2(&amp;data));
+    }
+}</code></pre>
+</div>
+</div>
+<a id="day25" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_25_rust"><a class="anchor" href="#_day_25_rust"></a><a class="link" href="#_day_25_rust">Day 25: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_25_full_of_hot_air"><a class="anchor" href="#_day_25_full_of_hot_air"></a><a class="link" href="#_day_25_full_of_hot_air">Day 25: Full of Hot Air</a></h4>
+<div class="paragraph">
+<p><a href="https://rust-lang.org">Rust</a> solution to <a href="https://adventofcode.com/2022/day/25">AoC|2022|25</a>.</p>
+</div>
+<div class="paragraph">
+<p>A nice, simple last one for Christmas!</p>
+</div>
+<div class="sect4">
+<h5 id="_star_1_23"><a class="anchor" href="#_star_1_23"></a><a class="link" href="#_star_1_23">Star 1</a></h5>
+<div class="paragraph">
+<p>There is not much to say. Here is the solution:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">pub fn star_1(data: &amp;&amp;str) -&gt; String {
+    // convert SNAFU to decimal and sum
+    let mut sum: isize = data
+        .lines()
+        .map(|l| {
+            l.as_bytes().iter().fold(0, |value, &amp;digit| {
+                5 * value
+                    + match digit {
+                        b'2' =&gt; 2,
+                        b'1' =&gt; 1,
+                        b'0' =&gt; 0,
+                        b'-' =&gt; -1,
+                        b'=' =&gt; -2,
+                        _ =&gt; unreachable!(),
+                    }
+            })
+        })
+        .sum();
+    println!("The sum is {sum}");
+
+    // convert decimal to SNAFU
+    let mut digits = Vec::new();
+    while sum != 0 {
+        let v = sum % 5;
+        sum /= 5;
+        if v &gt; 2 {
+            sum += 1;
+        }
+        digits.push(match v {
+            3 =&gt; '=',
+            4 =&gt; '-',
+            0 =&gt; '0',
+            1 =&gt; '1',
+            2 =&gt; '2',
+            _ =&gt; unreachable!(),
+        });
+    }
+    digits.iter().rev().collect()
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_tests_26"><a class="anchor" href="#_tests_26"></a><a class="link" href="#_tests_26">Tests</a></h5>
+<div class="paragraph">
+<p>And the tests:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONTENT: &amp;str = r#"1=-0-2
+12111
+2=0=
+21
+2=01
+111
+20012
+112
+1=-1=
+1-12
+12
+1=
+122
+"#;
+
+    #[test]
+    pub fn test_star_1() {
+        assert_eq!("2=-1=0", star_1(&amp;CONTENT));
     }
 }</code></pre>
 </div>
