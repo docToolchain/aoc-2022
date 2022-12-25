@@ -17,7 +17,7 @@ pub fn puzzle() -> Puzzle<'static, PuzzleData<'static>, isize, isize, isize, isi
         star2: Some(Star {
             name: "Star 2",
             f: &star_2,
-            exp: Some(3375719472776), // Some(3_375_719_472_770),
+            exp: Some(3_375_719_472_770),
         }),
     }
 }

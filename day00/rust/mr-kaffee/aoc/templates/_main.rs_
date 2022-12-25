@@ -1,6 +1,0 @@
-use mr_kaffee_aoc::{err::PuzzleError, GenericPuzzle};
-use mr_kaffee_{YEAR}_{DAY}::*;
-
-fn main() -> Result<(), PuzzleError> {
-    puzzle().solve_report_err()
-}

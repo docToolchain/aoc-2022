@@ -1,14 +1,10 @@
 [package]
 name = "mr-kaffee-aoc"
 description = "Simple solution framework for AoC, http://adventofcode.com"
-repository = "http://github.com/mr-kaffee/aoc-2022/tree/master/day00/rust/mr-kaffee/aoc"
 authors = ["Peter Wieland <peter@die-wielands.net>"]
 license = "MIT"
 version = "0.2.1"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 
 [dependencies]
 
