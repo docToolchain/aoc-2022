@@ -1,0 +1,23 @@
+== Day 25: Full of Hot Air ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/25[AoC|2022|25].
+
+A nice, simple last one for Christmas!
+
+=== Star 1 ===
+
+There is not much to say. Here is the solution:
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Tests ===
+
+And the tests:
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----
