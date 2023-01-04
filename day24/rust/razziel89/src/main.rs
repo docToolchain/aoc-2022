@@ -18,7 +18,9 @@ fn find_path<'a>(
     start: &'a data::Node,
     end: &'a data::Node,
     graph: &'a HashSet<data::Node>,
+    blizz: &'a Vec<data::Blizzard>,
     estimator_fn: fn(&data::Node, &data::Point) -> usize,
+    start_time: u16,
 ) -> Result<HashMap<data::Node, (Option<data::Point>, usize)>> {
     let ref_point = end.pos();
     let estimator = move |node: &data::Node| estimator_fn(node, &ref_point);
@@ -32,17 +34,18 @@ fn find_path<'a>(
     let mut connections = HashMap::<data::Node, (Option<data::Point>, usize)>::new();
     let mut checkable = HashMap::<data::Node, (data::Point, usize)>::new();
 
+    let start_at_time = start.shift(start_time);
     // Add starting point to resulting path.
-    connections.insert(start.clone(), (None, 0));
+    connections.insert(start_at_time.clone(), (None, 0));
     // Add neighbours of starting point to list of checkable values. Ignore neighbouring points
     // that are not part of the graph.
-    for neigh in start.neighbours() {
-        let neigh_node = get_node(neigh)?;
+    for neigh in start_at_time.neighbours(blizz, graph) {
+        let neigh_node = get_node(&neigh)?;
         // Estimated costs are the most direct possible connection plus 1, since every step costs
         // one.
         let estimate = estimator(&neigh_node);
-        checkable.insert(neigh_node, (start.pos(), estimate));
-        // connections.insert(neigh_node, (Some(start.pos()), 1));
+        checkable.insert(neigh_node, (start_at_time.pos(), estimate));
+        // connections.insert(neigh_node, (Some(start_at_time.pos()), 1));
     }
 
     // Search until we added the final node to the path or until there is nothing more to check.
@@ -78,13 +81,13 @@ fn find_path<'a>(
         }
 
         // Add neighbours of point to list of checkable values.
-        for neigh in next_best_node.neighbours() {
-            let neigh_node = get_node(neigh)?;
+        for neigh in next_best_node.neighbours(blizz, graph) {
+            let neigh_node = get_node(&neigh)?;
             if !connections.contains_key(&neigh_node) {
                 let estimate = cost_of_predecessor + estimator(&neigh_node);
                 let previous_best = checkable
                     .get(&neigh_node)
-                    .unwrap_or(&(*neigh, std::usize::MAX))
+                    .unwrap_or(&(neigh, std::usize::MAX))
                     .1;
                 if previous_best > estimate {
                     checkable.insert(neigh_node, (next_best_node.pos(), estimate));
@@ -203,22 +206,51 @@ fn solve(file: &str) -> Result<()> {
         })
         .collect::<Vec<_>>();
 
-    for time in 0..10 {
-        render(time, &graph, &blizzards, &min, &max);
-    }
+    // for time in 0..10 {
+    //     render(time, &graph, &blizzards, &min, &max);
+    // }
 
     let estimator = |node: &data::Node, point: &data::Point| node.infinity_dist(&point);
 
-    let path = find_path(&start, &end, &graph, estimator);
+    let path = find_path(&start, &end, &graph, &blizzards, estimator, 0)?;
 
-    println!("{:?}", path);
+    let mut max_time = path
+        .iter()
+        .map(|el| el.0.p.t)
+        .max()
+        .ok_or(Error::msg("cannot determine path length"))?;
+
+    println!("reached goal in {} steps", max_time);
+
+    // Part 2.
+    // Go back to the start.
+    let path = find_path(&end, &start, &graph, &blizzards, estimator, max_time)?;
+
+    max_time = path
+        .iter()
+        .map(|el| el.0.p.t)
+        .max()
+        .ok_or(Error::msg("cannot determine path length"))?;
+
+    println!("reached start again in {} steps", max_time);
+
+    // Go back to the end.
+    let path = find_path(&start, &end, &graph, &blizzards, estimator, max_time)?;
+
+    max_time = path
+        .iter()
+        .map(|el| el.0.p.t)
+        .max()
+        .ok_or(Error::msg("cannot determine path length"))?;
+
+    println!("reached goal again in {} steps", max_time);
 
     Ok(())
 }
 
 fn main() -> Result<()> {
     solve(SAMPLE1)?;
-    // solve(REAL)?;
+    solve(REAL)?;
 
     Ok(())
 }

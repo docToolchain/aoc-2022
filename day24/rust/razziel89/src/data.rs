@@ -106,38 +106,52 @@ impl Point {
     }
 
     pub fn env(&self) -> Vec<Self> {
-        vec![
+        let mut result = Vec::<_>::with_capacity(5);
+        result.push(
             // Waiting.
             Self {
                 x: self.x,
                 y: self.y,
                 t: self.t + 1,
             },
-            // Moving left.
-            Self {
-                x: self.x - 1,
-                y: self.y,
-                t: self.t + 1,
-            },
+        );
+        if self.x > 0 {
+            result.push(
+                // Moving left.
+                Self {
+                    x: self.x - 1,
+                    y: self.y,
+                    t: self.t + 1,
+                },
+            );
+        }
+        result.push(
             // Moving right.
             Self {
                 x: self.x + 1,
                 y: self.y,
                 t: self.t + 1,
             },
-            // Moving up.
-            Self {
-                x: self.x,
-                y: self.y - 1,
-                t: self.t + 1,
-            },
+        );
+        if self.y > 0 {
+            result.push(
+                // Moving up.
+                Self {
+                    x: self.x,
+                    y: self.y - 1,
+                    t: self.t + 1,
+                },
+            );
+        }
+        result.push(
             // Moving down.
             Self {
                 x: self.x,
                 y: self.y + 1,
                 t: self.t + 1,
             },
-        ]
+        );
+        result
     }
 
     pub fn as_node(&self, time: Option<u16>) -> Node {
@@ -185,12 +199,36 @@ impl Node {
         self.p
     }
 
-    pub fn neighbours<'a>(&'a self) -> &'a HashSet<Point> {
-        unimplemented!("we cannot yet generate valid neighbour lists");
+    pub fn neighbours<'a>(
+        &'a self,
+        blizz: &Vec<Blizzard>,
+        spaces: &HashSet<Node>,
+    ) -> HashSet<Point> {
+        let occupied = blizz
+            .iter()
+            .map(|el| el.at_time(self.p.t + 1))
+            .collect::<HashSet<_>>();
+
+        // Neighbours are points in the environment that are not occupied in the next turn.
+        self.p
+            .env()
+            .into_iter()
+            .filter(|el| !occupied.contains(el) && spaces.contains(&el.as_node(Some(0))))
+            .collect::<HashSet<_>>()
     }
 
     pub fn infinity_dist(&self, other: &Point) -> usize {
-        (other.x - self.p.x) as usize + (other.y - self.p.y) as usize
+        let x_diff = if other.x > self.p.x {
+            other.x - self.p.x
+        } else {
+            self.p.x - other.x
+        } as usize;
+        let y_diff = if other.y > self.p.y {
+            other.y - self.p.y
+        } else {
+            self.p.y - other.y
+        } as usize;
+        x_diff + y_diff
     }
 
     pub fn shift(&self, time: u16) -> Node {
