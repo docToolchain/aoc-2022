@@ -97,13 +97,66 @@ fn find_path<'a>(
     Ok(connections)
 }
 
+fn render<'a>(
+    time: u16,
+    graph: &'a HashSet<data::Node>,
+    blizzards: &'a Vec<data::Blizzard>,
+    min: &'a data::Point,
+    max: &'a data::Point,
+) {
+    let blizz = blizzards
+        .iter()
+        // This is a hacky way of moving the blizzard to a location but still retrieving its
+        // location in a way that can easily be queried against the graph.
+        .map(|el| el.at_time(time).as_node(Some(0)).p)
+        .collect::<Vec<_>>();
+
+    let mut blizz_count = HashMap::<data::Point, u8>::with_capacity(blizz.len());
+    let mut blizz_last = HashMap::<data::Point, &data::Blizzard>::with_capacity(blizz.len());
+    for (p, b) in blizz.iter().zip(blizzards.iter()) {
+        let curr_count = blizz_count.get(p).unwrap_or(&0);
+        blizz_count.insert(p.clone(), curr_count + 1);
+        blizz_last.insert(p.clone(), b);
+    }
+
+    for y in min.y..=max.y {
+        for x in min.x..=max.x {
+            let p = data::Point::new(x as isize, y as isize, 0);
+            if let Some(_) = graph.get(&p.as_node(None)) {
+                // This is a potential free spot. Check whether it's a blizzard or not.
+                if let Some(c) = blizz_count.get(&p) {
+                    if c == &1 {
+                        // Only one blizzard, print its direction.
+                        print!("{}", blizz_last.get(&p).unwrap().as_char());
+                    } else {
+                        // Otherwise, print the count.
+                        print!("{}", c);
+                    }
+                } else {
+                    // This is a free spot.
+                    print!(".");
+                }
+            } else {
+                // This is a wall spot.
+                print!("#");
+            }
+        }
+        println!("");
+    }
+
+    // Blobk until receiving return.
+    std::io::stdin().lines().next();
+}
+
 fn solve(file: &str) -> Result<()> {
     println!("PROCESSING {}", file);
 
     // Read file and convert into data.
-    // Also obtain max coords. Min coords are implicitly 0.
+    // Also obtain max coords. Min coords are implicitly (1,1) for free spaces..
     let (occ_map, max_x, max_y) = io::parse_chars_to_data::<data::Tile>(file, "tile", None, None)?;
     let max = data::Point::new(max_x, max_y, 0);
+    let min = data::Point::new(0, 0, 0);
+    let min_free = data::Point::new(1, 1, 0);
 
     let start = occ_map
         .iter()
@@ -121,6 +174,8 @@ fn solve(file: &str) -> Result<()> {
         .clone()
         .as_node(None);
 
+    // This isn't really a graph but we call it that because that's the name used in the other days
+    // where the same path finding algorithm has been used.
     let graph = occ_map
         .iter()
         .filter_map(|(point, tile)| {
@@ -132,16 +187,25 @@ fn solve(file: &str) -> Result<()> {
         })
         .collect::<HashSet<_>>();
 
-    let up_blizz = occ_map
+    let blizzards = occ_map
         .iter()
         .filter_map(|(point, tile)| {
             if let data::Tile::Blizzard(dir) = tile {
-                Some(point.as_node(None))
+                Some(data::Blizzard::new(
+                    point.clone(),
+                    dir.clone(),
+                    min_free,
+                    max,
+                ))
             } else {
                 None
             }
         })
-        .collect::<HashSet<_>>();
+        .collect::<Vec<_>>();
+
+    for time in 0..10 {
+        render(time, &graph, &blizzards, &min, &max);
+    }
 
     let estimator = |node: &data::Node, point: &data::Point| node.infinity_dist(&point);
 

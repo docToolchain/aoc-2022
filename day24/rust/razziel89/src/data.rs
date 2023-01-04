@@ -77,6 +77,15 @@ impl Blizzard {
             },
         }
     }
+
+    pub fn as_char(&self) -> char {
+        match self.direction {
+            Direction::Up => '^',
+            Direction::Down => 'v',
+            Direction::Left => '<',
+            Direction::Right => '>',
+        }
+    }
 }
 
 impl Point {
