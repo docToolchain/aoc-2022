@@ -18,7 +18,7 @@ pub fn read_lines_from_file(path: &str, chunk_size: usize) -> Result<Vec<String>
 }
 
 pub type Predicate = fn(&String) -> bool;
-pub type Transform = fn(String) -> String;
+pub type Transform = fn(String) -> Vec<String>;
 
 pub fn parse_chunks_to_data<T>(
     chunks: Vec<String>,
@@ -30,7 +30,7 @@ where
     T: FromStr<Err = Error>,
 {
     let filter_fn = filter.unwrap_or(|_| true);
-    let transformer = transform.unwrap_or(|el| el);
+    let transformer = transform.unwrap_or(|el| vec![el]);
 
     let mut errs: Vec<String> = vec![];
 
@@ -38,7 +38,7 @@ where
     let data = chunks
         .into_iter()
         .filter(filter_fn)
-        .map(transformer)
+        .flat_map(transformer)
         .enumerate()
         .filter_map(|(idx, el)| {
             match el
@@ -77,12 +77,12 @@ where
     let mut max_y = 0;
 
     let filter_fn = filter.unwrap_or(|_| true);
-    let transformer = transform.unwrap_or(|el| el);
+    let transformer = transform.unwrap_or(|el| vec![el]);
 
     for (line_idx, line) in read_lines_from_file(file, 1)?
         .into_iter()
         .filter(filter_fn)
-        .map(transformer)
+        .flat_map(transformer)
         .enumerate()
     {
         for (col_idx, character) in line.chars().enumerate() {

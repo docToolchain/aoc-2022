@@ -239,7 +239,13 @@ fn solve(file: &str) -> Result<()> {
         io::read_lines_from_file(file, 1)?,
         "action",
         Some(|el: &String| el.len() != 0 && !el.contains(".") && !el.contains("#")),
-        None,
+        Some(|el: String| {
+            el.replace("R", "\nR\n")
+                .replace("L", "\nL\n")
+                .split("\n")
+                .map(|el| el.to_string())
+                .collect::<Vec<_>>()
+        }),
     )?;
 
     let (start, _) =
