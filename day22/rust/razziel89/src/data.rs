@@ -54,8 +54,12 @@ impl Actor {
         }
     }
 
-    pub fn mv(&mut self, neigh: &Neighbours) {
-        self.pos = self.peek(neigh);
+    pub fn mv(&mut self, neigh: &Neighbours, next_neigh: &Neighbours) -> Result<()> {
+        let next_pos = self.peek(neigh);
+        let next_dir = self.next_dir(next_neigh)?;
+        self.pos = next_pos;
+        self.dir = next_dir;
+        Ok(())
     }
 
     pub fn right(&mut self) {
@@ -82,6 +86,18 @@ impl Actor {
             Direction::Right => 0,
             Direction::Up => 3,
             Direction::Down => 1,
+        }
+    }
+
+    fn next_dir(&mut self, next_neigh: &Neighbours) -> Result<Direction> {
+        match &self.pos {
+            p if p == &next_neigh.left => Ok(Direction::Right),
+            p if p == &next_neigh.right => Ok(Direction::Left),
+            p if p == &next_neigh.up => Ok(Direction::Down),
+            p if p == &next_neigh.down => Ok(Direction::Up),
+            _ => Err(Error::msg(
+                "previous position is no neighbour of current position",
+            )),
         }
     }
 }

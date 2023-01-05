@@ -106,7 +106,7 @@ fn find(
 }
 
 // This function is ugly, too but works.
-fn make_neigh_map(
+fn make_neigh_map_part1(
     occ_map: &HashMap<data::Point, data::Tile>,
     max: &data::Point,
 ) -> HashMap<data::Point, data::Neighbours> {
@@ -251,7 +251,7 @@ fn solve(file: &str) -> Result<()> {
     let (start, _) =
         find(&occ_map, data::Direction::Right, (None, Some(0)), &max).context("finding start")?;
 
-    let neigh_map = make_neigh_map(&occ_map, &max);
+    let neigh_map_part1 = make_neigh_map_part1(&occ_map, &max);
 
     // println!("{:?}", occupation_map);
     // println!("{:?}", actions);
@@ -277,14 +277,17 @@ fn solve(file: &str) -> Result<()> {
             }
             data::Action::Move(val) => {
                 for _ in 0..val {
-                    let neigh = neigh_map
+                    let neigh = neigh_map_part1
                         .get(&actor.pos)
                         .expect("we should not move off the board");
                     let next_tile = occ_map
                         .get(&actor.peek(neigh))
                         .expect("all neighbours are on the map");
+                    let next_neigh = neigh_map_part1
+                        .get(&actor.peek(neigh))
+                        .expect("all neighbours should be on the board");
                     if next_tile == &data::Tile::Free {
-                        actor.mv(neigh);
+                        actor.mv(neigh, next_neigh)?;
                         // render(&occ_map, &max, &actor);
                     } else {
                         break;
