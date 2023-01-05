@@ -223,6 +223,49 @@ fn render(occ_map: &HashMap<data::Point, data::Tile>, max: &data::Point, actor: 
     std::io::stdin().lines().next();
 }
 
+fn play_game(
+    actor: &mut data::Actor,
+    actions: &Vec<data::Action>,
+    neigh_map: &HashMap<data::Point, data::Neighbours>,
+    occ_map: &HashMap<data::Point, data::Tile>,
+) -> Result<()> {
+    // render(&occ_map, &max, &actor);
+    for action in actions {
+        match action {
+            data::Action::Left => {
+                actor.left();
+                // render(&occ_map, &max, &actor);
+            }
+            data::Action::Right => {
+                actor.right();
+                // render(&occ_map, &max, &actor);
+            }
+            data::Action::Move(val) => {
+                for _ in 0..*val {
+                    let neigh = neigh_map
+                        .get(&actor.pos)
+                        .expect("we should not move off the board");
+                    let next_tile = occ_map
+                        .get(&actor.peek(neigh))
+                        .expect("all neighbours are on the map");
+                    let next_neigh = neigh_map
+                        .get(&actor.peek(neigh))
+                        .expect("all neighbours should be on the board");
+                    if next_tile == &data::Tile::Free {
+                        actor.mv(neigh, next_neigh)?;
+                        // render(&occ_map, &max, &actor);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // render(&occ_map, &max, &actor);
+
+    Ok(())
+}
+
 fn solve(file: &str) -> Result<()> {
     println!("PROCESSING {}", file);
 
@@ -264,44 +307,15 @@ fn solve(file: &str) -> Result<()> {
         pos: start,
         dir: data::Direction::Right,
     };
-    // render(&occ_map, &max, &actor);
-    for action in actions {
-        match action {
-            data::Action::Left => {
-                actor.left();
-                // render(&occ_map, &max, &actor);
-            }
-            data::Action::Right => {
-                actor.right();
-                // render(&occ_map, &max, &actor);
-            }
-            data::Action::Move(val) => {
-                for _ in 0..val {
-                    let neigh = neigh_map_part1
-                        .get(&actor.pos)
-                        .expect("we should not move off the board");
-                    let next_tile = occ_map
-                        .get(&actor.peek(neigh))
-                        .expect("all neighbours are on the map");
-                    let next_neigh = neigh_map_part1
-                        .get(&actor.peek(neigh))
-                        .expect("all neighbours should be on the board");
-                    if next_tile == &data::Tile::Free {
-                        actor.mv(neigh, next_neigh)?;
-                        // render(&occ_map, &max, &actor);
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    // render(&occ_map, &max, &actor);
+    play_game(&mut actor, &actions, &neigh_map_part1, &occ_map)?;
     println!("{:?}", actor);
     println!(
         "{}",
         1000 * (actor.pos.y + 1) + 4 * (actor.pos.x + 1) + actor.num()
     );
+
+    // Part 2.
+    // Part 2 is identical apart from the really rather annoying construction of the neighbour map.
 
     Ok(())
 }
