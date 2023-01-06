@@ -472,7 +472,7 @@ fn solve(file: &str, points_per_edge: usize) -> Result<()> {
 
 fn main() -> Result<()> {
     solve(SAMPLE1, 4)?;
-    // solve(REAL, 50)?;
+    solve(REAL, 50)?;
 
     Ok(())
 }
