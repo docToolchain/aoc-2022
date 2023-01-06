@@ -17,6 +17,16 @@ pub struct PointData {
     norm: V3,
 }
 
+impl PointData {
+    fn as_str(&self) -> String {
+        let mut fmt = "PD:\n".to_string();
+        fmt += format!("pos:{}", self.pos).as_ref();
+        fmt += format!("north:{}", self.north).as_ref();
+        fmt += format!("norm:{}", self.norm).as_ref();
+        fmt
+    }
+}
+
 #[derive(Debug)]
 struct FieldNeighDat<'a> {
     pos: &'a Point,
@@ -61,6 +71,14 @@ fn rotmat(axis: V3, angle_in_degrees: isize) -> Result<M3> {
             }
         }),
     ))
+}
+
+fn transrot(input: &PointData, ref_point: &V3, mat: &M3) -> PointData {
+    PointData {
+        pos: (mat * (input.pos - ref_point)) + ref_point,
+        north: mat * input.north,
+        norm: mat * input.norm,
+    }
 }
 
 pub fn build<'b>(
@@ -154,8 +172,15 @@ pub fn build<'b>(
     println!("{:?}\n", ref_points);
     println!("{:?}\n", field_neigh);
 
-    let x_rot = rotmat(V3::new(1, 0, 0), -90)?;
-    println!("{:?}\n", x_rot);
+    // let x_rot = rotmat(V3::new(1, 0, 0), -90)?;
+    // println!("{}\n", x_rot);
+    // let dat = PointData {
+    //     pos: V3::new(1, 2, 3),
+    //     north: V3::new(0, -1, 0),
+    //     norm: V3::new(0, 0, 1),
+    // };
+    // println!("{}\n", dat.as_str());
+    // println!("{}\n", transrot(&dat, &V3::new(0, 2, 0), &x_rot).as_str());
 
     Ok(HashMap::<&Point, PointData>::from_iter(
         points.into_iter().zip(points_3d.into_iter()),

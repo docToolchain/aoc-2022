@@ -318,7 +318,7 @@ fn solve(file: &str, points_per_edge: usize) -> Result<()> {
     // Part 2.
     // Part 2 is identical apart from the really rather annoying construction of the neighbour map.
     let cube_map = cube::build(&occ_map, &max, points_per_edge)?;
-    println!("{:?}", cube_map);
+    println!("{:?}", cube_map.len());
 
     Ok(())
 }
