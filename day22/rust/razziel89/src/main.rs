@@ -229,17 +229,26 @@ fn play_game(
     actions: &Vec<data::Action>,
     neigh_map: &HashMap<data::Point, data::Neighbours>,
     occ_map: &HashMap<data::Point, data::Tile>,
+    cube_map: Option<&HashMap<&data::Point, cube::PointData>>,
+    max: &data::Point,
+    verbose: bool,
 ) -> Result<()> {
-    // render(&occ_map, &max, &actor);
+    if verbose {
+        render(&occ_map, max, &actor);
+    }
     for action in actions {
         match action {
             data::Action::Left => {
                 actor.left();
-                // render(&occ_map, &max, &actor);
+                if verbose {
+                    render(&occ_map, max, &actor);
+                }
             }
             data::Action::Right => {
                 actor.right();
-                // render(&occ_map, &max, &actor);
+                if verbose {
+                    render(&occ_map, max, &actor);
+                }
             }
             data::Action::Move(val) => {
                 for _ in 0..*val {
@@ -253,8 +262,10 @@ fn play_game(
                         .get(&actor.peek(neigh))
                         .expect("all neighbours should be on the board");
                     if next_tile == &data::Tile::Free {
-                        actor.mv(neigh, next_neigh)?;
-                        // render(&occ_map, &max, &actor);
+                        actor.mv(neigh, next_neigh, cube_map)?;
+                        if verbose {
+                            render(&occ_map, max, &actor);
+                        }
                     } else {
                         break;
                     }
@@ -262,9 +273,113 @@ fn play_game(
             }
         }
     }
-    // render(&occ_map, &max, &actor);
+    if verbose {
+        render(&occ_map, max, &actor);
+    }
 
     Ok(())
+}
+
+fn make_neigh_map_part2(
+    cube_map: &HashMap<&data::Point, cube::PointData>,
+) -> HashMap<data::Point, data::Neighbours> {
+    let mut sorted = cube_map.iter().collect::<Vec<_>>();
+    sorted.sort_by(|el1, el2| {
+        let x_cmp = el1.0.x.cmp(&el2.0.x);
+        if x_cmp != Ordering::Equal {
+            x_cmp
+        } else {
+            el1.0.y.cmp(&el2.0.y)
+        }
+    });
+
+    let get_2d_from_3d_and_dir = |v: cube::V3, d: cube::V3| {
+        let findings = sorted
+            .iter()
+            .map(|el| {
+                cube_map
+                    .get_key_value(el.0)
+                    .expect("sorting doesn't remove stuff")
+            })
+            .flat_map(|(&p, pd)| {
+                if pd.pos == v && pd.norm == d {
+                    Some(p)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        assert!(findings.len() <= 1);
+        if findings.len() > 0 {
+            Some(findings[0])
+        } else {
+            None
+        }
+    };
+
+    sorted
+        .iter()
+        .map(|el| {
+            cube_map
+                .get_key_value(el.0)
+                .expect("sorting doesn't remove stuff")
+        })
+        .map(|(&p, pd)| {
+            // let verbose = p == &data::Point::new(8, 0);
+
+            let left = if let Some(mp) =
+                get_2d_from_3d_and_dir(pd.pos + pd.norm.cross(&pd.north), pd.norm)
+            {
+                mp
+            } else if let Some(mp) = get_2d_from_3d_and_dir(pd.pos, pd.norm.cross(&pd.north)) {
+                // Find all points with the same coordinate as the one we are looking at
+                mp
+            } else {
+                panic!("cannot find left neighbour");
+            }
+            .clone();
+
+            let right = if let Some(mp) =
+                get_2d_from_3d_and_dir(pd.pos - pd.norm.cross(&pd.north), pd.norm)
+            {
+                mp
+            } else if let Some(mp) = get_2d_from_3d_and_dir(pd.pos, -pd.norm.cross(&pd.north)) {
+                // Find all points with the same coordinate as the one we are looking at
+                mp
+            } else {
+                panic!("cannot find right neighbour");
+            }
+            .clone();
+
+            let down = if let Some(mp) = get_2d_from_3d_and_dir(pd.pos + pd.north, pd.norm) {
+                mp
+            } else if let Some(mp) = get_2d_from_3d_and_dir(pd.pos, pd.north) {
+                // Find all points with the same coordinate as the one we are looking at
+                mp
+            } else {
+                panic!("cannot find bottom neighbour");
+            }
+            .clone();
+            let up = if let Some(mp) = get_2d_from_3d_and_dir(pd.pos - pd.north, pd.norm) {
+                mp
+            } else if let Some(mp) = get_2d_from_3d_and_dir(pd.pos, -pd.north) {
+                // Find all points with the same coordinate as the one we are looking at
+                mp
+            } else {
+                panic!("cannot find top neighbour");
+            }
+            .clone();
+
+            let neigh = data::Neighbours {
+                up,
+                down,
+                left,
+                right,
+            };
+
+            (p.clone(), neigh)
+        })
+        .collect::<HashMap<data::Point, data::Neighbours>>()
 }
 
 fn solve(file: &str, points_per_edge: usize) -> Result<()> {
@@ -305,10 +420,18 @@ fn solve(file: &str, points_per_edge: usize) -> Result<()> {
 
     // Play the game.
     let mut actor = data::Actor {
-        pos: start,
+        pos: start.clone(),
         dir: data::Direction::Right,
     };
-    play_game(&mut actor, &actions, &neigh_map_part1, &occ_map)?;
+    play_game(
+        &mut actor,
+        &actions,
+        &neigh_map_part1,
+        &occ_map,
+        None,
+        &max,
+        false,
+    )?;
     println!("{:?}", actor);
     println!(
         "{}",
@@ -317,8 +440,32 @@ fn solve(file: &str, points_per_edge: usize) -> Result<()> {
 
     // Part 2.
     // Part 2 is identical apart from the really rather annoying construction of the neighbour map.
+    // First, fold the input map into a cube. We have to be able to identify the original point and
+    // the original orientation to be able to build the map.
     let cube_map = cube::build(&occ_map, &max, points_per_edge)?;
-    println!("{:?}", cube_map.len());
+    println!("built the cube");
+    let neigh_map_part2 = make_neigh_map_part2(&cube_map);
+    println!("created neighbour map");
+
+    // Play the game again.
+    actor = data::Actor {
+        pos: start,
+        dir: data::Direction::Right,
+    };
+    play_game(
+        &mut actor,
+        &actions,
+        &neigh_map_part2,
+        &occ_map,
+        Some(&cube_map),
+        &max,
+        false,
+    )?;
+    println!("{:?}", actor);
+    println!(
+        "{}",
+        1000 * (actor.pos.y + 1) + 4 * (actor.pos.x + 1) + actor.num()
+    );
 
     Ok(())
 }

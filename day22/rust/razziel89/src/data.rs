@@ -1,5 +1,7 @@
 // tag::data[]
+use crate::cube;
 use anyhow::{Error, Result};
+use std::collections::HashMap;
 use std::str::FromStr;
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -54,9 +56,25 @@ impl Actor {
         }
     }
 
-    pub fn mv(&mut self, neigh: &Neighbours, next_neigh: &Neighbours) -> Result<()> {
+    pub fn mv(
+        &mut self,
+        neigh: &Neighbours,
+        next_neigh: &Neighbours,
+        cube_map: Option<&HashMap<&Point, cube::PointData>>,
+    ) -> Result<()> {
         let next_pos = self.peek(neigh);
-        let next_dir = self.next_dir(next_neigh)?;
+        let next_dir = if let Ok(d) = self.next_dir(next_neigh) {
+            d
+        } else {
+            if let Some(cm) = cube_map {
+                return Err(Error::msg(format!(
+                "curr: {:?}, next: {:?}, curr_neigh: {:?}, next_neigh: {:?}, curr_3d: {:?}, next_3d: {:?}",
+                self.pos, next_pos, neigh, next_neigh, cm.get(&self.pos).expect("curr pos in cube"), cm.get(&next_pos).expect("next pos in cube"),
+            )));
+            } else {
+                unreachable!("direction failure occurs only in part 2");
+            }
+        };
         self.pos = next_pos;
         self.dir = next_dir;
         Ok(())
