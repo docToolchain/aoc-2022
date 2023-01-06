@@ -5,6 +5,7 @@ const REAL: &str = "stage_1.dat";
 
 // Dependencies.
 extern crate derive_more;
+mod cube;
 mod data;
 mod io;
 
@@ -266,7 +267,7 @@ fn play_game(
     Ok(())
 }
 
-fn solve(file: &str) -> Result<()> {
+fn solve(file: &str, points_per_edge: usize) -> Result<()> {
     println!("PROCESSING {}", file);
 
     // Read file and convert into data.
@@ -316,13 +317,15 @@ fn solve(file: &str) -> Result<()> {
 
     // Part 2.
     // Part 2 is identical apart from the really rather annoying construction of the neighbour map.
+    let cube_map = cube::build(&occ_map, &max, points_per_edge)?;
+    println!("{:?}", cube_map);
 
     Ok(())
 }
 
 fn main() -> Result<()> {
-    solve(SAMPLE1)?;
-    solve(REAL)?;
+    solve(SAMPLE1, 4)?;
+    // solve(REAL, 50)?;
 
     Ok(())
 }
