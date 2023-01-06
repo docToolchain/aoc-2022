@@ -1,0 +1,48 @@
+== Day 25: Full of Hot Air ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+This was nice in Rust by implementing two traints, `FromStr` for parsing a SNAFU
+into an integer and then `Display` for converting it to string.
+Parsing is straightforward.
+The basic idea for displaying was to first convert to ordinary bsae 5 numbers
+and then process those from least significant to most significant.
+Then, for example, a `3` at one position can be replaced by a `=` at the same
+position followed by incrementing the next digit by one.
+The numbers 4 and 5 can be handled similarly.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.

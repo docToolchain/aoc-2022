@@ -1,0 +1,80 @@
+== Day 22: Monkey Map ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+This one was arguably the hardest one of this AOC.
+For part 1, I solved the problem by building a list of neighbours for each tile
+that is either free or a wall.
+You then simply follow the instruction string given.
+The most important function for building th eneighbour map for part 1 searches
+the map from an edge along a line to find the first tile that is free or a wall.
+
+Part 2 coul dhave been solved by hard-coding the neighbour relations between
+edges, but I didn't want to do that, which is one of the reasons I finished this
+one last and rather late.
+Two main ideas come into play here:
+
+Regarding rotation:
+Assuming you have a correct neighbour map, you can then easily determine the new
+rotation after a move by looking at the previous location.
+If that location is "up" from your current one, then you are now facing down,
+irrespective of any previous heading (holds similarly for the other directions).
+
+Regarding the neighbour map:
+I was wondering how to find out which points are neighbours to which ones.
+As a human, I would fold up the map and construct a cube, which is what I did
+here, too.
+Because the map does not contain any cuts between neighbouring 50x50 patches
+(aka cube faces in the flat map), we can make do with a simple folding
+procedure.
+
+1. Identify points belonging to each cube face and convert to 3D.
+  That conversion simply sets the z-coordinate to zero for now.
+  Also remeber an "up" or "north" vector and a normal vector for each point.
+2. Identify which cube faces neighbour which other faces.
+3. For each face, determine which faces need to be folded when folding down the
+  face to the right.
+  This can be determined by a breadth-first search over all face neighbours that
+  is blocked by the reference face.
+  Do the same for faces that lie downwards.
+4. Construct a transformation consisting of rotation and translation that
+  describes the folding operation.
+5. Fold all points in affected faces.
+6. Rinse repeat.
+7. Build the neighbour map considering that a folded neighbour's normal vector
+  is identical to the difference vector expected to that neighbour if it were in
+  the same plane.
+
+Once you have a neighbour map, you apply the very same algorithm as in part 2
+with the addition of the aforementioned rotation fix.
+Also note that folded neighbours are identified by the very same location but
+with different normal vectors.
+Thus, the actual tile position could be found by moving a tile in the direction
+of its normal vector by half a unit.
+
+The code looks horrible because I wanted to get it done and didn't care about
+readability.
+Thus, I havent' included it here.
+Please feel free to check out the repo if you want to have a look.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.

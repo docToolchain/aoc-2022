@@ -229,7 +229,6 @@ fn play_game(
     actions: &Vec<data::Action>,
     neigh_map: &HashMap<data::Point, data::Neighbours>,
     occ_map: &HashMap<data::Point, data::Tile>,
-    cube_map: Option<&HashMap<&data::Point, cube::PointData>>,
     max: &data::Point,
     verbose: bool,
 ) -> Result<()> {
@@ -262,7 +261,7 @@ fn play_game(
                         .get(&actor.peek(neigh))
                         .expect("all neighbours should be on the board");
                     if next_tile == &data::Tile::Free {
-                        actor.mv(neigh, next_neigh, cube_map)?;
+                        actor.mv(neigh, next_neigh)?;
                         if verbose {
                             render(&occ_map, max, &actor);
                         }
@@ -412,12 +411,6 @@ fn solve(file: &str, points_per_edge: usize) -> Result<()> {
 
     let neigh_map_part1 = make_neigh_map_part1(&occ_map, &max);
 
-    // println!("{:?}", occupation_map);
-    // println!("{:?}", actions);
-    // println!("{:?}", start);
-    // println!("{:?}", neigh_map);
-    // println!("{:?}", neigh_map.get(&data::Point::new(3, 7)));
-
     // Play the game.
     let mut actor = data::Actor {
         pos: start.clone(),
@@ -428,7 +421,6 @@ fn solve(file: &str, points_per_edge: usize) -> Result<()> {
         &actions,
         &neigh_map_part1,
         &occ_map,
-        None,
         &max,
         false,
     )?;
@@ -457,7 +449,6 @@ fn solve(file: &str, points_per_edge: usize) -> Result<()> {
         &actions,
         &neigh_map_part2,
         &occ_map,
-        Some(&cube_map),
         &max,
         false,
     )?;
