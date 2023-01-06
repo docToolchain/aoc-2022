@@ -1,0 +1,48 @@
+== Day 23: Unstable Diffusion ==
+
+This is my implementation for both rounds of today's puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.
+
+=== Oveview ===
+
+All source code lives in the `src` directory.
+This solution contains a `main.rs`, which defines the main executable.
+There is also a `data.rs`, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an `io.rs`, which contains helper functions related to input
+parsing and output processing.
+
+=== Solution ===
+
+This feels like a variant of the famous game of life.
+The solution can easily be found by dilligently following the instructions
+given.
+One potential pitfall could be that the elves change the directions in which
+they prefer to move.
+I used an infinite iterator over a vector again and make sure to skip one
+element after each round.
+That's basically it.
+
+`main.rs`
+[source,rust,numbered]
+----
+include::src/main.rs[tags=main]
+----
+
+`data.rs`
+[source,rust,numbered]
+----
+include::src/data.rs[tags=data]
+----
+
+There are no tests this time.
+
+=== How to run ===
+
+Please have a look at `src/main.rs` for expeced names of input files.
+Assuming the expected files are present, you only need to execute `cargo run` to
+run the solution.
+The expected input files are ususally called `sample.dat` and `stage_1.dat`.
