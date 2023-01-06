@@ -1,0 +1,11 @@
+﻿[package]
+name = "mr-kaffee-2022-25"
+description = "Solution to AoC 2022/25, http://adventofcode.com/2022/day/25/"
+authors = ["Peter Wieland <peter@die-wielands.net>"]
+license = "MIT"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+mr-kaffee-aoc = { path = "../../../day00/rust/mr-kaffee/aoc/" }

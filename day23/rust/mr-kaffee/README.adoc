@@ -1,0 +1,51 @@
+== Day 23: Unstable Diffusion ==
+
+https://rust-lang.org[Rust] solution to https://adventofcode.com/2022/day/23[AoC|2022|23].
+
+Elves extend in a space, open in all directions. 
+
+So the usual question: shall I use hash sets / hash maps or a more efficient grid based solution?
+
+I decided to go with sets and maps first and I was not happy with that choice. It solved part 1 in about 20ms and part 2 in a bit more than 1s. 
+
+In a second attempt, I implemented a grid based solution which solves part 1 in less than 2ms and part 2 in about 80ms. There is certainly potential to do even better...
+
+=== Input ===
+
+The input is directly parsed into a grid.
+
+The most important part of the implementation is the `increase_to_gap` function which is used to grow the grid to make space for the elves moving.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=grid]
+----
+
+=== Star 1 ===
+
+The interesting part is in the `simulate_round` function. 
+
+In each round, I first iterate over all elves and identify potential targets which are stored in the `targets` vec. Then I iterate over the targets and move the elves if applicable.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_1]
+----
+
+=== Star 2 ===
+
+Just simulate rounds until nothing more happens.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=star_2]
+----
+
+=== Tests ===
+
+Kind of visual tests today for the simple example. Just compared my output to the one on the website manually.
+
+[source,rust,numbered]
+----
+include::src/lib.rs[tags=tests]
+----

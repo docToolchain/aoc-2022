@@ -1,0 +1,22 @@
+== Day 22
+
+This solution is written in python.
+
+The following libraries are used to implement the solution:
+
+* Typer (https://typer.tiangolo.com/) to generate a nice command line interface
+* pathlib (https://docs.python.org/3/library/pathlib.html)
+
+=== Main idea
+
+Only solved part one today.
+
+
+=== What did I learn
+
+When zipping two lists make sure they are of equal lenght.
+
+=== How to run
+
+Run using:
+`$ python day_22.py --help`
