@@ -375,6 +375,50 @@
 </li>
 </ul>
 </li>
+<li><a href="#_day_22_rust">Day 22: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_22_monkey_map">Day 22: Monkey Map</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_20">Oveview</a></li>
+<li><a href="#_solution_21">Solution</a></li>
+<li><a href="#_how_to_run_22">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_day_23_rust">Day 23: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_23_unstable_diffusion">Day 23: Unstable Diffusion</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_21">Oveview</a></li>
+<li><a href="#_solution_22">Solution</a></li>
+<li><a href="#_how_to_run_23">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_day_24_rust">Day 24: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_24_blizzard_basin">Day 24: Blizzard Basin</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_22">Oveview</a></li>
+<li><a href="#_solution_23">Solution</a></li>
+<li><a href="#_how_to_run_24">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_day_25_rust">Day 25: rust</a>
+<ul class="sectlevel3">
+<li><a href="#_day_25_full_of_hot_air">Day 25: Full of Hot Air</a>
+<ul class="sectlevel4">
+<li><a href="#_oveview_23">Oveview</a></li>
+<li><a href="#_solution_24">Solution</a></li>
+<li><a href="#_how_to_run_25">How to run</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -389,10 +433,10 @@
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">image:[][]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="image"><img src="https://avatars.githubusercontent.com/u/10134766?v=4" alt="10134766?v=4"></span></p></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p><strong>razziel89</strong><br>
-<span class="icon"><i class="fa fa-github"></i></span>: [][razziel89]</p>
+<span class="icon"><i class="fa fa-github"></i></span>: <a href="https://github.com/razziel89">razziel89</a></p>
 </div></div></td>
 </tr>
 </tbody>
@@ -7165,6 +7209,1136 @@ impl FromStr for Monkey {
 </div>
 <div class="sect4">
 <h5 id="_how_to_run_21"><a class="anchor" href="#_how_to_run_21"></a><a class="link" href="#_how_to_run_21">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day22" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_22_rust"><a class="anchor" href="#_day_22_rust"></a><a class="link" href="#_day_22_rust">Day 22: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_22_monkey_map"><a class="anchor" href="#_day_22_monkey_map"></a><a class="link" href="#_day_22_monkey_map">Day 22: Monkey Map</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_20"><a class="anchor" href="#_oveview_20"></a><a class="link" href="#_oveview_20">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_21"><a class="anchor" href="#_solution_21"></a><a class="link" href="#_solution_21">Solution</a></h5>
+<div class="paragraph">
+<p>This one was arguably the hardest one of this AOC.
+For part 1, I solved the problem by building a list of neighbours for each tile
+that is either free or a wall.
+You then simply follow the instruction string given.
+The most important function for building th eneighbour map for part 1 searches
+the map from an edge along a line to find the first tile that is free or a wall.</p>
+</div>
+<div class="paragraph">
+<p>Part 2 coul dhave been solved by hard-coding the neighbour relations between
+edges, but I didn&#8217;t want to do that, which is one of the reasons I finished this
+one last and rather late.
+Two main ideas come into play here:</p>
+</div>
+<div class="paragraph">
+<p>Regarding rotation:
+Assuming you have a correct neighbour map, you can then easily determine the new
+rotation after a move by looking at the previous location.
+If that location is "up" from your current one, then you are now facing down,
+irrespective of any previous heading (holds similarly for the other directions).</p>
+</div>
+<div class="paragraph">
+<p>Regarding the neighbour map:
+I was wondering how to find out which points are neighbours to which ones.
+As a human, I would fold up the map and construct a cube, which is what I did
+here, too.
+Because the map does not contain any cuts between neighbouring 50x50 patches
+(aka cube faces in the flat map), we can make do with a simple folding
+procedure.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Identify points belonging to each cube face and convert to 3D.
+That conversion simply sets the z-coordinate to zero for now.
+Also remeber an "up" or "north" vector and a normal vector for each point.</p>
+</li>
+<li>
+<p>Identify which cube faces neighbour which other faces.</p>
+</li>
+<li>
+<p>For each face, determine which faces need to be folded when folding down the
+face to the right.
+This can be determined by a breadth-first search over all face neighbours that
+is blocked by the reference face.
+Do the same for faces that lie downwards.</p>
+</li>
+<li>
+<p>Construct a transformation consisting of rotation and translation that
+describes the folding operation.</p>
+</li>
+<li>
+<p>Fold all points in affected faces.</p>
+</li>
+<li>
+<p>Rinse repeat.</p>
+</li>
+<li>
+<p>Build the neighbour map considering that a folded neighbour&#8217;s normal vector
+is identical to the difference vector expected to that neighbour if it were in
+the same plane.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Once you have a neighbour map, you apply the very same algorithm as in part 2
+with the addition of the aforementioned rotation fix.
+Also note that folded neighbours are identified by the very same location but
+with different normal vectors.
+Thus, the actual tile position could be found by moving a tile in the direction
+of its normal vector by half a unit.</p>
+</div>
+<div class="paragraph">
+<p>The code looks horrible because I wanted to get it done and didn&#8217;t care about
+readability.
+Thus, I havent' included it here.
+Please feel free to check out the repo if you want to have a look.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_22"><a class="anchor" href="#_how_to_run_22"></a><a class="link" href="#_how_to_run_22">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day23" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_23_rust"><a class="anchor" href="#_day_23_rust"></a><a class="link" href="#_day_23_rust">Day 23: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_23_unstable_diffusion"><a class="anchor" href="#_day_23_unstable_diffusion"></a><a class="link" href="#_day_23_unstable_diffusion">Day 23: Unstable Diffusion</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_21"><a class="anchor" href="#_oveview_21"></a><a class="link" href="#_oveview_21">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_22"><a class="anchor" href="#_solution_22"></a><a class="link" href="#_solution_22">Solution</a></h5>
+<div class="paragraph">
+<p>This feels like a variant of the famous game of life.
+The solution can easily be found by dilligently following the instructions
+given.
+One potential pitfall could be that the elves change the directions in which
+they prefer to move.
+I used an infinite iterator over a vector again and make sure to skip one
+element after each round.
+That&#8217;s basically it.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Context, Error, Result};
+use std::cmp::Ordering;
+use std::collections::{HashMap, HashSet};
+use std::iter::Cycle;
+use std::vec::IntoIter;
+// Constants.
+
+// Play one round.
+fn game_of_elves(
+    elves: &amp;mut HashSet&lt;data::Point&gt;,
+    proposals: &amp;mut Cycle&lt;IntoIter&lt;data::Point&gt;&gt;,
+) -&gt; bool {
+    // First half. Find out which elves might actually move by filtering out those that have no
+    // other elf anywhere around them.
+    let maybe_moving_elves = elves
+        .iter()
+        .filter(|el| el.env().into_iter().any(|env| elves.contains(&amp;env)))
+        .map(|el| el.clone())
+        .collect::&lt;HashSet&lt;data::Point&gt;&gt;();
+    let mut props = HashMap::&lt;data::Point, data::Point&gt;::new();
+    // Each one of those elves proposes a spot. We propose up to 4 directions.
+    for _ in 0..4 {
+        let prop = proposals.next().expect("initnite proposals");
+        props.extend(
+            maybe_moving_elves
+                .iter()
+                // Only check those that haven't yet proposed something.
+                .filter(|el| !props.contains_key(el))
+                // Keep only those for whom this direction is clear.
+                .filter(|el| {
+                    el.dir_env(&amp;prop)
+                        .into_iter()
+                        .all(|env| !elves.contains(&amp;env))
+                })
+                .map(|el| (el.clone(), el.add(&amp;prop)))
+                .collect::&lt;HashMap&lt;_, _&gt;&gt;(),
+        );
+    }
+    let mut prop_count = HashMap::&lt;data::Point, usize&gt;::new();
+    for prop in props.values() {
+        if let Some(old) = prop_count.get_mut(&amp;prop) {
+            *old += 1;
+        } else {
+            prop_count.insert(prop.clone(), 1);
+        }
+    }
+
+    let mut was_moved = false;
+
+    // Second half. Only update to those positions that have been suggested exactly once.
+    for (elf, prop) in props {
+        if prop_count.get(&amp;prop).unwrap() == &amp;1 {
+            elves.remove(&amp;elf);
+            elves.insert(prop);
+            was_moved = true;
+        }
+    }
+
+    was_moved
+}
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    // Also obtain max coords. Min coords are implicitly 0.
+    let (occ_map, _, _) = io::parse_chars_to_data::&lt;data::Input&gt;(file, "input", None, None)?;
+
+    let mut elves = occ_map
+        .into_iter()
+        .filter_map(|(pos, tile)| {
+            if tile == data::Input::Elf {
+                Some(pos)
+            } else {
+                None
+            }
+        })
+        .collect::&lt;HashSet&lt;_&gt;&gt;();
+
+    // This is our infinite stream of proposals.
+    let mut proposals = vec![data::N, data::S, data::W, data::E].into_iter().cycle();
+
+    // Consider 10 rounds for part 1.
+    for _ in 0..10 {
+        game_of_elves(&amp;mut elves, &amp;mut proposals);
+        // Discard one element.
+        proposals.next().expect("inf it");
+    }
+
+    let min_x = elves.iter().map(|el| el.x).min().expect("no min x");
+    let max_x = elves.iter().map(|el| el.x).max().expect("no max x");
+    let min_y = elves.iter().map(|el| el.y).min().expect("no min y");
+    let max_y = elves.iter().map(|el| el.y).max().expect("no max y");
+
+    let mut count = 0;
+    for x in min_x..=max_x {
+        for y in min_y..=max_y {
+            if !elves.contains(&amp;data::Point::new(x, y)) {
+                count += 1;
+            }
+        }
+    }
+
+    println!("free field count is {}", count);
+
+    let mut round_count = 10;
+    while game_of_elves(&amp;mut elves, &amp;mut proposals) {
+        proposals.next().expect("inf it");
+        round_count += 1;
+    }
+    println!("final round count is {}", round_count + 1);
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1)?;
+    solve(REAL)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::str::FromStr;
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub struct Point {
+    pub x: isize,
+    pub y: isize,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Input {
+    Elf,
+    Free,
+}
+
+pub const N: Point = Point { x: 0, y: -1 };
+pub const NE: Point = Point { x: 1, y: -1 };
+pub const E: Point = Point { x: 1, y: 0 };
+pub const SE: Point = Point { x: 1, y: 1 };
+pub const S: Point = Point { x: 0, y: 1 };
+pub const SW: Point = Point { x: -1, y: 1 };
+pub const W: Point = Point { x: -1, y: 0 };
+pub const NW: Point = Point { x: -1, y: -1 };
+
+impl Point {
+    pub fn new(x: isize, y: isize) -&gt; Self {
+        Self { x, y }
+    }
+
+    pub fn add(&amp;self, other: &amp;Self) -&gt; Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+
+    pub fn env(&amp;self) -&gt; Vec&lt;Self&gt; {
+        vec![
+            self.add(&amp;N),
+            self.add(&amp;NE),
+            self.add(&amp;E),
+            self.add(&amp;SE),
+            self.add(&amp;S),
+            self.add(&amp;SW),
+            self.add(&amp;W),
+            self.add(&amp;NW),
+        ]
+    }
+
+    pub fn dir_env(&amp;self, dir: &amp;Point) -&gt; Vec&lt;Self&gt; {
+        match dir {
+            &amp;N =&gt; vec![self.add(&amp;NW), self.add(&amp;N), self.add(&amp;NE)],
+            &amp;E =&gt; vec![self.add(&amp;NE), self.add(&amp;E), self.add(&amp;SE)],
+            &amp;S =&gt; vec![self.add(&amp;SE), self.add(&amp;S), self.add(&amp;SW)],
+            &amp;W =&gt; vec![self.add(&amp;SW), self.add(&amp;W), self.add(&amp;NW)],
+            _ =&gt; panic!("we should never propose another direction"),
+        }
+    }
+}
+
+impl FromStr for Input {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s {
+            "." =&gt; Ok(Self::Free),
+            "#" =&gt; Ok(Self::Elf),
+            _ =&gt; Err(Error::msg("cannot parse as tile")),
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_23"><a class="anchor" href="#_how_to_run_23"></a><a class="link" href="#_how_to_run_23">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day24" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_24_rust"><a class="anchor" href="#_day_24_rust"></a><a class="link" href="#_day_24_rust">Day 24: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_24_blizzard_basin"><a class="anchor" href="#_day_24_blizzard_basin"></a><a class="link" href="#_day_24_blizzard_basin">Day 24: Blizzard Basin</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_22"><a class="anchor" href="#_oveview_22"></a><a class="link" href="#_oveview_22">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_23"><a class="anchor" href="#_solution_23"></a><a class="link" href="#_solution_23">Solution</a></h5>
+<div class="paragraph">
+<p>The code for this one looks horrible because I copied and modified an <code>A*</code>
+algorithm created for a previous day.
+I basically used <code>A*</code> for finding the path but in 3 dimentions, with 2 spatial
+ones and the third one being time.
+Time can only increase and the list of viable next locations is generated on the
+fly based on future blizzard positions.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Context, Error, Result};
+use std::cmp::Ordering;
+use std::collections::{HashMap, HashSet};
+// Constants.
+
+fn find_path&lt;'a&gt;(
+    start: &amp;'a data::Node,
+    end: &amp;'a data::Node,
+    graph: &amp;'a HashSet&lt;data::Node&gt;,
+    blizz: &amp;'a Vec&lt;data::Blizzard&gt;,
+    estimator_fn: fn(&amp;data::Node, &amp;data::Point) -&gt; usize,
+    start_time: u16,
+) -&gt; Result&lt;HashMap&lt;data::Node, (Option&lt;data::Point&gt;, usize)&gt;&gt; {
+    let ref_point = end.pos();
+    let estimator = move |node: &amp;data::Node| estimator_fn(node, &amp;ref_point);
+    let get_node = move |node: &amp;data::Point| {
+        graph
+            .get(&amp;node.as_node(Some(0)))
+            .ok_or(Error::msg("node not found"))
+            .map(|el| el.shift(node.t))
+    };
+
+    let mut connections = HashMap::&lt;data::Node, (Option&lt;data::Point&gt;, usize)&gt;::new();
+    let mut checkable = HashMap::&lt;data::Node, (data::Point, usize)&gt;::new();
+
+    let start_at_time = start.shift(start_time);
+    // Add starting point to resulting path.
+    connections.insert(start_at_time.clone(), (None, 0));
+    // Add neighbours of starting point to list of checkable values. Ignore neighbouring points
+    // that are not part of the graph.
+    for neigh in start_at_time.neighbours(blizz, graph) {
+        let neigh_node = get_node(&amp;neigh)?;
+        // Estimated costs are the most direct possible connection plus 1, since every step costs
+        // one.
+        let estimate = estimator(&amp;neigh_node);
+        checkable.insert(neigh_node, (start_at_time.pos(), estimate));
+        // connections.insert(neigh_node, (Some(start_at_time.pos()), 1));
+    }
+
+    // Search until we added the final node to the path or until there is nothing more to check.
+    while !connections.contains_key(end) &amp;&amp; checkable.len() &gt; 0 {
+        // Get node with minimum _estimated_ cost.
+        let next_best_node = checkable
+            .iter_mut()
+            // Get node with minimum estimated cost.
+            .min_by(|(_node1, (_pre1, cost1)), (_node2, (_pre2, cost2))| cost1.cmp(&amp;cost2))
+            .ok_or(Error::msg("cannot find next node"))?
+            .0
+            .clone();
+        let (_, (predecessor, _old_estimate)) = checkable
+            .remove_entry(&amp;next_best_node)
+            .ok_or(Error::msg("cannot find predecessor"))?;
+
+        let cost_of_predecessor = connections
+            .get(&amp;predecessor.as_node(None))
+            .ok_or(Error::msg("predecessor has not been visited"))?
+            .1;
+
+        // Add point to resulting path unless we've found the end/
+        connections.insert(
+            next_best_node.clone(),
+            (Some(predecessor), cost_of_predecessor + 1),
+        );
+        // We've found the end. Add it in a hacky way.
+        if estimator(&amp;next_best_node) == 0 {
+            connections.insert(
+                next_best_node.shift(end.p.t),
+                (Some(predecessor), cost_of_predecessor + 1),
+            );
+        }
+
+        // Add neighbours of point to list of checkable values.
+        for neigh in next_best_node.neighbours(blizz, graph) {
+            let neigh_node = get_node(&amp;neigh)?;
+            if !connections.contains_key(&amp;neigh_node) {
+                let estimate = cost_of_predecessor + estimator(&amp;neigh_node);
+                let previous_best = checkable
+                    .get(&amp;neigh_node)
+                    .unwrap_or(&amp;(neigh, std::usize::MAX))
+                    .1;
+                if previous_best &gt; estimate {
+                    checkable.insert(neigh_node, (next_best_node.pos(), estimate));
+                }
+                // connections.insert(neigh_node, Some(start.pos()));
+            }
+        }
+    }
+
+    Ok(connections)
+}
+
+fn render&lt;'a&gt;(
+    time: u16,
+    graph: &amp;'a HashSet&lt;data::Node&gt;,
+    blizzards: &amp;'a Vec&lt;data::Blizzard&gt;,
+    min: &amp;'a data::Point,
+    max: &amp;'a data::Point,
+) {
+    let blizz = blizzards
+        .iter()
+        // This is a hacky way of moving the blizzard to a location but still retrieving its
+        // location in a way that can easily be queried against the graph.
+        .map(|el| el.at_time(time).as_node(Some(0)).p)
+        .collect::&lt;Vec&lt;_&gt;&gt;();
+
+    let mut blizz_count = HashMap::&lt;data::Point, u8&gt;::with_capacity(blizz.len());
+    let mut blizz_last = HashMap::&lt;data::Point, &amp;data::Blizzard&gt;::with_capacity(blizz.len());
+    for (p, b) in blizz.iter().zip(blizzards.iter()) {
+        let curr_count = blizz_count.get(p).unwrap_or(&amp;0);
+        blizz_count.insert(p.clone(), curr_count + 1);
+        blizz_last.insert(p.clone(), b);
+    }
+
+    for y in min.y..=max.y {
+        for x in min.x..=max.x {
+            let p = data::Point::new(x as isize, y as isize, 0);
+            if let Some(_) = graph.get(&amp;p.as_node(None)) {
+                // This is a potential free spot. Check whether it's a blizzard or not.
+                if let Some(c) = blizz_count.get(&amp;p) {
+                    if c == &amp;1 {
+                        // Only one blizzard, print its direction.
+                        print!("{}", blizz_last.get(&amp;p).unwrap().as_char());
+                    } else {
+                        // Otherwise, print the count.
+                        print!("{}", c);
+                    }
+                } else {
+                    // This is a free spot.
+                    print!(".");
+                }
+            } else {
+                // This is a wall spot.
+                print!("#");
+            }
+        }
+        println!("");
+    }
+
+    // Blobk until receiving return.
+    std::io::stdin().lines().next();
+}
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    // Also obtain max coords. Min coords are implicitly (1,1) for free spaces..
+    let (occ_map, max_x, max_y) = io::parse_chars_to_data::&lt;data::Tile&gt;(file, "tile", None, None)?;
+    let max = data::Point::new(max_x, max_y, 0);
+    let min = data::Point::new(0, 0, 0);
+    let min_free = data::Point::new(1, 1, 0);
+
+    let start = occ_map
+        .iter()
+        .find(|(point, tile)| point.y == 0 &amp;&amp; tile == &amp;&amp;data::Tile::Free)
+        .ok_or(Error::msg("cannot find start"))?
+        .0
+        .clone()
+        .as_node(None);
+
+    let end = occ_map
+        .iter()
+        .find(|(point, tile)| point.y == max.y &amp;&amp; tile == &amp;&amp;data::Tile::Free)
+        .ok_or(Error::msg("cannot find end"))?
+        .0
+        .clone()
+        .as_node(None);
+
+    // This isn't really a graph but we call it that because that's the name used in the other days
+    // where the same path finding algorithm has been used.
+    let graph = occ_map
+        .iter()
+        .filter_map(|(point, tile)| {
+            if tile != &amp;data::Tile::Wall {
+                Some(point.as_node(None))
+            } else {
+                None
+            }
+        })
+        .collect::&lt;HashSet&lt;_&gt;&gt;();
+
+    let blizzards = occ_map
+        .iter()
+        .filter_map(|(point, tile)| {
+            if let data::Tile::Blizzard(dir) = tile {
+                Some(data::Blizzard::new(
+                    point.clone(),
+                    dir.clone(),
+                    min_free,
+                    max,
+                ))
+            } else {
+                None
+            }
+        })
+        .collect::&lt;Vec&lt;_&gt;&gt;();
+
+    // for time in 0..10 {
+    //     render(time, &amp;graph, &amp;blizzards, &amp;min, &amp;max);
+    // }
+
+    let estimator = |node: &amp;data::Node, point: &amp;data::Point| node.infinity_dist(&amp;point);
+
+    let path = find_path(&amp;start, &amp;end, &amp;graph, &amp;blizzards, estimator, 0)?;
+
+    let mut max_time = path
+        .iter()
+        .map(|el| el.0.p.t)
+        .max()
+        .ok_or(Error::msg("cannot determine path length"))?;
+
+    println!("reached goal in {} steps", max_time);
+
+    // Part 2.
+    // Go back to the start.
+    let path = find_path(&amp;end, &amp;start, &amp;graph, &amp;blizzards, estimator, max_time)?;
+
+    max_time = path
+        .iter()
+        .map(|el| el.0.p.t)
+        .max()
+        .ok_or(Error::msg("cannot determine path length"))?;
+
+    println!("reached start again in {} steps", max_time);
+
+    // Go back to the end.
+    let path = find_path(&amp;start, &amp;end, &amp;graph, &amp;blizzards, estimator, max_time)?;
+
+    max_time = path
+        .iter()
+        .map(|el| el.0.p.t)
+        .max()
+        .ok_or(Error::msg("cannot determine path length"))?;
+
+    println!("reached goal again in {} steps", max_time);
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1)?;
+    solve(REAL)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
+use std::str::FromStr;
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+pub struct Point {
+    pub x: u8,
+    pub y: u8,
+    pub t: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Tile {
+    Free,
+    Wall,
+    Blizzard(Direction),
+}
+
+pub struct Blizzard {
+    start: Point,
+    direction: Direction,
+    min_x: u8,
+    min_y: u8,
+    max_y: u16,
+    max_x: u16,
+}
+
+impl Blizzard {
+    pub fn new(start: Point, direction: Direction, min: Point, max: Point) -&gt; Self {
+        Self {
+            start: Point {
+                x: start.x - min.x,
+                y: start.y - min.y,
+                t: 0,
+            },
+            direction,
+            min_x: min.x,
+            min_y: min.y,
+            max_x: (max.x - min.x) as u16,
+            max_y: (max.y - min.y) as u16,
+        }
+    }
+
+    pub fn at_time(&amp;self, t: u16) -&gt; Point {
+        match self.direction {
+            Direction::Up =&gt; Point {
+                x: self.start.x + self.min_x,
+                y: ((self.start.y as u16 + self.max_y - t % self.max_y) % self.max_y) as u8
+                    + self.min_y,
+                t,
+            },
+            Direction::Down =&gt; Point {
+                x: self.start.x + self.min_x,
+                y: ((self.start.y as u16 + t % self.max_y) % self.max_y) as u8 + self.min_y,
+                t,
+            },
+            Direction::Left =&gt; Point {
+                x: ((self.start.x as u16 + self.max_x - t % self.max_x) % self.max_x) as u8
+                    + self.min_x,
+                y: self.start.y + self.min_y,
+                t,
+            },
+            Direction::Right =&gt; Point {
+                x: ((self.start.x as u16 + t % self.max_x) % self.max_x) as u8 + self.min_x,
+                y: self.start.y + self.min_y,
+                t,
+            },
+        }
+    }
+
+    pub fn as_char(&amp;self) -&gt; char {
+        match self.direction {
+            Direction::Up =&gt; '^',
+            Direction::Down =&gt; 'v',
+            Direction::Left =&gt; '&lt;',
+            Direction::Right =&gt; '&gt;',
+        }
+    }
+}
+
+impl Point {
+    pub fn new(x: isize, y: isize, t: isize) -&gt; Self {
+        Self {
+            x: x as u8,
+            y: y as u8,
+            t: t as u16,
+        }
+    }
+
+    pub fn add(&amp;self, other: &amp;Self) -&gt; Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            t: self.t,
+        }
+    }
+
+    pub fn env(&amp;self) -&gt; Vec&lt;Self&gt; {
+        let mut result = Vec::&lt;_&gt;::with_capacity(5);
+        result.push(
+            // Waiting.
+            Self {
+                x: self.x,
+                y: self.y,
+                t: self.t + 1,
+            },
+        );
+        if self.x &gt; 0 {
+            result.push(
+                // Moving left.
+                Self {
+                    x: self.x - 1,
+                    y: self.y,
+                    t: self.t + 1,
+                },
+            );
+        }
+        result.push(
+            // Moving right.
+            Self {
+                x: self.x + 1,
+                y: self.y,
+                t: self.t + 1,
+            },
+        );
+        if self.y &gt; 0 {
+            result.push(
+                // Moving up.
+                Self {
+                    x: self.x,
+                    y: self.y - 1,
+                    t: self.t + 1,
+                },
+            );
+        }
+        result.push(
+            // Moving down.
+            Self {
+                x: self.x,
+                y: self.y + 1,
+                t: self.t + 1,
+            },
+        );
+        result
+    }
+
+    pub fn as_node(&amp;self, time: Option&lt;u16&gt;) -&gt; Node {
+        let mut result = Node { p: *self };
+        if let Some(t) = time {
+            result.p.t = t
+        }
+        result
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Node {
+    pub p: Point,
+}
+
+impl FromStr for Direction {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s {
+            "^" =&gt; Ok(Direction::Up),
+            "v" =&gt; Ok(Direction::Down),
+            "&lt;" =&gt; Ok(Direction::Left),
+            "&gt;" =&gt; Ok(Direction::Right),
+            _ =&gt; Err(Error::msg("cannot parse as tile")),
+        }
+    }
+}
+
+impl FromStr for Tile {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        match s {
+            "." =&gt; Ok(Self::Free),
+            "#" =&gt; Ok(Self::Wall),
+            _ =&gt; Ok(Self::Blizzard(s.parse()?)),
+        }
+    }
+}
+
+impl Node {
+    pub fn pos(&amp;self) -&gt; Point {
+        self.p
+    }
+
+    pub fn neighbours&lt;'a&gt;(
+        &amp;'a self,
+        blizz: &amp;Vec&lt;Blizzard&gt;,
+        spaces: &amp;HashSet&lt;Node&gt;,
+    ) -&gt; HashSet&lt;Point&gt; {
+        let occupied = blizz
+            .iter()
+            .map(|el| el.at_time(self.p.t + 1))
+            .collect::&lt;HashSet&lt;_&gt;&gt;();
+
+        // Neighbours are points in the environment that are not occupied in the next turn.
+        self.p
+            .env()
+            .into_iter()
+            .filter(|el| !occupied.contains(el) &amp;&amp; spaces.contains(&amp;el.as_node(Some(0))))
+            .collect::&lt;HashSet&lt;_&gt;&gt;()
+    }
+
+    pub fn infinity_dist(&amp;self, other: &amp;Point) -&gt; usize {
+        let x_diff = if other.x &gt; self.p.x {
+            other.x - self.p.x
+        } else {
+            self.p.x - other.x
+        } as usize;
+        let y_diff = if other.y &gt; self.p.y {
+            other.y - self.p.y
+        } else {
+            self.p.y - other.y
+        } as usize;
+        x_diff + y_diff
+    }
+
+    pub fn shift(&amp;self, time: u16) -&gt; Node {
+        Self {
+            p: Point {
+                x: self.p.x,
+                y: self.p.y,
+                t: time,
+            },
+        }
+    }
+}
+
+// We identify a node only by its position.
+impl Hash for Node {
+    fn hash&lt;H: Hasher&gt;(&amp;self, state: &amp;mut H) {
+        self.p.hash(state)
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&amp;self, other: &amp;Self) -&gt; bool {
+        self.p == other.p
+    }
+}
+
+impl Eq for Node {}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_24"><a class="anchor" href="#_how_to_run_24"></a><a class="link" href="#_how_to_run_24">How to run</a></h5>
+<div class="paragraph">
+<p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
+Assuming the expected files are present, you only need to execute <code>cargo run</code> to
+run the solution.
+The expected input files are ususally called <code>sample.dat</code> and <code>stage_1.dat</code>.</p>
+</div>
+<a id="day25" />
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_day_25_rust"><a class="anchor" href="#_day_25_rust"></a><a class="link" href="#_day_25_rust">Day 25: rust</a></h3>
+<div class="sect3">
+<h4 id="_day_25_full_of_hot_air"><a class="anchor" href="#_day_25_full_of_hot_air"></a><a class="link" href="#_day_25_full_of_hot_air">Day 25: Full of Hot Air</a></h4>
+<div class="paragraph">
+<p>This is my implementation for both rounds of today&#8217;s puzzle.
+This year, I am using Rust to solve the challenges.
+My first priority is learning more about the language, while the creation of
+easily readable code is a second priority, this time.
+Wiriting fast code is a far-away third priority.</p>
+</div>
+<div class="sect4">
+<h5 id="_oveview_23"><a class="anchor" href="#_oveview_23"></a><a class="link" href="#_oveview_23">Oveview</a></h5>
+<div class="paragraph">
+<p>All source code lives in the <code>src</code> directory.
+This solution contains a <code>main.rs</code>, which defines the main executable.
+There is also a <code>data.rs</code>, which specifies data types important for this
+solution as well as associated functions, methods, and traits.
+There is also an <code>io.rs</code>, which contains helper functions related to input
+parsing and output processing.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_solution_24"><a class="anchor" href="#_solution_24"></a><a class="link" href="#_solution_24">Solution</a></h5>
+<div class="paragraph">
+<p>This was nice in Rust by implementing two traints, <code>FromStr</code> for parsing a SNAFU
+into an integer and then <code>Display</code> for converting it to string.
+Parsing is straightforward.
+The basic idea for displaying was to first convert to ordinary bsae 5 numbers
+and then process those from least significant to most significant.
+Then, for example, a <code>3</code> at one position can be replaced by a <code>=</code> at the same
+position followed by incrementing the next digit by one.
+The numbers 4 and 5 can be handled similarly.</p>
+</div>
+<div class="paragraph">
+<p><code>main.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::Result;
+
+fn solve(file: &amp;str) -&gt; Result&lt;()&gt; {
+    println!("PROCESSING {}", file);
+
+    // Read file and convert into data.
+    let snafus = io::parse_chunks_to_data::&lt;data::Snafu&gt;(
+        io::read_lines_from_file(file, 1)?,
+        "snafu",
+        None,
+        None,
+    )?;
+
+    for snafu in &amp;snafus {
+        println!("{} -&gt; {}", snafu.dec(), snafu);
+    }
+
+    let sum = snafus
+        .into_iter()
+        .fold(data::Snafu::new(0), |acc, val| acc.add(&amp;val));
+    println!("sum is {} -&gt; {}", sum.dec(), sum);
+
+    Ok(())
+}
+
+fn main() -&gt; Result&lt;()&gt; {
+    solve(SAMPLE1)?;
+    solve(REAL)?;
+
+    Ok(())
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>data.rs</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight linenums"><code class="language-rust" data-lang="rust">use anyhow::{Error, Result};
+use std::fmt;
+use std::str::FromStr;
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub struct Snafu(isize);
+
+impl FromStr for Snafu {
+    type Err = Error;
+
+    fn from_str(s: &amp;str) -&gt; Result&lt;Self&gt; {
+        let mut num = 0;
+        let mut place = 1;
+
+        for c in s.trim().chars().rev() {
+            num += place
+                * match c {
+                    '-' =&gt; -1,
+                    '=' =&gt; -2,
+                    '0' | '1' | '2' =&gt; String::from(c).parse::&lt;isize&gt;()?,
+                    _ =&gt; return Err(Error::msg("unknown char in snafu conversion")),
+                };
+            place *= 5;
+        }
+
+        Ok(Self(num))
+    }
+}
+
+impl Snafu {
+    pub fn dec(&amp;self) -&gt; isize {
+        self.0
+    }
+
+    pub fn new(val: isize) -&gt; Self {
+        Self(val)
+    }
+
+    pub fn add(&amp;self, other: &amp;Self) -&gt; Self {
+        Self(self.0 + other.0)
+    }
+
+    fn to_str(&amp;self) -&gt; Result&lt;String&gt; {
+        let mut digits = vec![];
+        // Convert to actual base 5 first.
+        let mut num = self.0;
+        while num &gt; 0 {
+            digits.push(num % 5);
+            num /= 5;
+        }
+        // Now make the conversion to snafu. Do that by replacing the digits 3, 4 and 5 by their
+        // snafu equivalents. Do so as long as there have been incorrect digits here.
+        for idx in 0..digits.len() {
+            match digits[idx] {
+                dig @ 3 | dig @ 4 | dig @ 5 =&gt; {
+                    digits[idx] = dig - 5;
+                    if digits.len() - 1 &lt; idx + 1 {
+                        digits.push(0);
+                    }
+                    digits[idx + 1] += 1;
+                }
+                // Don't do anything.
+                _ =&gt; {}
+            }
+        }
+
+        let mut has_err = false;
+        // Now create the printable representation.
+        let str_rep = digits
+            .into_iter()
+            .rev()
+            .map(|el| match el {
+                0 | 1 | 2 =&gt; format!("{}", el),
+                -1 =&gt; format!("-"),
+                -2 =&gt; format!("="),
+                _ =&gt; {
+                    has_err = true;
+                    String::new()
+                }
+            })
+            .collect::&lt;Vec&lt;_&gt;&gt;()
+            .join("");
+
+        if has_err {
+            Err(Error::msg("cannot print snafu"))
+        } else {
+            Ok(format!("{}", str_rep))
+        }
+    }
+}
+
+impl fmt::Display for Snafu {
+    fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
+        if let Ok(val) = self.to_str() {
+            write!(f, "{}", val)
+        } else {
+            Err(fmt::Error)
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are no tests this time.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_how_to_run_25"><a class="anchor" href="#_how_to_run_25"></a><a class="link" href="#_how_to_run_25">How to run</a></h5>
 <div class="paragraph">
 <p>Please have a look at <code>src/main.rs</code> for expeced names of input files.
 Assuming the expected files are present, you only need to execute <code>cargo run</code> to
